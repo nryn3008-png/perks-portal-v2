@@ -116,7 +116,7 @@ function ColorLabel({
 
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium ${styles[color]}`}
+      className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-medium ${styles[color]}`}
     >
       {text}
     </span>
@@ -201,7 +201,7 @@ export function VendorCard({ vendor, basePath = '/admin/vendors', perksCount }: 
                 <ColorLabel key={idx} text={service.name} color="grey" />
               ))}
               {vendor.services.length > 3 && (
-                <span className="text-[11px] text-gray-400 ml-0.5">
+                <span className="text-[11px] text-gray-400 ml-1">
                   +{vendor.services.length - 3}
                 </span>
               )}

@@ -5,7 +5,7 @@
  * shared attributes. Uses only existing API data - no additional fetches.
  *
  * SIMILAR PERKS: Match by offer_categories, deal_type, investment_levels, vendor primary_service
- * SIMILAR VENDORS: Match by services, industries, primary_service
+ * SIMILAR VENDORS: Match ONLY by primary_service (exact match)
  */
 
 import type { GetProvenDeal, GetProvenVendor } from '@/types';
@@ -140,49 +140,30 @@ interface VendorSimilarityScore {
   vendor: GetProvenVendor;
   score: number;
   perkCount: number;
+  hasSamePrimaryService: boolean;
 }
 
 /**
  * Calculate similarity score between two vendors
  *
- * Scoring:
- * - Shared services: +3 per match
- * - Shared industries: +2 per match
- * - Same primary_service: +4
+ * Scoring: ONLY matches by primary_service
+ * - Same primary_service: +1 (exact match required)
  */
 function calculateVendorSimilarity(
   baseVendor: GetProvenVendor,
   candidateVendor: GetProvenVendor
-): number {
-  let score = 0;
-
-  // Match services (strongest signal)
-  const baseServices = new Set(baseVendor.services.map((s) => s.name));
-  for (const service of candidateVendor.services) {
-    if (baseServices.has(service.name)) {
-      score += 3;
-    }
-  }
-
-  // Match industries
-  const baseIndustries = new Set(baseVendor.industries.map((i) => i.name));
-  for (const industry of candidateVendor.industries) {
-    if (baseIndustries.has(industry.name)) {
-      score += 2;
-    }
-  }
-
-  // Match primary_service (exact match is strong signal)
+): { score: number; hasSamePrimaryService: boolean } {
+  // Only match by primary_service
   if (
     baseVendor.primary_service &&
     candidateVendor.primary_service &&
     baseVendor.primary_service.toLowerCase() ===
       candidateVendor.primary_service.toLowerCase()
   ) {
-    score += 4;
+    return { score: 1, hasSamePrimaryService: true };
   }
 
-  return score;
+  return { score: 0, hasSamePrimaryService: false };
 }
 
 /**
@@ -199,11 +180,14 @@ function countPerksPerVendor(perks: GetProvenDeal[]): Map<number, number> {
 /**
  * Find similar vendors for a given vendor
  *
+ * Matching: ONLY by primary_service (exact match)
+ * Sorting: By number of perks available (more perks = more relevant)
+ *
  * @param currentVendor - The vendor to find similar items for
  * @param allVendors - All available vendors to search from
  * @param allPerks - All perks (to filter out vendors with no perks)
  * @param maxResults - Maximum number of results (default: 4)
- * @returns Array of similar vendors that have active perks
+ * @returns Array of similar vendors that have active perks, prioritizing same primary_service
  */
 export function findSimilarVendors(
   currentVendor: GetProvenVendor,
@@ -224,20 +208,20 @@ export function findSimilarVendors(
       if (perkCount === 0) return false;
       return true;
     })
-    .map((vendor) => ({
-      vendor,
-      score: calculateVendorSimilarity(currentVendor, vendor),
-      perkCount: perkCounts.get(vendor.id) || 0,
-    }))
+    .map((vendor) => {
+      const { score, hasSamePrimaryService } = calculateVendorSimilarity(currentVendor, vendor);
+      return {
+        vendor,
+        score,
+        perkCount: perkCounts.get(vendor.id) || 0,
+        hasSamePrimaryService,
+      };
+    })
     .filter((item) => item.score > 0); // Only include vendors with some similarity
 
-  // Sort by score (higher first), then by perk count (more perks = more relevant)
-  scoredVendors.sort((a, b) => {
-    if (b.score !== a.score) {
-      return b.score - a.score;
-    }
-    return b.perkCount - a.perkCount;
-  });
+  // Sort by number of perks (more perks = more relevant)
+  // All vendors at this point have matching primary_service
+  scoredVendors.sort((a, b) => b.perkCount - a.perkCount);
 
   // Return top results
   return scoredVendors.slice(0, maxResults).map((item) => item.vendor);

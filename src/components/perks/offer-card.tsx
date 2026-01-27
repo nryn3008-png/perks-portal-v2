@@ -155,7 +155,7 @@ function ColorLabel({
 
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${styles[color]}`}
+      className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${styles[color]}`}
     >
       {text}
     </span>
@@ -289,7 +289,7 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
         <div className="flex flex-1 flex-col gap-2 p-4">
 
           {/* Deal type label */}
-          <div className="inline-flex w-fit items-center rounded bg-gray-100 px-2 py-0.5">
+          <div className="inline-flex w-fit items-center rounded bg-gray-100 px-2 py-1">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
               {dealTypeLabel}
             </span>
@@ -339,7 +339,7 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
                 <ColorLabel key={idx} text={level.name} color="grey" />
               ))}
               {remainingCount > 0 && (
-                <span className="text-xs text-gray-400 ml-0.5">
+                <span className="text-xs text-gray-400 ml-1">
                   +{remainingCount}
                 </span>
               )}
