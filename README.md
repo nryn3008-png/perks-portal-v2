@@ -10,11 +10,18 @@ Perks Portal provides a curated marketplace experience where:
 
 ### Key Features
 
-- **Perks Catalog** - Browse all available perks with search and filtering
-- **Category Navigation** - Filter perks by category (Cloud, Developer Tools, Sales, etc.)
-- **Perk Details** - View full information, eligibility requirements, and redemption instructions
-- **Admin Dashboard** - Manage perk visibility and track redemption analytics
-- **Portfolio Access Control** - Founders only see perks curated for their VC
+**For Founders:**
+- **Perks Catalog** - Browse 460+ exclusive perks with search and filtering
+- **Smart Filtering** - Filter by investment stage (Bootstrapped, Seed, Series A, etc.) and category
+- **Perk Details** - View full information, eligibility, redemption instructions, and coupon codes
+- **Similar Perks** - Discover related offers based on categories and deal types
+- **Vendor Grouping** - View perks organized by vendor
+
+**For Admins:**
+- **Vendor Management** - Browse and manage vendor details with perk counts
+- **Warm Connections** - See Bridge intropath data for vendors (who can introduce you)
+- **Whitelist Management** - Control domain-based access
+- **API Health Monitoring** - Real-time status of GetProven and Bridge APIs
 
 ## Tech Stack
 
@@ -63,7 +70,7 @@ Perks Portal provides a curated marketplace experience where:
    ```
 
 5. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+   Navigate to [http://localhost:3002](http://localhost:3002)
 
 ## Project Structure
 
@@ -71,14 +78,23 @@ Perks Portal provides a curated marketplace experience where:
 perks-portal/
 ├── src/
 │   ├── app/                      # Next.js App Router pages
-│   │   ├── (dashboard)/          # Authenticated dashboard routes
+│   │   ├── (dashboard)/          # Dashboard routes
 │   │   │   ├── perks/            # Perks listing and detail pages
 │   │   │   │   └── [id]/         # Individual perk page
 │   │   │   └── admin/            # Admin management pages
-│   │   │       └── perks/        # Perks management table
+│   │   │       ├── vendors/      # Vendor management
+│   │   │       │   └── [id]/     # Individual vendor detail
+│   │   │       ├── whitelist/    # Domain whitelist management
+│   │   │       └── individual-access/  # Individual email access
 │   │   ├── api/                  # API routes
 │   │   │   ├── perks/            # Perks endpoints
-│   │   │   └── categories/       # Categories endpoint
+│   │   │   │   ├── filters/      # Filter options
+│   │   │   │   └── totals/       # Perk counts
+│   │   │   ├── vendors/          # Vendor endpoints
+│   │   │   │   ├── filters/      # Vendor filter options
+│   │   │   │   └── [id]/         # Vendor detail, clients, contacts
+│   │   │   ├── admin/whitelist/  # Whitelist management
+│   │   │   └── health/           # API health status
 │   │   ├── layout.tsx            # Root layout
 │   │   └── page.tsx              # Landing/redirect
 │   │
@@ -87,25 +103,42 @@ perks-portal/
 │   │   │   ├── button.tsx
 │   │   │   ├── badge.tsx
 │   │   │   ├── card.tsx
-│   │   │   └── input.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── search-input.tsx
+│   │   │   └── disclosure.tsx
 │   │   ├── layout/               # Layout components
 │   │   │   ├── app-shell.tsx     # Main app wrapper
-│   │   │   ├── sidebar.tsx       # Navigation sidebar
-│   │   │   └── header.tsx        # Top header bar
-│   │   └── perks/                # Perk-specific components
-│   │       ├── perk-card.tsx     # Perk card for grid
-│   │       ├── perks-grid.tsx    # Grid layout with states
-│   │       └── category-filter.tsx
+│   │   │   ├── top-nav.tsx       # Top navigation bar
+│   │   │   ├── bottom-nav.tsx    # Mobile bottom navigation
+│   │   │   ├── api-health-badge.tsx  # API status indicator
+│   │   │   └── header.tsx        # Page headers
+│   │   ├── perks/                # Perk-specific components
+│   │   │   ├── perk-card.tsx     # Perk card for grid
+│   │   │   ├── perks-grid.tsx    # Grid layout with states
+│   │   │   ├── offer-card.tsx    # Offer card component
+│   │   │   ├── offers-grid.tsx   # Offers grid layout
+│   │   │   ├── vendor-group.tsx  # Vendor group display
+│   │   │   ├── vendor-icon.tsx   # Vendor logo/icon
+│   │   │   ├── copy-button.tsx   # Copy to clipboard
+│   │   │   └── category-filter.tsx
+│   │   └── vendors/              # Vendor-specific components
+│   │       ├── vendor-card.tsx   # Vendor card for grid
+│   │       └── vendors-grid.tsx  # Vendors grid layout
 │   │
 │   ├── lib/                      # Utilities and services
 │   │   ├── api/                  # API service layer
 │   │   │   ├── getproven-client.ts  # GetProven API client
+│   │   │   ├── bridge-client.ts     # Bridge API client (intropath)
 │   │   │   ├── perks-service.ts     # High-level perks service
-│   │   │   ├── mock-data.ts         # Mock data for development
+│   │   │   ├── vendors-service.ts   # High-level vendors service
+│   │   │   ├── whitelist-service.ts # Whitelist management
 │   │   │   └── index.ts
+│   │   ├── normalizers/          # Data transformation
+│   │   │   └── getproven.ts      # GetProven response normalizer
 │   │   ├── utils/                # Utility functions
 │   │   │   ├── cn.ts             # Class name helper
 │   │   │   └── format.ts         # Formatting utilities
+│   │   ├── similarity.ts         # Vendor similarity matching
 │   │   └── constants.ts          # App constants
 │   │
 │   ├── types/                    # TypeScript type definitions
@@ -118,6 +151,7 @@ perks-portal/
 │       └── globals.css           # Global styles and Tailwind
 │
 ├── public/                       # Static assets
+├── DESIGN_SYSTEM.md              # MercuryOS design system reference
 ├── .env.example                  # Environment template
 ├── next.config.js                # Next.js configuration
 ├── tailwind.config.js            # Tailwind configuration
@@ -217,14 +251,42 @@ Search the codebase for `TODO:` comments to find areas needing implementation:
 - **CSS Variables** for theme customization (`src/styles/globals.css`)
 - **Component Variants** use the `cn()` helper for conditional classes
 - **Brand Colors** customizable in `tailwind.config.js`
+- **Design System** - See `DESIGN_SYSTEM.md` for MercuryOS spacing and component guidelines (8px grid system)
 
 ## API Routes
+
+### Perks API
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/perks` | GET | List perks with pagination and filters |
 | `/api/perks/[id]` | GET | Get single perk by ID or slug |
-| `/api/categories` | GET | List all categories |
+| `/api/perks/filters` | GET | Get available filter options (categories, stages) |
+| `/api/perks/totals` | GET | Get total perk counts |
+
+### Vendors API
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/vendors` | GET | List vendors with pagination and filters |
+| `/api/vendors/[id]` | GET | Get single vendor by ID |
+| `/api/vendors/[id]/clients` | GET | Get vendor's client list |
+| `/api/vendors/[id]/contacts` | GET | Get vendor contacts |
+| `/api/vendors/filters` | GET | Get available vendor filter options |
+
+### Admin API
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/whitelist/domains` | GET/POST/DELETE | Manage whitelisted domains |
+| `/api/admin/whitelist/individual-access` | GET/POST/DELETE | Manage individual email access |
+| `/api/admin/whitelist/upload` | POST | Bulk upload domains via CSV |
+
+### Health API
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/health` | GET | Check API health (GetProven + Bridge) |
 
 ### Query Parameters (GET /api/perks)
 
@@ -232,7 +294,7 @@ Search the codebase for `TODO:` comments to find areas needing implementation:
 - `pageSize` - Items per page (default: 12)
 - `category` - Filter by category slug
 - `search` - Search query
-- `featured` - Filter featured perks only (true/false)
+- `stage` - Filter by investment stage
 
 ## Deployment
 
