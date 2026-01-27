@@ -24,18 +24,25 @@ import {
   EyeOff,
   Link as LinkIcon,
   Phone,
-  Hash,
   Gift,
+  ChevronRight,
 } from 'lucide-react';
-import { Badge, Card, CardContent, Disclosure, LinkButton } from '@/components/ui';
 import { vendorsService, perksService } from '@/lib/api';
 import { OfferCard } from '@/components/perks';
 import { VendorCard } from '@/components/vendors';
 import { findSimilarVendors } from '@/lib/similarity';
-import type { GetProvenDeal, GetProvenVendor, VendorClient, VendorUser } from '@/types';
+import type { GetProvenDeal, GetProvenVendor } from '@/types';
 
 /**
- * Admin Vendor Detail Page
+ * Admin Vendor Detail Page - MercuryOS Design System
+ *
+ * Design Philosophy:
+ * - Fluid, modeless experience with horizontal flows
+ * - Glassmorphic cards with backdrop blur and soft shadows
+ * - Intent-driven layout - content responds to context
+ * - Generous whitespace and breathing room
+ * - Subtle animations and micro-interactions
+ *
  * ADMIN ONLY: View vendor details from GetProven API
  *
  * VENDOR PROFILE: name, logo, description, story, website, video, brochure,
@@ -52,6 +59,10 @@ import type { GetProvenDeal, GetProvenVendor, VendorClient, VendorUser } from '@
 interface AdminVendorDetailPageProps {
   params: Promise<{ id: string }>;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPER FUNCTIONS
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Format employee range for display
@@ -81,6 +92,153 @@ function getYouTubeEmbedUrl(url: string): string | null {
   }
   return url;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MERCURY OS COMPONENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Mercury Glass Card - Frosted glass effect container
+ */
+function GlassCard({
+  children,
+  className = '',
+  hover = false,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  hover?: boolean;
+}) {
+  return (
+    <div
+      className={`
+        relative overflow-hidden rounded-2xl
+        bg-white/70 backdrop-blur-xl
+        border border-white/20
+        shadow-[0_8px_32px_rgba(0,0,0,0.08)]
+        ${hover ? 'transition-all duration-300 ease-out hover:shadow-[0_16px_48px_rgba(0,0,0,0.12)] hover:-translate-y-1' : ''}
+        ${className}
+      `}
+    >
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent pointer-events-none" />
+      <div className="relative">{children}</div>
+    </div>
+  );
+}
+
+/**
+ * Mercury Floating Panel - For sidebar actions
+ */
+function FloatingPanel({
+  children,
+  className = ''
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`
+        sticky top-6
+        rounded-3xl overflow-hidden
+        bg-gradient-to-b from-white/80 to-white/60
+        backdrop-blur-2xl
+        border border-white/30
+        shadow-[0_24px_64px_rgba(0,0,0,0.1),0_0_0_1px_rgba(255,255,255,0.5)_inset]
+        ${className}
+      `}
+    >
+      <div className="relative">{children}</div>
+    </div>
+  );
+}
+
+/**
+ * Mercury Button - Primary action button
+ */
+function MercuryButton({
+  href,
+  children,
+  variant = 'primary',
+  className = '',
+}: {
+  href: string;
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'ghost';
+  className?: string;
+}) {
+  const variants = {
+    primary: `
+      bg-[#0038FF]
+      text-white font-medium
+      shadow-[0_4px_16px_rgba(0,56,255,0.3),0_0_0_1px_rgba(255,255,255,0.1)_inset]
+      hover:bg-[#0030E0] hover:shadow-[0_8px_24px_rgba(0,56,255,0.4)]
+      active:scale-[0.98]
+    `,
+    secondary: `
+      bg-white/80 backdrop-blur-sm
+      text-gray-700 font-medium
+      border border-gray-200/60
+      shadow-sm
+      hover:bg-white hover:shadow-md
+      active:scale-[0.98]
+    `,
+    ghost: `
+      bg-transparent
+      text-gray-600 font-medium
+      hover:bg-gray-100/80
+      active:scale-[0.98]
+    `,
+  };
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`
+        inline-flex items-center justify-center gap-2
+        px-6 py-4 rounded-2xl
+        text-sm tracking-wide
+        transition-all duration-200 ease-out
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/20 focus-visible:ring-offset-2
+        ${variants[variant]}
+        ${className}
+      `}
+    >
+      {children}
+    </a>
+  );
+}
+
+
+/**
+ * Color Label Badge - Consistent tag styling
+ */
+function ColorLabel({
+  text,
+  color = 'grey',
+}: {
+  text: string;
+  color?: 'green' | 'blue' | 'grey';
+}) {
+  const styles = {
+    green: 'bg-emerald-50 text-emerald-700',
+    blue: 'bg-[#0038FF]/10 text-[#0038FF]',
+    grey: 'bg-gray-100 text-gray-600',
+  };
+
+  return (
+    <span className={`inline-flex items-center rounded-lg px-2 py-1 text-[13px] font-medium ${styles[color]}`}>
+      {text}
+    </span>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN PAGE COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default async function AdminVendorDetailPage({ params }: AdminVendorDetailPageProps) {
   const { id } = await params;
@@ -126,601 +284,574 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
   const videoEmbedUrl = vendor.video ? getYouTubeEmbedUrl(vendor.video) : null;
 
   return (
-    <div className="mx-auto max-w-5xl">
-      {/* Admin Header */}
-      <div className="mb-6 flex items-center gap-4 rounded-lg bg-amber-50 border border-amber-200 p-4">
-        <Shield className="h-5 w-5 text-amber-600" />
-        <div>
-          <h2 className="font-semibold text-amber-900">Admin Only</h2>
-          <p className="text-sm text-amber-700">
-            Viewing vendor details as an administrator
-          </p>
-        </div>
+    <div className="min-h-screen">
+      {/* Ambient Background - Mercury OS gradient mesh */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-50" />
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-bl from-indigo-50/40 via-transparent to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-amber-50/30 via-transparent to-transparent rounded-full blur-3xl" />
       </div>
 
-      {/* Back navigation */}
-      <Link
-        href="/admin/vendors"
-        className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-md px-1 -ml-1"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Back to Vendors
-      </Link>
+      <div className="mx-auto max-w-6xl px-6 py-8">
+        {/* Admin Header - Mercury OS style with amber */}
+        <GlassCard className="mb-8 !bg-amber-50/70 !border-amber-200/40">
+          <div className="flex items-center gap-4 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
+              <Shield className="h-5 w-5 text-amber-600" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-amber-900 text-[15px]">Admin Only</h2>
+              <p className="text-[13px] text-amber-700">
+                Viewing vendor details as an administrator
+              </p>
+            </div>
+          </div>
+        </GlassCard>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Main Content Column */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Header Section */}
-          <header className="space-y-4">
-            {/* Logo + Name row */}
-            <div className="flex items-start gap-5">
-              {/* Vendor logo */}
-              {vendor.logo ? (
-                <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 shadow-sm">
-                  <Image
-                    src={vendor.logo}
-                    alt=""
-                    width={80}
-                    height={80}
-                    className="h-full w-full object-contain"
-                    unoptimized
+        {/* Back Navigation - Minimal */}
+        <Link
+          href="/admin/vendors"
+          className="
+            inline-flex items-center gap-2 mb-8
+            text-sm font-medium text-gray-500
+            hover:text-gray-900
+            transition-colors duration-200
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-offset-2
+            rounded-lg px-2 py-1 -ml-2
+          "
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Vendors</span>
+        </Link>
+
+        <div className="grid lg:grid-cols-[1fr,380px] gap-8">
+          {/* Main Content */}
+          <div className="space-y-8">
+
+            {/* Hero Section - Mercury OS Module */}
+            <GlassCard className="p-8">
+              {/* Vendor Identity */}
+              <div className="flex items-start gap-4 mb-6">
+                {vendor.logo ? (
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white shadow-lg ring-1 ring-black/5 flex-shrink-0">
+                    <Image
+                      src={vendor.logo}
+                      alt=""
+                      width={80}
+                      height={80}
+                      className="w-full h-full object-contain"
+                      unoptimized
+                    />
+                  </div>
+                ) : (
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center shadow-lg flex-shrink-0">
+                    <Building2 className="w-10 h-10 text-gray-400" />
+                  </div>
+                )}
+
+                <div className="flex-1 min-w-0">
+                  {/* Primary service */}
+                  {vendor.primary_service && (
+                    <p className="text-sm font-medium text-[#0038FF] mb-1">
+                      {vendor.primary_service}
+                    </p>
+                  )}
+
+                  {/* Name */}
+                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight leading-tight">
+                    {vendor.name}
+                  </h1>
+
+                  {/* Vendor groups */}
+                  {vendor.vendor_groups.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {vendor.vendor_groups.map((group) => (
+                        <span
+                          key={group.name}
+                          className="inline-flex rounded-full bg-[#0038FF]/10 px-3 py-1 text-xs font-medium text-[#0038FF]"
+                        >
+                          {group.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Perks Badge */}
+              <div className="pt-6 border-t border-gray-200/50">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0038FF]/5 border border-[#0038FF]/10">
+                  <Gift className="h-4 w-4 text-[#0038FF]" />
+                  <span className="text-sm font-medium text-[#0038FF]">
+                    {vendorPerks.length} {vendorPerks.length === 1 ? 'perk' : 'perks'} available
+                  </span>
+                </div>
+              </div>
+            </GlassCard>
+
+            {/* Description Section */}
+            {vendor.description && (
+              <GlassCard className="overflow-hidden">
+                <div className="p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                    About
+                  </h2>
+                  <div
+                    className="prose prose-gray prose-sm max-w-none text-gray-600 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: vendor.description }}
                   />
                 </div>
-              ) : (
-                <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 shadow-sm">
-                  <Building2 className="h-10 w-10 text-slate-400" />
-                </div>
-              )}
+              </GlassCard>
+            )}
 
-              <div className="flex-1 min-w-0">
-                {/* Primary service */}
-                {vendor.primary_service && (
-                  <p className="text-sm font-medium text-brand-600 mb-1">
-                    {vendor.primary_service}
+            {/* Story Section */}
+            {vendor.story && (
+              <GlassCard className="overflow-hidden">
+                <div className="p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                    Why Choose Us
+                  </h2>
+                  <div
+                    className="prose prose-gray prose-sm max-w-none text-gray-600 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: vendor.story }}
+                  />
+                </div>
+              </GlassCard>
+            )}
+
+            {/* Video Section */}
+            {videoEmbedUrl && (
+              <GlassCard className="overflow-hidden">
+                <div className="p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="p-2 rounded-xl bg-gray-100">
+                      <Play className="h-5 w-5 text-gray-600" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">Video</h2>
+                  </div>
+                  <div className="aspect-video rounded-xl overflow-hidden bg-gray-100">
+                    <iframe
+                      src={videoEmbedUrl}
+                      title={`${vendor.name} video`}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              </GlassCard>
+            )}
+
+            {/* Services Section */}
+            {vendor.services.length > 0 && (
+              <section>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 rounded-xl bg-gray-100">
+                    <Briefcase className="h-5 w-5 text-gray-600" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900">Services</h2>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {vendor.services.map((service) => (
+                    <ColorLabel key={service.name} text={service.name} color="grey" />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Industries Section */}
+            {vendor.industries.length > 0 && (
+              <section>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 rounded-xl bg-[#0038FF]/10">
+                    <Factory className="h-5 w-5 text-[#0038FF]" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900">Industries Served</h2>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {vendor.industries.map((industry) => (
+                    <ColorLabel key={industry.name} text={industry.name} color="blue" />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Clients Section - Only show if clients exist */}
+            {hasClients && (
+              <section>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 rounded-xl bg-gray-100">
+                    <Users className="h-5 w-5 text-gray-600" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900">Clients</h2>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {clients.slice(0, 12).map((client) => (
+                    <GlassCard
+                      key={client.id}
+                      hover
+                      className="!rounded-xl"
+                    >
+                      <div className="flex flex-col items-center p-4">
+                        {client.logo ? (
+                          <div className="h-12 w-12 flex items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm mb-2">
+                            <Image
+                              src={client.logo}
+                              alt=""
+                              width={48}
+                              height={48}
+                              className="h-full w-full object-contain"
+                              unoptimized
+                            />
+                          </div>
+                        ) : (
+                          <div className="h-12 w-12 flex items-center justify-center rounded-lg bg-gray-100 mb-2">
+                            <Building2 className="h-6 w-6 text-gray-400" />
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <span className="text-[13px] font-medium text-gray-700 text-center line-clamp-2">
+                            {client.name}
+                          </span>
+                          {/* Verified badge - only if verified=true */}
+                          {client.verified && (
+                            <BadgeCheck
+                              className="h-4 w-4 text-[#0038FF] flex-shrink-0"
+                              aria-label="Verified"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </GlassCard>
+                  ))}
+                </div>
+                {clients.length > 12 && (
+                  <p className="mt-4 text-[13px] text-gray-400 text-center">
+                    And {clients.length - 12} more clients
                   </p>
                 )}
-
-                {/* Name */}
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-                  {vendor.name}
-                </h1>
-
-                {/* Vendor groups */}
-                {vendor.vendor_groups.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {vendor.vendor_groups.map((group) => (
-                      <Badge key={group.name} variant="info" className="text-xs">
-                        {group.name}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Meta row */}
-            <div className="flex flex-wrap items-center gap-4 pt-1 text-sm text-slate-600">
-              {/* Perks count */}
-              <span className="flex items-center gap-2">
-                <Gift className="h-4 w-4 text-slate-400" aria-hidden="true" />
-                {vendorPerks.length} {vendorPerks.length === 1 ? 'perk' : 'perks'} available
-              </span>
-
-              {/* Employees */}
-              {employeeRange && (
-                <span className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-slate-400" aria-hidden="true" />
-                  {employeeRange} employees
-                </span>
-              )}
-
-              {/* Founded */}
-              {vendor.founded && (
-                <span className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-slate-400" aria-hidden="true" />
-                  Founded {vendor.founded}
-                </span>
-              )}
-
-              {/* Website */}
-              {vendor.website && (
-                <a
-                  href={vendor.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-brand-600 hover:text-brand-700 hover:underline"
-                >
-                  <Globe className="h-4 w-4" aria-hidden="true" />
-                  Website
-                </a>
-              )}
-            </div>
-          </header>
-
-          {/* Description Section */}
-          {vendor.description && (
-            <section aria-labelledby="about-heading">
-              <h2
-                id="about-heading"
-                className="text-lg font-semibold text-slate-900 mb-4"
-              >
-                About
-              </h2>
-              <div
-                className="prose prose-slate prose-sm sm:prose-base max-w-none"
-                dangerouslySetInnerHTML={{ __html: vendor.description }}
-              />
-            </section>
-          )}
-
-          {/* Story Section */}
-          {vendor.story && (
-            <section aria-labelledby="story-heading">
-              <h2
-                id="story-heading"
-                className="text-lg font-semibold text-slate-900 mb-4"
-              >
-                Why Choose Us
-              </h2>
-              <div
-                className="prose prose-slate prose-sm sm:prose-base max-w-none"
-                dangerouslySetInnerHTML={{ __html: vendor.story }}
-              />
-            </section>
-          )}
-
-          {/* Video Section */}
-          {videoEmbedUrl && (
-            <section aria-labelledby="video-heading">
-              <h2
-                id="video-heading"
-                className="text-lg font-semibold text-slate-900 mb-4"
-              >
-                <Play className="inline-block h-5 w-5 mr-2 text-slate-400" />
-                Video
-              </h2>
-              <div className="aspect-video rounded-xl overflow-hidden bg-slate-100">
-                <iframe
-                  src={videoEmbedUrl}
-                  title={`${vendor.name} video`}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-            </section>
-          )}
-
-          {/* Services Section */}
-          {vendor.services.length > 0 && (
-            <section aria-labelledby="services-heading">
-              <h2
-                id="services-heading"
-                className="text-lg font-semibold text-slate-900 mb-4"
-              >
-                <Briefcase className="inline-block h-5 w-5 mr-2 text-slate-400" />
-                Services
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {vendor.services.map((service) => (
-                  <span
-                    key={service.name}
-                    className="inline-block rounded-lg bg-slate-100 px-3 py-1.5 text-sm text-slate-700"
-                  >
-                    {service.name}
-                  </span>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Industries Section */}
-          {vendor.industries.length > 0 && (
-            <section aria-labelledby="industries-heading">
-              <h2
-                id="industries-heading"
-                className="text-lg font-semibold text-slate-900 mb-4"
-              >
-                <Factory className="inline-block h-5 w-5 mr-2 text-slate-400" />
-                Industries Served
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {vendor.industries.map((industry) => (
-                  <span
-                    key={industry.name}
-                    className="inline-block rounded-lg bg-blue-50 px-3 py-1.5 text-sm text-blue-700"
-                  >
-                    {industry.name}
-                  </span>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Clients Section - Only show if clients exist */}
-          {hasClients && (
-            <section aria-labelledby="clients-heading">
-              <h2
-                id="clients-heading"
-                className="text-lg font-semibold text-slate-900 mb-4"
-              >
-                <Users className="inline-block h-5 w-5 mr-2 text-slate-400" />
-                Clients
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {clients.slice(0, 12).map((client) => (
-                  <div
-                    key={client.id}
-                    className="flex flex-col items-center p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
-                  >
-                    {client.logo ? (
-                      <div className="h-12 w-12 flex items-center justify-center overflow-hidden rounded-lg bg-white mb-2">
-                        <Image
-                          src={client.logo}
-                          alt=""
-                          width={48}
-                          height={48}
-                          className="h-full w-full object-contain"
-                          unoptimized
-                        />
-                      </div>
-                    ) : (
-                      <div className="h-12 w-12 flex items-center justify-center rounded-lg bg-white mb-2">
-                        <Building2 className="h-6 w-6 text-slate-400" />
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm font-medium text-slate-700 text-center line-clamp-2">
-                        {client.name}
-                      </span>
-                      {/* Verified badge - only if verified=true */}
-                      {client.verified && (
-                        <BadgeCheck
-                          className="h-4 w-4 text-blue-500 flex-shrink-0"
-                          aria-label="Verified"
-                        />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {clients.length > 12 && (
-                <p className="mt-4 text-sm text-slate-500 text-center">
-                  And {clients.length - 12} more clients
-                </p>
-              )}
-            </section>
-          )}
-
-          {/* Available Perks Section */}
-          <section aria-labelledby="perks-heading">
-            <h2
-              id="perks-heading"
-              className="text-lg font-semibold text-slate-900 mb-4"
-            >
-              <Gift className="inline-block h-5 w-5 mr-2 text-slate-400" />
-              Available Perks
-            </h2>
-            {vendorPerks.length > 0 ? (
-              <div className="grid gap-6 sm:grid-cols-2">
-                {vendorPerks.map((perk) => (
-                  <OfferCard
-                    key={perk.id}
-                    offer={perk}
-                    vendorLogo={vendor.logo}
-                    vendorName={vendor.name}
-                    vendorPrimaryService={vendor.primary_service}
-                  />
-                ))}
-              </div>
-            ) : (
-              <Card className="border-slate-200">
-                <CardContent className="p-8 text-center">
-                  <Gift className="mx-auto h-12 w-12 text-slate-300 mb-3" />
-                  <p className="text-slate-500">No perks available for this vendor</p>
-                </CardContent>
-              </Card>
+              </section>
             )}
-          </section>
 
-          {/* Similar Vendors Section - Only show if there are similar vendors */}
-          {similarVendors.length > 0 && (
-            <section aria-labelledby="similar-vendors-heading" className="pt-8 border-t border-slate-200">
-              <h2
-                id="similar-vendors-heading"
-                className="text-lg font-semibold text-slate-900 mb-2"
-              >
-                Similar Vendors
-              </h2>
-              <p className="text-sm text-slate-500 mb-6">
-                Other vendors with similar services and industries
-              </p>
-              <div className="grid gap-6 sm:grid-cols-2">
-                {similarVendors.map((similarVendor) => (
-                  <VendorCard
-                    key={similarVendor.id}
-                    vendor={similarVendor}
-                    basePath="/admin/vendors"
-                    perksCount={perksCountMap.get(similarVendor.id) || 0}
-                  />
-                ))}
+            {/* Available Perks Section */}
+            <section className="pt-8 border-t border-gray-200/50">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Available Perks</h2>
+                <p className="text-sm text-gray-500 mt-2">Offers from {vendor.name}</p>
               </div>
+              {vendorPerks.length > 0 ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {vendorPerks.map((perk) => (
+                    <OfferCard
+                      key={perk.id}
+                      offer={perk}
+                      vendorLogo={vendor.logo}
+                      vendorName={vendor.name}
+                      vendorPrimaryService={vendor.primary_service}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <GlassCard className="!rounded-xl">
+                  <div className="flex flex-col items-center justify-center py-16">
+                    <Gift className="h-12 w-12 text-gray-300 mb-4" />
+                    <p className="text-[14px] text-gray-500">No perks available for this vendor</p>
+                  </div>
+                </GlassCard>
+              )}
             </section>
-          )}
 
-          {/* Raw API Data - Collapsed by default */}
-          <Disclosure trigger="See raw API data">
-            <div className="space-y-8">
-              {/* Visibility Flags */}
-              <section aria-labelledby="visibility-heading">
-                <h3
-                  id="visibility-heading"
-                  className="text-base font-semibold text-slate-900 mb-3 flex items-center"
-                >
-                  {vendor.is_visible ? (
-                    <Eye className="inline-block h-4 w-4 mr-2 text-slate-400" />
-                  ) : (
-                    <EyeOff className="inline-block h-4 w-4 mr-2 text-slate-400" />
-                  )}
-                  Visibility Flags
-                </h3>
-                <Card className="border-slate-200">
-                  <CardContent className="p-4">
-                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <dt className="text-slate-500 font-medium">is_visible</dt>
-                        <dd className="mt-1">
-                          {vendor.is_visible ? (
-                            <Badge variant="success">true</Badge>
-                          ) : (
-                            <Badge variant="error">false</Badge>
-                          )}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-500 font-medium">is_visible_non_whitelisted</dt>
-                        <dd className="mt-1">
-                          {vendor.is_visible_non_whitelisted ? (
-                            <Badge variant="success">true</Badge>
-                          ) : (
-                            <Badge variant="error">false</Badge>
-                          )}
-                        </dd>
-                      </div>
-                    </dl>
-                  </CardContent>
-                </Card>
+            {/* Similar Vendors Section - Only show if there are similar vendors */}
+            {similarVendors.length > 0 && (
+              <section className="pt-8 border-t border-gray-200/50">
+                <div className="mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900">Similar Vendors</h2>
+                  <p className="text-sm text-gray-500 mt-2">Other vendors with similar services and industries</p>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {similarVendors.map((similarVendor) => (
+                    <VendorCard
+                      key={similarVendor.id}
+                      vendor={similarVendor}
+                      basePath="/admin/vendors"
+                      perksCount={perksCountMap.get(similarVendor.id) || 0}
+                    />
+                  ))}
+                </div>
               </section>
+            )}
 
-              {/* External Links & Marketing Assets */}
-              <section aria-labelledby="links-heading">
-                <h3
-                  id="links-heading"
-                  className="text-base font-semibold text-slate-900 mb-3 flex items-center"
-                >
-                  <LinkIcon className="inline-block h-4 w-4 mr-2 text-slate-400" />
-                  External Links & Marketing Assets
-                </h3>
-                <Card className="border-slate-200">
-                  <CardContent className="p-4">
-                    <dl className="space-y-3 text-sm">
-                      <div>
-                        <dt className="text-slate-500 font-medium">Website</dt>
-                        <dd className="mt-1">
-                          {vendor.website ? (
-                            <a href={vendor.website} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline break-all">
-                              {vendor.website}
-                            </a>
-                          ) : (
-                            <span className="text-slate-400">-</span>
-                          )}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-500 font-medium">GetProven Link</dt>
-                        <dd className="mt-1">
-                          <a href={vendor.getproven_link} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline break-all">
-                            {vendor.getproven_link}
-                          </a>
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-500 font-medium">Brochure</dt>
-                        <dd className="mt-1">
-                          {vendor.brochure ? (
-                            <a href={vendor.brochure} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline break-all">
-                              {vendor.brochure}
-                            </a>
-                          ) : (
-                            <span className="text-slate-400">-</span>
-                          )}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-500 font-medium">Video</dt>
-                        <dd className="mt-1">
-                          {vendor.video ? (
-                            <a href={vendor.video} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline break-all">
-                              {vendor.video}
-                            </a>
-                          ) : (
-                            <span className="text-slate-400">-</span>
-                          )}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-500 font-medium">LinkedIn</dt>
-                        <dd className="mt-1">
-                          {vendor.linkedin ? (
-                            <a href={vendor.linkedin.startsWith('http') ? vendor.linkedin : `https://linkedin.com/company/${vendor.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline break-all">
-                              {vendor.linkedin}
-                            </a>
-                          ) : (
-                            <span className="text-slate-400">-</span>
-                          )}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-500 font-medium">Facebook</dt>
-                        <dd className="mt-1">
-                          {vendor.facebook ? (
-                            <a href={vendor.facebook.startsWith('http') ? vendor.facebook : `https://facebook.com/${vendor.facebook}`} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline break-all">
-                              {vendor.facebook}
-                            </a>
-                          ) : (
-                            <span className="text-slate-400">-</span>
-                          )}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-500 font-medium">Twitter</dt>
-                        <dd className="mt-1">
-                          {vendor.twitter ? (
-                            <a href={vendor.twitter.startsWith('http') ? vendor.twitter : `https://twitter.com/${vendor.twitter}`} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline break-all">
-                              {vendor.twitter}
-                            </a>
-                          ) : (
-                            <span className="text-slate-400">-</span>
-                          )}
-                        </dd>
-                      </div>
-                    </dl>
-                  </CardContent>
-                </Card>
-              </section>
+            {/* Raw API Data - Collapsible */}
+            <section className="pt-8 border-t border-gray-200/50">
+              <details className="group">
+                <summary className="
+                  flex items-center justify-between cursor-pointer
+                  hover:opacity-80 transition-opacity duration-200
+                  list-none
+                  [&::-webkit-details-marker]:hidden
+                ">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-gray-100">
+                      <Database className="h-5 w-5 text-gray-600" />
+                    </div>
+                    <span className="font-semibold text-gray-900">Raw API Data</span>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400 transition-transform duration-200 group-open:rotate-90" />
+                </summary>
 
-              {/* All Vendor Data (API) */}
-              <section aria-labelledby="vendor-api-data-heading">
-                <h3
-                  id="vendor-api-data-heading"
-                  className="text-base font-semibold text-slate-900 mb-3 flex items-center"
-                >
-                  <Database className="inline-block h-4 w-4 mr-2 text-slate-400" />
-                  All Vendor Data (API)
-                </h3>
-                <Card className="border-slate-200">
-                  <CardContent className="p-4">
-                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <dt className="text-slate-500 font-medium">ID</dt>
-                        <dd className="text-slate-900 font-mono">{vendor.id}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-500 font-medium">Slug</dt>
-                        <dd className="text-slate-900 font-mono">{vendor.slug}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-500 font-medium">Name</dt>
-                        <dd className="text-slate-900">{vendor.name}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-500 font-medium">Primary Service</dt>
-                        <dd className="text-slate-900">{vendor.primary_service || <span className="text-slate-400">-</span>}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-500 font-medium">Founded</dt>
-                        <dd className="text-slate-900">{vendor.founded || <span className="text-slate-400">-</span>}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-500 font-medium">Employee Range</dt>
-                        <dd className="text-slate-900">
-                          {vendor.employee_min !== null || vendor.employee_max !== null ? (
-                            <>min: {vendor.employee_min ?? 'null'}, max: {vendor.employee_max ?? 'null'}</>
-                          ) : (
-                            <span className="text-slate-400">-</span>
-                          )}
-                        </dd>
-                      </div>
-                      {vendor.services.length > 0 && (
-                        <div className="sm:col-span-2">
-                          <dt className="text-slate-500 font-medium">Services</dt>
-                          <dd className="flex flex-wrap gap-1 mt-1">
-                            {vendor.services.map((s, idx) => (
-                              <Badge key={idx} variant="default">{s.name}</Badge>
-                            ))}
+                <div className="mt-6 space-y-8">
+                  {/* Visibility Flags */}
+                  <GlassCard className="!rounded-xl">
+                    <div className="p-6">
+                      <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        {vendor.is_visible ? (
+                          <Eye className="h-4 w-4 text-gray-400" />
+                        ) : (
+                          <EyeOff className="h-4 w-4 text-gray-400" />
+                        )}
+                        Visibility Flags
+                      </h3>
+                      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-[13px]">
+                        <div>
+                          <dt className="text-gray-500 font-medium">is_visible</dt>
+                          <dd className="mt-2">
+                            {vendor.is_visible ? (
+                              <span className="inline-flex rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">true</span>
+                            ) : (
+                              <span className="inline-flex rounded-md bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-700">false</span>
+                            )}
                           </dd>
                         </div>
-                      )}
-                      {vendor.industries.length > 0 && (
-                        <div className="sm:col-span-2">
-                          <dt className="text-slate-500 font-medium">Industries</dt>
-                          <dd className="flex flex-wrap gap-1 mt-1">
-                            {vendor.industries.map((i, idx) => (
-                              <Badge key={idx} variant="info">{i.name}</Badge>
-                            ))}
+                        <div>
+                          <dt className="text-gray-500 font-medium">is_visible_non_whitelisted</dt>
+                          <dd className="mt-2">
+                            {vendor.is_visible_non_whitelisted ? (
+                              <span className="inline-flex rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">true</span>
+                            ) : (
+                              <span className="inline-flex rounded-md bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-700">false</span>
+                            )}
                           </dd>
                         </div>
-                      )}
-                      {vendor.vendor_groups.length > 0 && (
-                        <div className="sm:col-span-2">
-                          <dt className="text-slate-500 font-medium">Vendor Groups</dt>
-                          <dd className="flex flex-wrap gap-1 mt-1">
-                            {vendor.vendor_groups.map((g, idx) => (
-                              <Badge key={idx} variant="success">{g.name}</Badge>
-                            ))}
+                      </dl>
+                    </div>
+                  </GlassCard>
+
+                  {/* External Links & Marketing Assets */}
+                  <GlassCard className="!rounded-xl">
+                    <div className="p-6">
+                      <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <LinkIcon className="h-4 w-4 text-gray-400" />
+                        External Links & Marketing Assets
+                      </h3>
+                      <dl className="space-y-3 text-[13px]">
+                        <div>
+                          <dt className="text-gray-500 font-medium">Website</dt>
+                          <dd className="mt-2">
+                            {vendor.website ? (
+                              <a href={vendor.website} target="_blank" rel="noopener noreferrer" className="text-[#0038FF] hover:text-[#0030E0] break-all">
+                                {vendor.website}
+                              </a>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
                           </dd>
                         </div>
-                      )}
-                      {vendor.logo && (
-                        <div className="sm:col-span-2">
-                          <dt className="text-slate-500 font-medium">Logo URL</dt>
-                          <dd>
-                            <a href={vendor.logo} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline break-all">
-                              {vendor.logo}
+                        <div>
+                          <dt className="text-gray-500 font-medium">GetProven Link</dt>
+                          <dd className="mt-2">
+                            <a href={vendor.getproven_link} target="_blank" rel="noopener noreferrer" className="text-[#0038FF] hover:text-[#0030E0] break-all">
+                              {vendor.getproven_link}
                             </a>
                           </dd>
                         </div>
-                      )}
-                    </dl>
-                  </CardContent>
-                </Card>
-              </section>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Brochure</dt>
+                          <dd className="mt-2">
+                            {vendor.brochure ? (
+                              <a href={vendor.brochure} target="_blank" rel="noopener noreferrer" className="text-[#0038FF] hover:text-[#0030E0] break-all">
+                                {vendor.brochure}
+                              </a>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Video</dt>
+                          <dd className="mt-2">
+                            {vendor.video ? (
+                              <a href={vendor.video} target="_blank" rel="noopener noreferrer" className="text-[#0038FF] hover:text-[#0030E0] break-all">
+                                {vendor.video}
+                              </a>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">LinkedIn</dt>
+                          <dd className="mt-2">
+                            {vendor.linkedin ? (
+                              <a href={vendor.linkedin.startsWith('http') ? vendor.linkedin : `https://linkedin.com/company/${vendor.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-[#0038FF] hover:text-[#0030E0] break-all">
+                                {vendor.linkedin}
+                              </a>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Facebook</dt>
+                          <dd className="mt-2">
+                            {vendor.facebook ? (
+                              <a href={vendor.facebook.startsWith('http') ? vendor.facebook : `https://facebook.com/${vendor.facebook}`} target="_blank" rel="noopener noreferrer" className="text-[#0038FF] hover:text-[#0030E0] break-all">
+                                {vendor.facebook}
+                              </a>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Twitter</dt>
+                          <dd className="mt-2">
+                            {vendor.twitter ? (
+                              <a href={vendor.twitter.startsWith('http') ? vendor.twitter : `https://twitter.com/${vendor.twitter}`} target="_blank" rel="noopener noreferrer" className="text-[#0038FF] hover:text-[#0030E0] break-all">
+                                {vendor.twitter}
+                              </a>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </dd>
+                        </div>
+                      </dl>
+                    </div>
+                  </GlassCard>
 
-              {/* All Clients Data (API) */}
-              {hasClients && (
-                <section aria-labelledby="clients-data-heading">
-                  <h3
-                    id="clients-data-heading"
-                    className="text-base font-semibold text-slate-900 mb-3 flex items-center"
-                  >
-                    <Database className="inline-block h-4 w-4 mr-2 text-slate-400" />
-                    All Clients Data (API)
-                  </h3>
-                  <Card className="border-slate-200">
-                    <CardContent className="p-0">
+                  {/* All Vendor Data (API) */}
+                  <GlassCard className="!rounded-xl">
+                    <div className="p-6">
+                      <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <Database className="h-4 w-4 text-gray-400" />
+                        All Vendor Data (API)
+                      </h3>
+                      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-[13px]">
+                        <div>
+                          <dt className="text-gray-500 font-medium">ID</dt>
+                          <dd className="text-gray-900 font-mono">{vendor.id}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Slug</dt>
+                          <dd className="text-gray-900 font-mono">{vendor.slug}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Name</dt>
+                          <dd className="text-gray-900">{vendor.name}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Primary Service</dt>
+                          <dd className="text-gray-900">{vendor.primary_service || <span className="text-gray-400">-</span>}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Founded</dt>
+                          <dd className="text-gray-900">{vendor.founded || <span className="text-gray-400">-</span>}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Employee Range</dt>
+                          <dd className="text-gray-900">
+                            {vendor.employee_min !== null || vendor.employee_max !== null ? (
+                              <>min: {vendor.employee_min ?? 'null'}, max: {vendor.employee_max ?? 'null'}</>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </dd>
+                        </div>
+                        {vendor.services.length > 0 && (
+                          <div className="sm:col-span-2">
+                            <dt className="text-gray-500 font-medium">Services</dt>
+                            <dd className="flex flex-wrap gap-1 mt-2">
+                              {vendor.services.map((s, idx) => (
+                                <span key={idx} className="inline-flex rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700">{s.name}</span>
+                              ))}
+                            </dd>
+                          </div>
+                        )}
+                        {vendor.industries.length > 0 && (
+                          <div className="sm:col-span-2">
+                            <dt className="text-gray-500 font-medium">Industries</dt>
+                            <dd className="flex flex-wrap gap-1 mt-2">
+                              {vendor.industries.map((i, idx) => (
+                                <span key={idx} className="inline-flex rounded-md bg-[#0038FF]/10 px-2 py-0.5 text-[11px] font-medium text-[#0038FF]">{i.name}</span>
+                              ))}
+                            </dd>
+                          </div>
+                        )}
+                        {vendor.vendor_groups.length > 0 && (
+                          <div className="sm:col-span-2">
+                            <dt className="text-gray-500 font-medium">Vendor Groups</dt>
+                            <dd className="flex flex-wrap gap-1 mt-2">
+                              {vendor.vendor_groups.map((g, idx) => (
+                                <span key={idx} className="inline-flex rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">{g.name}</span>
+                              ))}
+                            </dd>
+                          </div>
+                        )}
+                        {vendor.logo && (
+                          <div className="sm:col-span-2">
+                            <dt className="text-gray-500 font-medium">Logo URL</dt>
+                            <dd>
+                              <a href={vendor.logo} target="_blank" rel="noopener noreferrer" className="text-[#0038FF] hover:text-[#0030E0] break-all">
+                                {vendor.logo}
+                              </a>
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
+                    </div>
+                  </GlassCard>
+
+                  {/* All Clients Data (API) */}
+                  {hasClients && (
+                    <GlassCard className="!rounded-xl overflow-hidden">
+                      <div className="p-6 pb-0">
+                        <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                          <Database className="h-4 w-4 text-gray-400" />
+                          All Clients Data (API)
+                        </h3>
+                      </div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                          <thead className="bg-slate-50 border-b border-slate-200">
+                        <table className="w-full text-left text-[13px]">
+                          <thead className="bg-gray-50/80 border-y border-gray-100">
                             <tr>
-                              <th className="px-4 py-2 font-semibold text-slate-900">ID</th>
-                              <th className="px-4 py-2 font-semibold text-slate-900">Name</th>
-                              <th className="px-4 py-2 font-semibold text-slate-900">Logo</th>
-                              <th className="px-4 py-2 font-semibold text-slate-900">Description</th>
-                              <th className="px-4 py-2 font-semibold text-slate-900">Verified</th>
+                              <th className="px-6 py-4 text-[12px] font-semibold uppercase tracking-wider text-gray-500">ID</th>
+                              <th className="px-6 py-4 text-[12px] font-semibold uppercase tracking-wider text-gray-500">Name</th>
+                              <th className="px-6 py-4 text-[12px] font-semibold uppercase tracking-wider text-gray-500">Logo</th>
+                              <th className="px-6 py-4 text-[12px] font-semibold uppercase tracking-wider text-gray-500">Description</th>
+                              <th className="px-6 py-4 text-[12px] font-semibold uppercase tracking-wider text-gray-500">Verified</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-100">
+                          <tbody className="divide-y divide-gray-100">
                             {clients.map((client) => (
-                              <tr key={client.id} className="hover:bg-slate-50">
-                                <td className="px-4 py-2 font-mono text-slate-600">{client.id}</td>
-                                <td className="px-4 py-2 font-medium text-slate-900">{client.name}</td>
-                                <td className="px-4 py-2">
+                              <tr key={client.id} className="hover:bg-gray-50/50 transition-colors">
+                                <td className="px-6 py-4 font-mono text-gray-500">{client.id}</td>
+                                <td className="px-6 py-4 font-medium text-gray-900">{client.name}</td>
+                                <td className="px-6 py-4">
                                   {client.logo ? (
-                                    <a href={client.logo} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline truncate block max-w-[150px]">
+                                    <a href={client.logo} target="_blank" rel="noopener noreferrer" className="text-[#0038FF] hover:text-[#0030E0] truncate block max-w-[150px]">
                                       {client.logo.split('/').pop()}
                                     </a>
                                   ) : (
-                                    <span className="text-slate-400">-</span>
+                                    <span className="text-gray-400">-</span>
                                   )}
                                 </td>
-                                <td className="px-4 py-2 text-slate-600 max-w-[200px] truncate">
-                                  {client.description || <span className="text-slate-400">-</span>}
+                                <td className="px-6 py-4 text-gray-600 max-w-[200px] truncate">
+                                  {client.description || <span className="text-gray-400">-</span>}
                                 </td>
-                                <td className="px-4 py-2">
+                                <td className="px-6 py-4">
                                   {client.verified ? (
-                                    <Badge variant="success">true</Badge>
+                                    <span className="inline-flex rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">true</span>
                                   ) : (
-                                    <Badge variant="default">false</Badge>
+                                    <span className="inline-flex rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700">false</span>
                                   )}
                                 </td>
                               </tr>
@@ -728,43 +859,38 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                           </tbody>
                         </table>
                       </div>
-                    </CardContent>
-                  </Card>
-                </section>
-              )}
+                    </GlassCard>
+                  )}
 
-              {/* All Vendor Users (API - Unfiltered) */}
-              {hasAllUsers && (
-                <section aria-labelledby="users-data-heading">
-                  <h3
-                    id="users-data-heading"
-                    className="text-base font-semibold text-slate-900 mb-3 flex items-center"
-                  >
-                    <User className="inline-block h-4 w-4 mr-2 text-slate-400" />
-                    All Vendor Users (API - Unfiltered)
-                  </h3>
-                  <Card className="border-slate-200">
-                    <CardContent className="p-0">
+                  {/* All Vendor Users (API - Unfiltered) */}
+                  {hasAllUsers && (
+                    <GlassCard className="!rounded-xl overflow-hidden">
+                      <div className="p-6 pb-0">
+                        <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                          <User className="h-4 w-4 text-gray-400" />
+                          All Vendor Users (API - Unfiltered)
+                        </h3>
+                      </div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                          <thead className="bg-slate-50 border-b border-slate-200">
+                        <table className="w-full text-left text-[13px]">
+                          <thead className="bg-gray-50/80 border-y border-gray-100">
                             <tr>
-                              <th className="px-4 py-2 font-semibold text-slate-900">ID</th>
-                              <th className="px-4 py-2 font-semibold text-slate-900">Name</th>
-                              <th className="px-4 py-2 font-semibold text-slate-900">Email</th>
-                              <th className="px-4 py-2 font-semibold text-slate-900">Phone</th>
-                              <th className="px-4 py-2 font-semibold text-slate-900">Position</th>
-                              <th className="px-4 py-2 font-semibold text-slate-900">Roles</th>
+                              <th className="px-6 py-4 text-[12px] font-semibold uppercase tracking-wider text-gray-500">ID</th>
+                              <th className="px-6 py-4 text-[12px] font-semibold uppercase tracking-wider text-gray-500">Name</th>
+                              <th className="px-6 py-4 text-[12px] font-semibold uppercase tracking-wider text-gray-500">Email</th>
+                              <th className="px-6 py-4 text-[12px] font-semibold uppercase tracking-wider text-gray-500">Phone</th>
+                              <th className="px-6 py-4 text-[12px] font-semibold uppercase tracking-wider text-gray-500">Position</th>
+                              <th className="px-6 py-4 text-[12px] font-semibold uppercase tracking-wider text-gray-500">Roles</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-100">
+                          <tbody className="divide-y divide-gray-100">
                             {allUsers.map((user) => (
-                              <tr key={user.id} className="hover:bg-slate-50">
-                                <td className="px-4 py-2 font-mono text-slate-600">{user.id}</td>
-                                <td className="px-4 py-2">
+                              <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
+                                <td className="px-6 py-4 font-mono text-gray-500">{user.id}</td>
+                                <td className="px-6 py-4">
                                   <div className="flex items-center gap-2">
                                     {user.avatar ? (
-                                      <div className="h-6 w-6 flex-shrink-0 overflow-hidden rounded-full bg-slate-100">
+                                      <div className="h-6 w-6 flex-shrink-0 overflow-hidden rounded-full bg-gray-100">
                                         <Image
                                           src={user.avatar}
                                           alt=""
@@ -775,35 +901,35 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                                         />
                                       </div>
                                     ) : (
-                                      <div className="h-6 w-6 flex-shrink-0 flex items-center justify-center rounded-full bg-slate-100">
-                                        <User className="h-3 w-3 text-slate-400" />
+                                      <div className="h-6 w-6 flex-shrink-0 flex items-center justify-center rounded-full bg-gray-100">
+                                        <User className="h-3 w-3 text-gray-400" />
                                       </div>
                                     )}
-                                    <span className="font-medium text-slate-900">
+                                    <span className="font-medium text-gray-900">
                                       {user.first_name} {user.last_name}
                                     </span>
                                   </div>
                                 </td>
-                                <td className="px-4 py-2 text-slate-600">{user.email}</td>
-                                <td className="px-4 py-2">
+                                <td className="px-6 py-4 text-gray-600">{user.email}</td>
+                                <td className="px-6 py-4">
                                   {user.phone ? (
-                                    <span className="flex items-center gap-1 text-slate-600">
+                                    <span className="flex items-center gap-1 text-gray-600">
                                       <Phone className="h-3 w-3" />
                                       {user.phone}
                                     </span>
                                   ) : (
-                                    <span className="text-slate-400">-</span>
+                                    <span className="text-gray-400">-</span>
                                   )}
                                 </td>
-                                <td className="px-4 py-2 text-slate-600">
-                                  {user.position || <span className="text-slate-400">-</span>}
+                                <td className="px-6 py-4 text-gray-600">
+                                  {user.position || <span className="text-gray-400">-</span>}
                                 </td>
-                                <td className="px-4 py-2">
+                                <td className="px-6 py-4">
                                   <div className="flex flex-wrap gap-1">
                                     {user.roles.map((role, idx) => (
-                                      <Badge key={idx} variant="info" className="text-xs">
+                                      <span key={idx} className="inline-flex rounded-md bg-[#0038FF]/10 px-2 py-0.5 text-[11px] font-medium text-[#0038FF]">
                                         {role}
-                                      </Badge>
+                                      </span>
                                     ))}
                                   </div>
                                 </td>
@@ -812,82 +938,67 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                           </tbody>
                         </table>
                       </div>
-                    </CardContent>
-                  </Card>
-                </section>
-              )}
-            </div>
-          </Disclosure>
-        </div>
+                    </GlassCard>
+                  )}
+                </div>
+              </details>
+            </section>
+          </div>
 
-        {/* Sidebar */}
-        <aside className="lg:col-span-1 space-y-6">
-          {/* Contact Card */}
-          <Card className="sticky top-24 border-slate-200 shadow-sm">
-            <CardContent className="p-0">
-              {/* Card header */}
-              <div className="p-6 pb-4 border-b border-slate-100">
-                <h3 className="text-lg font-semibold text-slate-900">
+          {/* Sidebar - Mercury Floating Panel */}
+          <aside className="lg:self-start">
+            <FloatingPanel>
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">
                   Contact Vendor
                 </h3>
-              </div>
 
-              {/* Card body */}
-              <div className="p-6 space-y-5">
                 {/* Primary CTA - GetProven link */}
-                <LinkButton
+                <MercuryButton
                   href={vendor.getproven_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   variant="primary"
-                  className="w-full"
+                  className="w-full mb-4"
                 >
-                  <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                  <ExternalLink className="h-4 w-4" />
                   View on GetProven
-                </LinkButton>
+                </MercuryButton>
 
                 {/* Website */}
                 {vendor.website && (
-                  <LinkButton
+                  <MercuryButton
                     href={vendor.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
+                    variant="secondary"
+                    className="w-full mb-4"
                   >
-                    <Globe className="h-4 w-4" aria-hidden="true" />
+                    <Globe className="h-4 w-4" />
                     Visit Website
-                  </LinkButton>
+                  </MercuryButton>
                 )}
 
                 {/* Brochure */}
                 {vendor.brochure && (
-                  <LinkButton
+                  <MercuryButton
                     href={vendor.brochure}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
+                    variant="ghost"
+                    className="w-full mb-4"
                   >
-                    <FileText className="h-4 w-4" aria-hidden="true" />
+                    <FileText className="h-4 w-4" />
                     Download Brochure
-                  </LinkButton>
+                  </MercuryButton>
                 )}
 
                 {/* Contact Section - Only if contacts exist */}
                 {hasContacts && (
-                  <div className="border-t border-slate-100 pt-5">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-4">
+                  <div className="border-t border-gray-200/50 pt-6 mt-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-4">
                       Key Contacts
                     </p>
                     <div className="space-y-4">
                       {contacts.map((contact) => (
-                        <div key={contact.id} className="flex items-start gap-4">
+                        <div key={contact.id} className="flex items-start gap-2">
                           {/* Avatar */}
                           {contact.avatar ? (
-                            <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-slate-100">
+                            <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gray-100 ring-2 ring-white shadow-sm">
                               <Image
                                 src={contact.avatar}
                                 alt=""
@@ -898,26 +1009,26 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                               />
                             </div>
                           ) : (
-                            <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-full bg-slate-100">
-                              <User className="h-5 w-5 text-slate-400" />
+                            <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-full bg-gray-100 ring-2 ring-white shadow-sm">
+                              <User className="h-5 w-5 text-gray-400" />
                             </div>
                           )}
 
                           {/* Info */}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-900 truncate">
+                            <p className="text-[13px] font-medium text-gray-900 truncate">
                               {contact.first_name} {contact.last_name}
                             </p>
                             {contact.position && (
-                              <p className="text-xs text-slate-500 truncate">
+                              <p className="text-[12px] text-gray-500 truncate">
                                 {contact.position}
                               </p>
                             )}
                             {/* Contact CTAs */}
-                            <div className="flex items-center gap-3 mt-1">
+                            <div className="flex items-center gap-2 mt-2">
                               <a
                                 href={`mailto:${contact.email}`}
-                                className="inline-flex items-center gap-1 text-xs text-brand-600 hover:text-brand-700 hover:underline"
+                                className="inline-flex items-center gap-1 text-[12px] text-[#0038FF] hover:text-[#0030E0] transition-colors"
                               >
                                 <Mail className="h-3 w-3" />
                                 Email
@@ -925,7 +1036,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                               {contact.phone && (
                                 <a
                                   href={`tel:${contact.phone}`}
-                                  className="inline-flex items-center gap-1 text-xs text-brand-600 hover:text-brand-700 hover:underline"
+                                  className="inline-flex items-center gap-1 text-[12px] text-[#0038FF] hover:text-[#0030E0] transition-colors"
                                 >
                                   <Phone className="h-3 w-3" />
                                   {contact.phone}
@@ -941,17 +1052,17 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
 
                 {/* Social Links */}
                 {hasSocialLinks && (
-                  <div className="border-t border-slate-100 pt-5">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">
+                  <div className="border-t border-gray-200/50 pt-6 mt-6">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-2">
                       Connect
                     </p>
-                    <div className="flex gap-4">
+                    <div className="flex gap-2">
                       {vendor.linkedin && (
                         <a
                           href={vendor.linkedin.startsWith('http') ? vendor.linkedin : `https://linkedin.com/company/${vendor.linkedin}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-900"
+                          className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:text-gray-900 hover:scale-105"
                           aria-label="LinkedIn"
                         >
                           <Linkedin className="h-5 w-5" />
@@ -962,7 +1073,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                           href={vendor.facebook.startsWith('http') ? vendor.facebook : `https://facebook.com/${vendor.facebook}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-900"
+                          className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:text-gray-900 hover:scale-105"
                           aria-label="Facebook"
                         >
                           <Facebook className="h-5 w-5" />
@@ -973,7 +1084,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                           href={vendor.twitter.startsWith('http') ? vendor.twitter : `https://twitter.com/${vendor.twitter}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-900"
+                          className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:text-gray-900 hover:scale-105"
                           aria-label="Twitter"
                         >
                           <Twitter className="h-5 w-5" />
@@ -984,37 +1095,52 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                 )}
 
                 {/* Company info */}
-                <div className="border-t border-slate-100 pt-5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">
+                <div className="border-t border-gray-200/50 pt-6 mt-6">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-4">
                     Company Info
                   </p>
-                  <dl className="space-y-2 text-sm">
+                  <dl className="space-y-4 text-[13px]">
                     {vendor.primary_service && (
-                      <div className="flex justify-between">
-                        <dt className="text-slate-500">Primary Service</dt>
-                        <dd className="font-medium text-slate-900 text-right max-w-[60%] truncate">
-                          {vendor.primary_service}
-                        </dd>
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
+                          <Briefcase className="h-4 w-4 text-gray-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <dt className="text-[11px] text-gray-400">Primary Service</dt>
+                          <dd className="font-medium text-gray-900 truncate">
+                            {vendor.primary_service}
+                          </dd>
+                        </div>
                       </div>
                     )}
                     {employeeRange && (
-                      <div className="flex justify-between">
-                        <dt className="text-slate-500">Employees</dt>
-                        <dd className="font-medium text-slate-900">{employeeRange}</dd>
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
+                          <Users className="h-4 w-4 text-gray-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <dt className="text-[11px] text-gray-400">Employees</dt>
+                          <dd className="font-medium text-gray-900">{employeeRange}</dd>
+                        </div>
                       </div>
                     )}
                     {vendor.founded && (
-                      <div className="flex justify-between">
-                        <dt className="text-slate-500">Founded</dt>
-                        <dd className="font-medium text-slate-900">{vendor.founded}</dd>
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
+                          <Calendar className="h-4 w-4 text-gray-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <dt className="text-[11px] text-gray-400">Founded</dt>
+                          <dd className="font-medium text-gray-900">{vendor.founded}</dd>
+                        </div>
                       </div>
                     )}
                   </dl>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </aside>
+            </FloatingPanel>
+          </aside>
+        </div>
       </div>
     </div>
   );

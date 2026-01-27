@@ -27,11 +27,11 @@ export interface SearchInputProps
 // Container with MercuryOS styling
 const containerStyles = [
   // Layout
-  'flex items-center gap-2.5',
+  'flex items-center gap-2',
   // Shape - Rounded
   'rounded-lg',
   // Padding
-  'px-3 py-2',
+  'px-4 py-2',
   // Background
   'bg-gray-50',
   // Border

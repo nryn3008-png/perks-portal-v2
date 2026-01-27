@@ -171,7 +171,7 @@ export function OfferCardSkeleton() {
     <div className="flex h-full flex-col overflow-hidden rounded-xl bg-gray-50 border border-gray-100">
       {/* Header */}
       <div className="border-b border-gray-100 bg-white p-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="h-10 w-10 shrink-0 animate-pulse rounded-lg bg-gray-100" />
           <div className="flex-1 space-y-2">
             <div className="h-4 w-28 animate-pulse rounded bg-gray-100" />
@@ -181,7 +181,7 @@ export function OfferCardSkeleton() {
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col gap-3 bg-white p-4">
+      <div className="flex flex-1 flex-col gap-2 bg-white p-4">
         {/* Label */}
         <div className="h-5 w-14 animate-pulse rounded bg-gray-100" />
 
@@ -192,7 +192,7 @@ export function OfferCardSkeleton() {
         </div>
 
         {/* Description */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <div className="h-3 w-full animate-pulse rounded bg-gray-50" />
           <div className="h-3 w-5/6 animate-pulse rounded bg-gray-50" />
         </div>
@@ -205,7 +205,7 @@ export function OfferCardSkeleton() {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center border-t border-gray-100 bg-gray-50 px-4 py-3">
+      <div className="flex items-center border-t border-gray-100 bg-gray-50 px-4 py-2">
         <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
       </div>
     </div>
@@ -267,8 +267,8 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
       <div className="flex h-full flex-col overflow-hidden rounded-xl bg-white border border-gray-200/60 shadow-sm transition-all duration-200 ease-out group-hover:shadow-lg group-hover:border-gray-300/80 group-hover:-translate-y-1 group-hover:scale-[1.01]">
 
         {/* HEADER - Vendor info */}
-        <div className="border-b border-gray-100 bg-gray-50/50 px-4 py-3">
-          <div className="flex items-center gap-3">
+        <div className="border-b border-gray-100 bg-gray-50/50 px-4 py-2">
+          <div className="flex items-center gap-2">
             <VendorLogo src={picture} />
             {vendorName && (
               <div className="min-w-0 flex-1">
@@ -286,7 +286,7 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
         </div>
 
         {/* CONTENT - Main card body */}
-        <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="flex flex-1 flex-col gap-2 p-4">
 
           {/* Deal type label */}
           <div className="inline-flex w-fit items-center rounded bg-gray-100 px-2 py-0.5">
@@ -296,7 +296,7 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
           </div>
 
           {/* Title & Description */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1">
             <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-gray-900">
               {name}
             </h3>
@@ -311,7 +311,7 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
           {/* Value Tags Section */}
           {valueTag && (
             <div className="flex flex-col gap-2 mt-auto">
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1">
                 {discountValue && formattedDiscount && (
                   <ColorLabel text={formattedDiscount} color="green" />
                 )}
@@ -334,7 +334,7 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
 
           {/* Investment Levels */}
           {investmentLevels.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 mt-auto pt-1">
+            <div className="flex flex-wrap items-center gap-1 mt-auto pt-1">
               {visibleLevels.map((level, idx) => (
                 <ColorLabel key={idx} text={level.name} color="grey" />
               ))}
@@ -348,7 +348,7 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
         </div>
 
         {/* FOOTER - Action area */}
-        <div className="flex items-center border-t border-gray-100 bg-gray-50/30 px-4 py-3">
+        <div className="flex items-center border-t border-gray-100 bg-gray-50/30 px-4 py-2">
           <span className="text-sm font-medium text-[#0038FF] group-hover:text-[#0030E0] transition-colors duration-200">
             View offer
           </span>

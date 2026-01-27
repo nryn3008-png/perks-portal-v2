@@ -22,7 +22,7 @@ export function TopNav({ user }: TopNavProps) {
     <header className="sticky top-0 z-50 w-full border-b border-gray-200/60 bg-white/80 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Left: Logo */}
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-4">
           <a
             href={BRIDGE_URL}
             target="_blank"
@@ -57,7 +57,7 @@ export function TopNav({ user }: TopNavProps) {
             href={GETPROVEN_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden md:flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+            className="hidden md:flex items-center gap-1 text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
             aria-label="Powered by GetProven - Opens in new tab"
           >
             <span className="font-normal">Powered by</span>
@@ -71,7 +71,7 @@ export function TopNav({ user }: TopNavProps) {
 
           {/* User Avatar */}
           {user && (
-            <div className="flex items-center gap-2.5 pl-3 border-l border-gray-200">
+            <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
               {user.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img

@@ -68,7 +68,7 @@ export function ApiHealthBadge() {
 
   return (
     <div
-      className="hidden sm:flex items-center gap-1.5 text-[11px]"
+      className="hidden sm:flex items-center gap-1 text-[11px]"
       role="status"
       aria-live="polite"
     >

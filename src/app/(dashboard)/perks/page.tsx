@@ -54,7 +54,7 @@ function FilterDropdown({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium
+          flex items-center gap-1 rounded-lg px-2 py-2 text-[13px] font-medium
           border transition-all duration-150
           ${hasSelection
             ? 'border-[#0038FF]/20 bg-[#0038FF]/5 text-[#0038FF]'
@@ -81,7 +81,7 @@ function FilterDropdown({
               onClear();
             }}
             className={`
-              flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px]
+              flex w-full items-center gap-2 px-2 py-2 text-left text-[13px]
               transition-colors duration-100
               ${!hasSelection ? 'text-gray-900' : 'text-gray-600 hover:bg-gray-50'}
             `}
@@ -102,7 +102,7 @@ function FilterDropdown({
                 type="button"
                 onClick={() => onToggle(option)}
                 className={`
-                  flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px]
+                  flex w-full items-center gap-2 px-2 py-2 text-left text-[13px]
                   transition-colors duration-100
                   ${isSelected ? 'text-gray-900' : 'text-gray-600 hover:bg-gray-50'}
                 `}
@@ -161,7 +161,7 @@ function SortDropdown({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium
+          flex items-center gap-1 rounded-lg px-2 py-2 text-[13px] font-medium
           border transition-all duration-150
           ${isActive
             ? 'border-[#0038FF]/20 bg-[#0038FF]/5 text-[#0038FF]'
@@ -187,7 +187,7 @@ function SortDropdown({
                   setIsOpen(false);
                 }}
                 className={`
-                  flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px]
+                  flex w-full items-center gap-2 px-2 py-2 text-left text-[13px]
                   transition-colors duration-100
                   ${isSelected ? 'text-gray-900' : 'text-gray-600 hover:bg-gray-50'}
                 `}
@@ -418,8 +418,8 @@ function PerksPageContent() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Page Header - MercuryOS style */}
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-3">
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#0038FF] to-[#0030E0]">
             <Gift className="h-4 w-4 text-white" />
           </div>
@@ -444,7 +444,7 @@ function PerksPageContent() {
       </div>
 
       {/* Search & Controls */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <SearchInput
           className="flex-1"
           placeholder="Search by vendor or service area..."
@@ -487,7 +487,7 @@ function PerksPageContent() {
             <button
               type="button"
               onClick={() => setViewMode('grid')}
-              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-all duration-150 ${
+              className={`flex items-center gap-1 rounded-md px-2 py-1 text-[13px] font-medium transition-all duration-150 ${
                 viewMode === 'grid'
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
@@ -500,7 +500,7 @@ function PerksPageContent() {
             <button
               type="button"
               onClick={() => setViewMode('grouped')}
-              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-all duration-150 ${
+              className={`flex items-center gap-1 rounded-md px-2 py-1 text-[13px] font-medium transition-all duration-150 ${
                 viewMode === 'grouped'
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
@@ -517,7 +517,7 @@ function PerksPageContent() {
       {/* Error State */}
       {error && (
         <Card className="border-red-200 bg-red-50 p-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-600" aria-hidden="true" />
             <p className="text-[14px] text-red-700">{error}</p>
             <Button
@@ -535,7 +535,7 @@ function PerksPageContent() {
       {/* Results */}
       <div>
         {/* Results count with active filters */}
-        <div className="mb-5 flex flex-wrap items-center gap-2" aria-live="polite">
+        <div className="mb-4 flex flex-wrap items-center gap-2" aria-live="polite">
           <span className="text-[13px] text-gray-400">
             {isLoading
               ? 'Loading perks...'
@@ -557,7 +557,7 @@ function PerksPageContent() {
                 <button
                   key={level}
                   onClick={() => toggleFilter('investmentLevels', level)}
-                  className="inline-flex items-center gap-1 rounded-full bg-[#0038FF]/10 px-2.5 py-0.5 text-[12px] font-medium text-[#0038FF] hover:bg-[#0038FF]/20 transition-colors duration-150"
+                  className="inline-flex items-center gap-1 rounded-full bg-[#0038FF]/10 px-2 py-0.5 text-[12px] font-medium text-[#0038FF] hover:bg-[#0038FF]/20 transition-colors duration-150"
                 >
                   {level}
                   <X className="h-3 w-3" />
@@ -567,7 +567,7 @@ function PerksPageContent() {
                 <button
                   key={category}
                   onClick={() => toggleFilter('offerCategories', category)}
-                  className="inline-flex items-center gap-1 rounded-full bg-[#0038FF]/10 px-2.5 py-0.5 text-[12px] font-medium text-[#0038FF] hover:bg-[#0038FF]/20 transition-colors duration-150"
+                  className="inline-flex items-center gap-1 rounded-full bg-[#0038FF]/10 px-2 py-0.5 text-[12px] font-medium text-[#0038FF] hover:bg-[#0038FF]/20 transition-colors duration-150"
                 >
                   {category}
                   <X className="h-3 w-3" />
@@ -576,7 +576,7 @@ function PerksPageContent() {
               {sortBy !== 'default' && (
                 <button
                   onClick={() => setSortBy('default')}
-                  className="inline-flex items-center gap-1 rounded-full bg-[#0038FF]/10 px-2.5 py-0.5 text-[12px] font-medium text-[#0038FF] hover:bg-[#0038FF]/20 transition-colors duration-150"
+                  className="inline-flex items-center gap-1 rounded-full bg-[#0038FF]/10 px-2 py-0.5 text-[12px] font-medium text-[#0038FF] hover:bg-[#0038FF]/20 transition-colors duration-150"
                 >
                   {SORT_OPTIONS.find((opt) => opt.value === sortBy)?.label}
                   <X className="h-3 w-3" />
@@ -623,14 +623,14 @@ function PerksPageContent() {
 function PerksPageLoading() {
   return (
     <div className="space-y-8">
-      <div className="space-y-3">
-        <div className="flex items-center gap-3">
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
           <div className="h-10 w-10 rounded-xl bg-gray-100 animate-pulse" />
           <div className="h-8 w-40 rounded-lg bg-gray-100 animate-pulse" />
         </div>
         <div className="h-5 w-96 rounded-lg bg-gray-100 animate-pulse" />
       </div>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <div key={i} className="h-64 rounded-xl bg-gray-100 animate-pulse" />
         ))}

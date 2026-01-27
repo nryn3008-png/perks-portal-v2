@@ -109,11 +109,11 @@ export default function OfferDetailLoading() {
 
             {/* Description Skeleton */}
             <GlassCardSkeleton className="p-8">
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-2 mb-4">
                 <SkeletonPulse className="w-9 h-9 rounded-xl" />
                 <SkeletonPulse className="h-5 w-32" />
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <SkeletonPulse className="h-4 w-full" />
                 <SkeletonPulse className="h-4 w-full" />
                 <SkeletonPulse className="h-4 w-5/6" />
@@ -125,7 +125,7 @@ export default function OfferDetailLoading() {
             {/* Terms Skeleton */}
             <div className="rounded-2xl bg-gray-50/80 backdrop-blur-sm border border-gray-200/50 p-6">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <SkeletonPulse className="w-9 h-9 rounded-xl" />
                   <SkeletonPulse className="h-5 w-40" />
                 </div>
@@ -140,7 +140,7 @@ export default function OfferDetailLoading() {
               <div className="p-6">
                 <SkeletonPulse className="h-6 w-36 mb-6" />
 
-                <div className="space-y-5 mb-6">
+                <div className="space-y-4 mb-6">
                   {/* Promo Code */}
                   <div>
                     <SkeletonPulse className="h-3 w-20 mb-2" />

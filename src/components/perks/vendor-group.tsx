@@ -104,7 +104,7 @@ export function VendorGroup({
         onClick={() => setIsExpanded(!isExpanded)}
         aria-expanded={isExpanded}
         aria-controls={contentId}
-        className="flex w-full items-center gap-3 p-4 text-left transition-colors duration-150 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500/40"
+        className="flex w-full items-center gap-2 p-4 text-left transition-colors duration-150 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500/40"
       >
         {/* Vendor Logo */}
         <VendorGroupLogo src={vendorLogo} />

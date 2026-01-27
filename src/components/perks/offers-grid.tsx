@@ -79,7 +79,7 @@ export function OffersGrid({
   // Loading state - use OfferCardSkeleton for better visual consistency
   if (isLoading) {
     return (
-      <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <OfferCardSkeleton key={i} />
         ))}
@@ -125,7 +125,7 @@ export function OffersGrid({
 
   // Flat grid view (default)
   return (
-    <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {offers.map((offer) => {
         const vendor = vendorMap[offer.vendor_id];
         return (

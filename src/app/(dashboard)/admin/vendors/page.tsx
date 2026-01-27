@@ -1,20 +1,124 @@
 'use client';
 
 /**
- * Admin Vendors Page
+ * Admin Vendors Page - MercuryOS Design System
  *
  * ADMIN ONLY: Manage vendors via GetProven API
  * - Fetches all vendors at once for complete search coverage
  * - Filter by search, service_name, group_name
+ * - Mercury OS styling with Bridge Blue (#0038FF)
  */
 
-import { Suspense, useEffect, useState, useCallback } from 'react';
-import { AlertCircle, Filter, X, Shield, LayoutGrid, List, Building2, Gift, Users, Calendar } from 'lucide-react';
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
+import { AlertCircle, X, LayoutGrid, List, Building2, Gift, Users, Calendar, ChevronDown, Check, Filter, Shield } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button, Card, SearchInput } from '@/components/ui';
 import { VendorsGrid } from '@/components/vendors';
 import type { GetProvenVendor } from '@/types';
+
+/**
+ * Filter Dropdown Component
+ * Mercury OS-style dropdown with checkmarks for selected items
+ */
+function FilterDropdown({
+  label,
+  options,
+  selected,
+  onSelect,
+  onClear,
+}: {
+  label: string;
+  options: string[];
+  selected: string;
+  onSelect: (value: string) => void;
+  onClear: () => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const hasSelection = selected !== '';
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`
+          flex items-center gap-1 rounded-lg px-2 py-2 text-[13px] font-medium
+          border transition-all duration-150
+          ${hasSelection
+            ? 'border-[#0038FF]/20 bg-[#0038FF]/5 text-[#0038FF]'
+            : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+          }
+        `}
+      >
+        <Filter className="h-3.5 w-3.5" />
+        <span>{hasSelection ? selected : label}</span>
+        <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 top-full z-50 mt-1.5 min-w-[200px] max-h-[300px] overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg animate-fade-in">
+          {/* All option */}
+          <button
+            type="button"
+            onClick={() => {
+              onClear();
+              setIsOpen(false);
+            }}
+            className={`
+              flex w-full items-center gap-2 px-2 py-2 text-left text-[13px]
+              transition-colors duration-100
+              ${!hasSelection ? 'text-gray-900' : 'text-gray-600 hover:bg-gray-50'}
+            `}
+          >
+            {!hasSelection && <Check className="h-3.5 w-3.5 text-[#0038FF]" />}
+            {hasSelection && <span className="w-3.5" />}
+            <span>All {label.toLowerCase()}</span>
+          </button>
+
+          <div className="my-1 border-t border-gray-100" />
+
+          {/* Options */}
+          {options.map((option) => {
+            const isSelected = selected === option;
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => {
+                  onSelect(option);
+                  setIsOpen(false);
+                }}
+                className={`
+                  flex w-full items-center gap-2 px-2 py-2 text-left text-[13px]
+                  transition-colors duration-100
+                  ${isSelected ? 'text-gray-900' : 'text-gray-600 hover:bg-gray-50'}
+                `}
+              >
+                {isSelected && <Check className="h-3.5 w-3.5 text-[#0038FF]" />}
+                {!isSelected && <span className="w-3.5" />}
+                <span className="truncate">{option}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 type ViewMode = 'card' | 'table';
 
@@ -48,7 +152,7 @@ function formatEmployeeRange(min: number | null, max: number | null): string | n
 }
 
 /**
- * Vendors Table Component
+ * Vendors Table Component - Mercury OS style
  */
 interface VendorsTableProps {
   vendors: GetProvenVendor[];
@@ -68,32 +172,32 @@ function VendorsTable({
   // Loading state
   if (isLoading) {
     return (
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
         <table className="w-full">
-          <thead className="border-b border-slate-200 bg-slate-50">
+          <thead className="border-b border-gray-100 bg-gray-50/50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Vendor</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Primary Service</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Perks</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Employees</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Founded</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Services</th>
+              <th className="px-4 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-gray-500">Vendor</th>
+              <th className="px-4 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-gray-500">Primary Service</th>
+              <th className="px-4 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-gray-500">Perks</th>
+              <th className="px-4 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-gray-500">Employees</th>
+              <th className="px-4 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-gray-500">Founded</th>
+              <th className="px-4 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-gray-500">Services</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-gray-100">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <tr key={i}>
                 <td className="px-4 py-4">
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded bg-slate-200 animate-pulse" />
-                    <div className="h-4 w-32 rounded bg-slate-200 animate-pulse" />
+                    <div className="h-10 w-10 rounded-lg bg-gray-100 animate-pulse" />
+                    <div className="h-4 w-32 rounded bg-gray-100 animate-pulse" />
                   </div>
                 </td>
-                <td className="px-4 py-4"><div className="h-4 w-24 rounded bg-slate-200 animate-pulse" /></td>
-                <td className="px-4 py-4"><div className="h-4 w-12 rounded bg-slate-200 animate-pulse" /></td>
-                <td className="px-4 py-4"><div className="h-4 w-16 rounded bg-slate-200 animate-pulse" /></td>
-                <td className="px-4 py-4"><div className="h-4 w-12 rounded bg-slate-200 animate-pulse" /></td>
-                <td className="px-4 py-4"><div className="h-4 w-40 rounded bg-slate-200 animate-pulse" /></td>
+                <td className="px-4 py-4"><div className="h-4 w-24 rounded bg-gray-100 animate-pulse" /></td>
+                <td className="px-4 py-4"><div className="h-4 w-12 rounded bg-gray-100 animate-pulse" /></td>
+                <td className="px-4 py-4"><div className="h-4 w-16 rounded bg-gray-100 animate-pulse" /></td>
+                <td className="px-4 py-4"><div className="h-4 w-12 rounded bg-gray-100 animate-pulse" /></td>
+                <td className="px-4 py-4"><div className="h-4 w-40 rounded bg-gray-100 animate-pulse" /></td>
               </tr>
             ))}
           </tbody>
@@ -105,28 +209,28 @@ function VendorsTable({
   // Empty state
   if (vendors.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-16">
-        <p className="text-slate-500">{emptyMessage}</p>
+      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/50 py-16">
+        <p className="text-[14px] text-gray-500">{emptyMessage}</p>
       </div>
     );
   }
 
   // Table view
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="border-b border-slate-200 bg-slate-50">
+          <thead className="border-b border-gray-100 bg-gray-50/50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Vendor</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Primary Service</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Perks</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Employees</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Founded</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Services</th>
+              <th className="px-4 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-gray-500">Vendor</th>
+              <th className="px-4 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-gray-500">Primary Service</th>
+              <th className="px-4 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-gray-500">Perks</th>
+              <th className="px-4 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-gray-500">Employees</th>
+              <th className="px-4 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-gray-500">Founded</th>
+              <th className="px-4 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-gray-500">Services</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-gray-100">
             {vendors.map((vendor) => {
               const employeeRange = formatEmployeeRange(vendor.employee_min, vendor.employee_max);
               const perksCount = perksCountMap?.[vendor.id];
@@ -134,7 +238,7 @@ function VendorsTable({
               return (
                 <tr
                   key={vendor.id}
-                  className="transition-colors hover:bg-slate-50"
+                  className="transition-colors hover:bg-gray-50/50"
                 >
                   <td className="px-4 py-4">
                     <Link
@@ -143,7 +247,7 @@ function VendorsTable({
                     >
                       {/* Logo */}
                       {vendor.logo ? (
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded bg-slate-100">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
                           <Image
                             src={vendor.logo}
                             alt={`${vendor.name} logo`}
@@ -154,46 +258,46 @@ function VendorsTable({
                           />
                         </div>
                       ) : (
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-slate-100">
-                          <Building2 className="h-5 w-5 text-slate-400" aria-hidden="true" />
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100">
+                          <Building2 className="h-5 w-5 text-gray-400" aria-hidden="true" />
                         </div>
                       )}
-                      <span className="font-medium text-slate-900 group-hover:text-brand-600">
+                      <span className="font-medium text-gray-900 group-hover:text-[#0038FF] transition-colors">
                         {vendor.name}
                       </span>
                     </Link>
                   </td>
-                  <td className="px-4 py-4 text-sm text-slate-600">
-                    {vendor.primary_service || <span className="text-slate-400">—</span>}
+                  <td className="px-4 py-4 text-[13px] text-gray-600">
+                    {vendor.primary_service || <span className="text-gray-400">—</span>}
                   </td>
                   <td className="px-4 py-4">
                     {perksCount !== undefined ? (
-                      <span className="inline-flex items-center gap-1 text-sm text-slate-600">
-                        <Gift className="h-3.5 w-3.5 text-slate-400" />
+                      <span className="inline-flex items-center gap-1 text-[13px] text-gray-600">
+                        <Gift className="h-3.5 w-3.5 text-gray-400" />
                         {perksCount}
                       </span>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className="text-gray-400">—</span>
                     )}
                   </td>
                   <td className="px-4 py-4">
                     {employeeRange ? (
-                      <span className="inline-flex items-center gap-1 text-sm text-slate-600">
-                        <Users className="h-3.5 w-3.5 text-slate-400" />
+                      <span className="inline-flex items-center gap-1 text-[13px] text-gray-600">
+                        <Users className="h-3.5 w-3.5 text-gray-400" />
                         {employeeRange}
                       </span>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className="text-gray-400">—</span>
                     )}
                   </td>
                   <td className="px-4 py-4">
                     {vendor.founded ? (
-                      <span className="inline-flex items-center gap-1 text-sm text-slate-600">
-                        <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                      <span className="inline-flex items-center gap-1 text-[13px] text-gray-600">
+                        <Calendar className="h-3.5 w-3.5 text-gray-400" />
                         {vendor.founded}
                       </span>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className="text-gray-400">—</span>
                     )}
                   </td>
                   <td className="px-4 py-4">
@@ -202,19 +306,19 @@ function VendorsTable({
                         {vendor.services.slice(0, 2).map((service, idx) => (
                           <span
                             key={idx}
-                            className="inline-flex rounded border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-600"
+                            className="inline-flex rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] text-gray-600"
                           >
                             {service.name}
                           </span>
                         ))}
                         {vendor.services.length > 2 && (
-                          <span className="text-xs text-slate-500">
+                          <span className="text-[11px] text-gray-400">
                             +{vendor.services.length - 2}
                           </span>
                         )}
                       </div>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className="text-gray-400">—</span>
                     )}
                   </td>
                 </tr>
@@ -244,7 +348,6 @@ function AdminVendorsPageContent() {
     groupName: '',
   });
   const [searchInput, setSearchInput] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('card');
 
   // Fetch filter options from API
@@ -347,7 +450,8 @@ function AdminVendorsPageContent() {
   // Client-side search filtering (filters as user types)
   const finalVendors = isSearchActive
     ? vendors.filter((vendor) =>
-        vendor.name.toLowerCase().includes(searchInput.toLowerCase())
+        vendor.name.toLowerCase().includes(searchInput.toLowerCase()) ||
+        (vendor.primary_service && vendor.primary_service.toLowerCase().includes(searchInput.toLowerCase()))
       )
     : vendors;
 
@@ -356,192 +460,169 @@ function AdminVendorsPageContent() {
     filterOptions.vendorGroups.length > 0;
 
   return (
-    <div className="space-y-6">
-      {/* Admin Header */}
-      <div className="flex items-center gap-4 rounded-lg bg-amber-50 border border-amber-200 p-4">
-        <Shield className="h-5 w-5 text-amber-600" />
+    <div className="space-y-6 animate-fade-in">
+      {/* Admin Header - Mercury OS style */}
+      <div className="flex items-center gap-4 rounded-xl bg-amber-50/80 border border-amber-200/60 p-4">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100">
+          <Shield className="h-4 w-4 text-amber-600" />
+        </div>
         <div>
-          <h2 className="font-semibold text-amber-900">Admin Only</h2>
-          <p className="text-sm text-amber-700">
+          <h2 className="font-semibold text-amber-900 text-[15px]">Admin Only</h2>
+          <p className="text-[13px] text-amber-700">
             This page is restricted to administrators
           </p>
         </div>
       </div>
 
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Vendors Management</h1>
-        <p className="text-slate-600">
+      {/* Page Header - MercuryOS style */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#0038FF] to-[#0030E0]">
+            <Building2 className="h-4 w-4 text-white" />
+          </div>
+          <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
+            Vendors Management
+          </h1>
+        </div>
+        <p className="text-[15px] text-gray-500 max-w-2xl">
           View and manage vendor information
         </p>
       </div>
 
-      {/* Search Bar with View Toggle and Filter */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        {/* Search Bar - filters as you type */}
+      {/* Search & Controls */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <SearchInput
           className="flex-1"
+          placeholder="Search by vendor name or service..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           onClear={clearSearch}
-          placeholder="Search vendors..."
           aria-label="Search vendors"
         />
 
-        <div className="flex items-center gap-3">
-          {/* View Mode Toggle */}
-          <div className="flex rounded-full border border-slate-200 bg-white p-1">
+        <div className="flex items-center gap-2">
+          {/* Filter Dropdowns */}
+          {filterOptions.services.length > 0 && (
+            <FilterDropdown
+              label="Service"
+              options={filterOptions.services.slice(0, 20)}
+              selected={activeFilters.serviceName}
+              onSelect={(value) => setActiveFilters(prev => ({ ...prev, serviceName: value }))}
+              onClear={() => setActiveFilters(prev => ({ ...prev, serviceName: '' }))}
+            />
+          )}
+
+          {filterOptions.vendorGroups.length > 0 && (
+            <FilterDropdown
+              label="Group"
+              options={filterOptions.vendorGroups}
+              selected={activeFilters.groupName}
+              onSelect={(value) => setActiveFilters(prev => ({ ...prev, groupName: value }))}
+              onClear={() => setActiveFilters(prev => ({ ...prev, groupName: '' }))}
+            />
+          )}
+
+          {/* Divider */}
+          <div className="h-6 w-px bg-gray-200 mx-1 hidden sm:block" />
+
+          {/* View mode toggle */}
+          <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-0.5">
             <button
               type="button"
               onClick={() => setViewMode('card')}
-              className={`flex items-center justify-center rounded-full px-3 py-1.5 transition-colors ${
+              className={`flex items-center gap-1 rounded-md px-2 py-1 text-[13px] font-medium transition-all duration-150 ${
                 viewMode === 'card'
-                  ? 'bg-[#0038ff] text-white'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
               aria-label="Card view"
               aria-pressed={viewMode === 'card'}
             >
-              <LayoutGrid className="h-4 w-4" />
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Cards</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode('table')}
-              className={`flex items-center justify-center rounded-full px-3 py-1.5 transition-colors ${
+              className={`flex items-center gap-1 rounded-md px-2 py-1 text-[13px] font-medium transition-all duration-150 ${
                 viewMode === 'table'
-                  ? 'bg-[#0038ff] text-white'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
               aria-label="Table view"
               aria-pressed={viewMode === 'table'}
             >
-              <List className="h-4 w-4" />
+              <List className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Table</span>
             </button>
           </div>
-
-          {/* Filter toggle button - uses secondary when active to avoid competing with Search primary button */}
-          {hasFilterOptions && (
-            <Button
-              variant={showFilters ? 'secondary' : 'outline'}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="mr-2 h-4 w-4" />
-              Filters
-              {hasActiveFilters && (
-                <span className="ml-2 rounded-full bg-brand-100 px-2 py-1 text-xs font-medium text-brand-700">
-                  {(activeFilters.serviceName ? 1 : 0) + (activeFilters.groupName ? 1 : 0)}
-                </span>
-              )}
-            </Button>
-          )}
         </div>
       </div>
 
-      {/* Filters Panel */}
-      {showFilters && hasFilterOptions && (
-        <Card className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium text-slate-900">Filter Vendors</h3>
-            {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters}>
-                <X className="mr-1 h-4 w-4" />
-                Clear all
-              </Button>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            {/* Services Filter */}
-            {filterOptions.services.length > 0 && (
-              <div>
-                <p className="text-sm font-medium text-slate-700 mb-2">Service</p>
-                <div className="flex flex-wrap gap-2">
-                  {filterOptions.services.slice(0, 15).map((service) => (
-                    <button
-                      key={service}
-                      onClick={() =>
-                        setActiveFilters((prev) => ({
-                          ...prev,
-                          serviceName: prev.serviceName === service ? '' : service,
-                        }))
-                      }
-                      className={`rounded-full px-3 py-1 text-sm transition-colors ${
-                        activeFilters.serviceName === service
-                          ? 'bg-brand-600 text-white'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                      }`}
-                    >
-                      {service}
-                    </button>
-                  ))}
-                  {filterOptions.services.length > 15 && (
-                    <span className="px-3 py-1 text-sm text-slate-500">
-                      +{filterOptions.services.length - 15} more
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Vendor Groups Filter */}
-            {filterOptions.vendorGroups.length > 0 && (
-              <div>
-                <p className="text-sm font-medium text-slate-700 mb-2">Group</p>
-                <div className="flex flex-wrap gap-2">
-                  {filterOptions.vendorGroups.map((group) => (
-                    <button
-                      key={group}
-                      onClick={() =>
-                        setActiveFilters((prev) => ({
-                          ...prev,
-                          groupName: prev.groupName === group ? '' : group,
-                        }))
-                      }
-                      className={`rounded-full px-3 py-1 text-sm transition-colors ${
-                        activeFilters.groupName === group
-                          ? 'bg-brand-600 text-white'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                      }`}
-                    >
-                      {group}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+      {/* Error State */}
+      {error && (
+        <Card className="border-red-200 bg-red-50 p-4">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-600" aria-hidden="true" />
+            <p className="text-[14px] text-red-700">{error}</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => fetchVendors()}
+              className="ml-auto"
+            >
+              Retry
+            </Button>
           </div>
         </Card>
       )}
 
-      {/* Error State */}
-      {error && (
-        <div
-          className="flex items-center gap-4 rounded-lg bg-red-50 p-4 text-red-800"
-          role="alert"
-        >
-          <AlertCircle className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-          <p>{error}</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => fetchVendors()}
-            className="ml-auto text-red-700 hover:bg-red-100"
-          >
-            Retry
-          </Button>
-        </div>
-      )}
-
       {/* Results */}
       <div>
-        {/* Results count */}
-        <p className="mb-4 text-sm text-slate-500" aria-live="polite">
-          {isLoading
-            ? 'Loading vendors...'
-            : isSearchActive
-            ? `${finalVendors.length} of ${vendors.length} ${vendors.length === 1 ? 'vendor' : 'vendors'} matching "${searchInput}"`
-            : `${vendors.length} ${vendors.length === 1 ? 'vendor' : 'vendors'} found`}
-        </p>
+        {/* Results count with active filters */}
+        <div className="mb-4 flex flex-wrap items-center gap-2" aria-live="polite">
+          <span className="text-[13px] text-gray-400">
+            {isLoading
+              ? 'Loading vendors...'
+              : isSearchActive
+              ? `${finalVendors.length} of ${vendors.length} ${vendors.length === 1 ? 'vendor' : 'vendors'} matching "${searchInput}"`
+              : `${vendors.length} ${vendors.length === 1 ? 'vendor' : 'vendors'} found`}
+          </span>
+
+          {/* Active filter pills */}
+          {hasActiveFilters && !isLoading && (
+            <>
+              <span className="text-[13px] text-gray-300">•</span>
+              <span className="text-[12px] text-gray-400">Filtered by:</span>
+              {activeFilters.serviceName && (
+                <button
+                  onClick={() => setActiveFilters(prev => ({ ...prev, serviceName: '' }))}
+                  className="inline-flex items-center gap-1 rounded-full bg-[#0038FF]/10 px-2 py-0.5 text-[12px] font-medium text-[#0038FF] hover:bg-[#0038FF]/20 transition-colors duration-150"
+                >
+                  {activeFilters.serviceName}
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+              {activeFilters.groupName && (
+                <button
+                  onClick={() => setActiveFilters(prev => ({ ...prev, groupName: '' }))}
+                  className="inline-flex items-center gap-1 rounded-full bg-[#0038FF]/10 px-2 py-0.5 text-[12px] font-medium text-[#0038FF] hover:bg-[#0038FF]/20 transition-colors duration-150"
+                >
+                  {activeFilters.groupName}
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+              {/* Clear all */}
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="inline-flex items-center gap-1 text-[12px] font-medium text-gray-400 hover:text-gray-600 transition-colors duration-150 ml-1"
+              >
+                Clear all
+              </button>
+            </>
+          )}
+        </div>
 
         {/* Vendors Grid or Table */}
         {viewMode === 'card' ? (
@@ -562,10 +643,10 @@ function AdminVendorsPageContent() {
           />
         )}
 
-        {/* All loaded message */}
+        {/* Footer */}
         {!isLoading && vendors.length > 0 && !isSearchActive && (
-          <div className="flex justify-center border-t border-slate-200 pt-6 mt-6">
-            <p className="text-sm text-slate-500">
+          <div className="flex justify-center border-t border-gray-100 pt-6 mt-8">
+            <p className="text-[13px] text-gray-400">
               Showing all {vendors.length} vendors
             </p>
           </div>
@@ -580,15 +661,18 @@ function AdminVendorsPageContent() {
  */
 function AdminVendorsPageLoading() {
   return (
-    <div className="space-y-6">
-      <div className="h-16 animate-pulse rounded-lg bg-amber-50" />
-      <div>
-        <div className="h-8 w-48 animate-pulse rounded bg-slate-200" />
-        <div className="mt-2 h-5 w-64 animate-pulse rounded bg-slate-100" />
+    <div className="space-y-8">
+      <div className="h-16 rounded-xl bg-amber-50/50 animate-pulse" />
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <div className="h-10 w-10 rounded-xl bg-gray-100 animate-pulse" />
+          <div className="h-8 w-48 rounded-lg bg-gray-100 animate-pulse" />
+        </div>
+        <div className="h-5 w-64 rounded-lg bg-gray-100 animate-pulse" />
       </div>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="h-72 animate-pulse rounded-xl bg-slate-100" />
+          <div key={i} className="h-72 rounded-xl bg-gray-100 animate-pulse" />
         ))}
       </div>
     </div>

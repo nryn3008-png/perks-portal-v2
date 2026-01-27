@@ -147,7 +147,7 @@ function ValuePill({
 
   return (
     <div className={`
-      min-w-[140px] px-5 py-4 rounded-2xl
+      min-w-[140px] px-4 py-4 rounded-2xl
       bg-gradient-to-r ${variants[variant]}
       border border-white/60
       shadow-sm
@@ -195,7 +195,7 @@ function MercuryBadge({
 }) {
   return (
     <span className={`
-      inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium
+      inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
       ${variant === 'subtle'
         ? 'bg-gray-100/80 text-gray-600'
         : 'bg-white/80 text-gray-700 border border-gray-200/50 shadow-sm'
@@ -250,8 +250,8 @@ function MercuryButton({
       target="_blank"
       rel="noopener noreferrer"
       className={`
-        inline-flex items-center justify-center gap-2.5
-        px-6 py-3.5 rounded-2xl
+        inline-flex items-center justify-center gap-2
+        px-6 py-4 rounded-2xl
         text-sm tracking-wide
         transition-all duration-200 ease-out
         focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/20 focus-visible:ring-offset-2
@@ -419,7 +419,7 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
                   )}
 
                   {(offer.old_price || offer.new_price) && (
-                    <div className="flex items-center gap-3 px-5 py-4 rounded-2xl bg-gradient-to-r from-gray-50 to-gray-100/80 border border-white/60 shadow-sm">
+                    <div className="flex items-center gap-2 px-4 py-4 rounded-2xl bg-gradient-to-r from-gray-50 to-gray-100/80 border border-white/60 shadow-sm">
                       <div>
                         <p className="text-xs font-medium uppercase tracking-wider text-gray-500 opacity-60">Price</p>
                         <div className="flex items-baseline gap-2">
@@ -443,7 +443,7 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
                 {/* About this Offer Section */}
                 {offer.description && (
                   <div className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center gap-2 mb-4">
                       <div className="p-2 rounded-xl bg-indigo-50">
                         <Info className="w-5 h-5 text-indigo-600" />
                       </div>
@@ -470,7 +470,7 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
                       list-none
                       [&::-webkit-details-marker]:hidden
                     ">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         <div className="p-2 rounded-xl bg-gray-100">
                           <Shield className="w-5 h-5 text-gray-600" />
                         </div>
@@ -510,7 +510,7 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">Redeem this Offer</h3>
 
                 {showRedemption && (
-                  <div className="space-y-5 mb-6">
+                  <div className="space-y-4 mb-6">
                     {/* Coupon Code */}
                     {offer.coupon_code && (
                       <div>
@@ -519,7 +519,7 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
                         </label>
                         <div className="flex items-center gap-2">
                           <code className="
-                            flex-1 px-4 py-3 rounded-xl
+                            flex-1 px-4 py-4 rounded-xl
                             bg-gray-900 text-white
                             font-mono text-sm font-medium
                             shadow-inner
@@ -595,7 +595,7 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
               <p className="text-sm text-gray-500 mt-1">Explore other offers from this vendor</p>
             </div>
 
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {relatedPerks.map((perk) => (
                 <OfferCard
                   key={perk.id}
@@ -617,7 +617,7 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
               <p className="text-sm text-gray-500 mt-1">Other offers you might find useful</p>
             </div>
 
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {similarPerks.map((perk) => {
                 const perkVendor = vendorMap[perk.vendor_id];
                 return (

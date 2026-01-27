@@ -22,7 +22,7 @@ export function PerksGrid({
   if (isLoading) {
     return (
       <div
-        className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3"
+        className="grid gap-4 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3"
         aria-busy="true"
         aria-label="Loading perks"
       >
@@ -71,7 +71,7 @@ export function PerksGrid({
 
   return (
     <ul
-      className="grid list-none gap-4 sm:gap-5 p-0 m-0 sm:grid-cols-2 lg:grid-cols-3"
+      className="grid list-none gap-4 sm:gap-4 p-0 m-0 sm:grid-cols-2 lg:grid-cols-3"
       role="list"
       aria-label="Available perks"
     >

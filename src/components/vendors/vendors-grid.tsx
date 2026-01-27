@@ -26,7 +26,7 @@ export function VendorsGrid({
   // Loading state
   if (isLoading) {
     return (
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <VendorCardSkeleton key={i} />
         ))}
@@ -45,7 +45,7 @@ export function VendorsGrid({
 
   // Grid of vendors
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {vendors.map((vendor) => (
         <VendorCard
           key={vendor.id}

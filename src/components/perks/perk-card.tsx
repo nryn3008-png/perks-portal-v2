@@ -214,14 +214,14 @@ export function PerkCard({ perk, isLoading = false }: PerkCardProps) {
         </div>
 
         {/* Content section */}
-        <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="flex flex-1 flex-col gap-2 p-4">
           {/* Value type label */}
           <span className="inline-flex w-fit items-center rounded bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
             {valueTypeLabel}
           </span>
 
           {/* Title and description */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1">
             <h4 className="text-[15px] font-semibold leading-snug text-gray-900 line-clamp-2">
               {perk.title || 'Untitled Perk'}
             </h4>
@@ -231,7 +231,7 @@ export function PerkCard({ perk, isLoading = false }: PerkCardProps) {
           </div>
 
           {/* Value badges */}
-          <div className="flex flex-wrap gap-1.5 mt-auto">
+          <div className="flex flex-wrap gap-1 mt-auto">
             <ValueBadge text={formattedValue} variant="green" />
             {secondaryValue && (
               <ValueBadge text={`${secondaryValue} value`} variant="blue" />
@@ -240,7 +240,7 @@ export function PerkCard({ perk, isLoading = false }: PerkCardProps) {
         </div>
 
         {/* Footer with action */}
-        <div className="border-t border-gray-100 bg-gray-50/30 px-4 py-3">
+        <div className="border-t border-gray-100 bg-gray-50/30 px-4 py-2">
           <span className="text-sm font-medium text-indigo-600 group-hover:text-indigo-700 transition-colors duration-150">
             View offer
           </span>

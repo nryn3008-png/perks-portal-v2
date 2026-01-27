@@ -76,7 +76,7 @@ export function BottomNav({ isAdmin = false }: BottomNavProps) {
                 href={item.href}
                 onClick={() => setShowMore(false)}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-150',
+                  'flex items-center gap-2 rounded-lg px-4 py-4 text-sm font-medium transition-colors duration-150',
                   'min-h-[48px]',
                   active
                     ? 'bg-indigo-50 text-indigo-700'
