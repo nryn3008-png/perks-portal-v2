@@ -26,12 +26,13 @@ import {
   Phone,
   Gift,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react';
-import { vendorsService, perksService } from '@/lib/api';
+import { vendorsService, perksService, getVendorIntropathCounts } from '@/lib/api';
 import { OfferCard } from '@/components/perks';
 import { VendorCard } from '@/components/vendors';
 import { findSimilarVendors } from '@/lib/similarity';
-import type { GetProvenDeal, GetProvenVendor } from '@/types';
+import type { GetProvenDeal, GetProvenVendor, VendorIntropathData } from '@/types';
 
 /**
  * Admin Vendor Detail Page - MercuryOS Design System
@@ -262,6 +263,10 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
   const contacts = contactsResult.success ? contactsResult.data : [];
   const allUsers = allUsersResult.success ? allUsersResult.data : [];
 
+  // Fetch intropath counts from Bridge API (non-blocking, fails silently)
+  // Only fetch if vendor has a valid website
+  const intropathData: VendorIntropathData = await getVendorIntropathCounts(vendor.website);
+
   // Filter perks for this vendor
   const allPerks: GetProvenDeal[] = perksResult.success ? perksResult.data.data : [];
   const vendorPerks = allPerks.filter((perk) => perk.vendor_id === vendor.id);
@@ -282,6 +287,9 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
   const hasContacts = contacts.length > 0;
   const hasAllUsers = allUsers.length > 0;
   const videoEmbedUrl = vendor.video ? getYouTubeEmbedUrl(vendor.video) : null;
+
+  // Intropath data from Bridge API
+  const hasIntropathData = intropathData.intropathCount !== null && intropathData.intropathCount > 0;
 
   return (
     <div className="min-h-screen">
@@ -378,14 +386,35 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                 </div>
               </div>
 
-              {/* Perks Badge */}
-              <div className="pt-6 border-t border-gray-200/50">
+              {/* Perks Badge & Intropath Badge */}
+              <div className="pt-6 border-t border-gray-200/50 flex flex-wrap gap-3">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0038FF]/5 border border-[#0038FF]/10">
                   <Gift className="h-4 w-4 text-[#0038FF]" />
                   <span className="text-sm font-medium text-[#0038FF]">
                     {vendorPerks.length} {vendorPerks.length === 1 ? 'perk' : 'perks'} available
                   </span>
                 </div>
+
+                {/* Bridge Intropath Badge - Warm Connections */}
+                {hasIntropathData && (
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0038FF]/5 border border-[#0038FF]/10">
+                    <Sparkles className="h-4 w-4 text-[#0038FF]" />
+                    <span className="text-sm font-medium text-[#0038FF]">
+                      {intropathData.intropathCount} warm {intropathData.intropathCount === 1 ? 'connection' : 'connections'}
+                    </span>
+                    {intropathData.orgProfileUrl && (
+                      <a
+                        href={intropathData.orgProfileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-1 text-[#0038FF] hover:text-[#0030E0] transition-colors"
+                        title="View on Bridge"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             </GlassCard>
 
@@ -949,6 +978,39 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
           <aside className="lg:self-start">
             <FloatingPanel>
               <div className="p-6">
+                {/* Bridge Warm Connections Section */}
+                {hasIntropathData && (
+                  <div className="mb-6 -mx-6 -mt-6 px-6 py-5 bg-gradient-to-br from-[#0038FF]/5 via-[#0038FF]/[0.03] to-indigo-50/40 border-b border-[#0038FF]/10">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#0038FF] to-[#0030E0] shadow-lg shadow-[#0038FF]/25">
+                        <Sparkles className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#0038FF]/70 mb-1">
+                          Warm Connections
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {intropathData.intropathCount}
+                        </p>
+                        <p className="text-[13px] text-gray-600 mt-1">
+                          People in your network who can introduce you
+                        </p>
+                        {intropathData.orgProfileUrl && (
+                          <a
+                            href={intropathData.orgProfileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg bg-[#0038FF]/10 text-[#0038FF] text-[12px] font-medium hover:bg-[#0038FF]/20 transition-colors"
+                          >
+                            <span>View on Bridge</span>
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">
                   Contact Vendor
                 </h3>

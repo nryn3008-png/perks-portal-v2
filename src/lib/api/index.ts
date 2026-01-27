@@ -12,6 +12,18 @@ export { vendorsService } from './vendors-service';
 export { whitelistService } from './whitelist-service';
 export { getProvenClient, GetProvenApiError } from './getproven-client';
 
+// Bridge API (server-only) - for intropath counts
+export {
+  bridgeClient,
+  BridgeApiError,
+  getVendorIntropathCounts,
+  extractDomainFromUrl,
+} from './bridge-client';
+export type {
+  BridgeIntropathCountResponse,
+  VendorIntropathData,
+} from './bridge-client';
+
 // Re-export normalizers for advanced use cases
 export {
   normalizeDeal,

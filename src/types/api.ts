@@ -198,3 +198,25 @@ export interface IndividualAccess {
   offer_categories: { name: string }[];
   investment_level: { name: string } | null;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BRIDGE API TYPES
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Bridge API intropath count response
+ * Returns the number of warm introduction paths to an organization
+ */
+export interface BridgeIntropathCountResponse {
+  intropath_count: number;
+  org_profile_url?: string;
+}
+
+/**
+ * Normalized intropath data for internal use
+ * Used when enriching vendor data with Bridge insights
+ */
+export interface VendorIntropathData {
+  intropathCount: number | null;
+  orgProfileUrl?: string;
+}
