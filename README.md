@@ -23,6 +23,7 @@ Perks Portal provides a curated marketplace experience where:
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
 - **Primary Integration**: [GetProven API](https://provendeals.getproven.com/api/ext/v1/docs/)
+- **Secondary Integration**: [Bridge API](https://brdg.app) - Warm connections / intropath data
 
 ## Getting Started
 
@@ -50,8 +51,10 @@ Perks Portal provides a curated marketplace experience where:
    ```
 
    Edit `.env.local` and configure:
-   - `GETPROVEN_API_TOKEN` - Your GetProven API token
+   - `GETPROVEN_API_TOKEN` - Your GetProven API token (required)
    - `GETPROVEN_API_URL` - API base URL (default provided)
+   - `BRIDGE_API_KEY` - Your Bridge API key (optional, for warm connections)
+   - `BRIDGE_API_BASE_URL` - Bridge API base URL (default: https://api.brdg.app)
    - `USE_MOCK_DATA` - Set to `true` for development without API access
 
 4. **Start the development server**
@@ -130,6 +133,9 @@ perks-portal/
 |----------|-------------|----------|
 | `GETPROVEN_API_TOKEN` | API token for GetProven authentication | Yes (production) |
 | `GETPROVEN_API_URL` | GetProven API base URL | No (default provided) |
+| `BRIDGE_API_KEY` | API key for Bridge warm connections | No (admin feature) |
+| `BRIDGE_API_BASE_URL` | Bridge API base URL | No (default: https://api.brdg.app) |
+| `USE_MOCK_INTROPATH_DATA` | Use mock data for Bridge API | No (default: false) |
 | `NEXT_PUBLIC_APP_URL` | Public URL of your deployment | No |
 | `USE_MOCK_DATA` | Use mock data instead of API | No (default: false) |
 | `NEXT_PUBLIC_ENABLE_ADMIN` | Enable admin features | No (default: true) |
@@ -143,6 +149,20 @@ The application integrates with GetProven for perk data. The API client (`src/li
 - Response transformation
 
 **Authentication**: Uses `Token <API_TOKEN>` in the Authorization header (server-side only).
+
+### Bridge API
+
+The application integrates with Bridge API for warm connection data (intropath counts). This is an **admin-only feature** that shows how many people in your network can introduce you to a vendor.
+
+The Bridge client (`src/lib/api/bridge-client.ts`) handles:
+- Bearer token authentication
+- Domain extraction from vendor websites
+- Graceful error handling (fails silently if unavailable)
+- Mock data support for testing
+
+**Authentication**: Uses `Bearer <API_KEY>` in the Authorization header (server-side only).
+
+**Note**: Bridge API is optional. If `BRIDGE_API_KEY` is not configured, the warm connections feature will be hidden.
 
 ## Development
 
