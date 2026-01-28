@@ -251,7 +251,7 @@ function MercuryButton({
       rel="noopener noreferrer"
       className={`
         inline-flex items-center justify-center gap-2
-        px-6 py-4 rounded-2xl
+        px-6 py-4 rounded-full
         text-sm tracking-wide
         transition-all duration-200 ease-out
         focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/20 focus-visible:ring-offset-2
