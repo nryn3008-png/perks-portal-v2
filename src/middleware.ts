@@ -58,7 +58,7 @@ const BRIDGE_LOGIN_URL = process.env.BRIDGE_LOGIN_URL || 'https://brdg.app/login
 /**
  * Routes that don't require authentication
  */
-const PUBLIC_ROUTES = [
+const PUBLIC_ROUTES_PREFIX = [
   '/_next',
   '/api/health',
   '/api/auth',    // Auth API routes (login/logout)
@@ -69,6 +69,12 @@ const PUBLIC_ROUTES = [
   '/manifest.json',
   '/robots.txt',
   '/sitemap.xml',
+];
+
+// Exact-match public routes (landing pages accessible without auth)
+const PUBLIC_ROUTES_EXACT = [
+  '/',
+  '/perks',
 ];
 
 /**
@@ -91,7 +97,10 @@ const ADMIN_ROUTES = [
  * Check if path is a public route
  */
 function isPublicRoute(pathname: string): boolean {
-  return PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
+  return (
+    PUBLIC_ROUTES_PREFIX.some((route) => pathname.startsWith(route)) ||
+    PUBLIC_ROUTES_EXACT.some((route) => pathname === route)
+  );
 }
 
 /**
@@ -245,8 +254,27 @@ function logMiddleware(event: string, details?: Record<string, unknown>): void {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Allow public routes
+  // 1. Public routes — allow through, but still resolve auth if possible
+  //    so authenticated users get their user data in the layout
   if (isPublicRoute(pathname)) {
+    const authToken = request.cookies.get(BRIDGE_AUTH_COOKIE)?.value;
+    if (authToken) {
+      const user = await resolveUserFromToken(authToken);
+      if (user) {
+        return buildAuthResponse(user, 'cookie');
+      }
+    }
+    // Not authenticated on Bridge domain — try API key cookie
+    if (!isBridgeDomain(request)) {
+      const apiKeyCookie = request.cookies.get(BRIDGE_API_KEY_COOKIE)?.value;
+      if (apiKeyCookie) {
+        const user = await resolveUserFromToken(apiKeyCookie);
+        if (user) {
+          return buildAuthResponse(user, 'api-key');
+        }
+      }
+    }
+    // No valid auth — still allow access (public route)
     return NextResponse.next();
   }
 
