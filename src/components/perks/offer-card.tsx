@@ -262,21 +262,21 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
   return (
     <Link
       href={`/perks/${offer.id}`}
-      className={`group block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-offset-2 ${className}`}
+      className={`group block min-w-0 overflow-hidden rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-offset-2 ${className}`}
     >
       <div className="flex h-full flex-col overflow-hidden rounded-xl bg-white border border-gray-200/60 shadow-sm transition-all duration-200 ease-out group-hover:shadow-lg group-hover:border-gray-300/80 group-hover:-translate-y-1 group-hover:scale-[1.01]">
 
         {/* HEADER - Vendor info */}
-        <div className="border-b border-gray-100 bg-gray-50/50 px-3 sm:px-4 py-2">
+        <div className="border-b border-gray-100 bg-gray-50/50 px-4 py-2">
           <div className="flex items-center gap-2">
             <VendorLogo src={picture} />
             {vendorName && (
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] sm:text-sm font-semibold text-gray-900">
+                <p className="truncate text-sm font-semibold text-gray-900">
                   {vendorName}
                 </p>
                 {vendorPrimaryService && (
-                  <p className="truncate text-[11px] sm:text-xs text-gray-500">
+                  <p className="truncate text-xs text-gray-500">
                     {vendorPrimaryService}
                   </p>
                 )}
@@ -286,23 +286,23 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
         </div>
 
         {/* CONTENT - Main card body */}
-        <div className="flex flex-1 flex-col gap-1.5 sm:gap-2 p-3 sm:p-4">
+        <div className="flex flex-1 flex-col gap-2 p-4">
 
           {/* Deal type label */}
-          <div className="inline-flex w-fit items-center rounded bg-gray-100 px-2 py-0.5 sm:py-1">
+          <div className="inline-flex w-fit items-center rounded bg-gray-100 px-2 py-1">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
               {dealTypeLabel}
             </span>
           </div>
 
           {/* Title & Description */}
-          <div className="flex flex-col gap-0.5 sm:gap-1">
-            <h3 className="line-clamp-2 text-sm sm:text-[15px] font-semibold leading-snug text-gray-900">
+          <div className="flex flex-col gap-1">
+            <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-gray-900">
               {name}
             </h3>
 
             {showDescription && (
-              <p className="line-clamp-2 text-[13px] sm:text-sm text-gray-500 leading-relaxed">
+              <p className="line-clamp-2 text-sm text-gray-500 leading-relaxed">
                 {description}
               </p>
             )}
@@ -310,7 +310,7 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
 
           {/* Value Tags Section */}
           {valueTag && (
-            <div className="flex flex-col gap-1.5 sm:gap-2 mt-auto">
+            <div className="flex flex-col gap-2 mt-auto">
               <div className="flex flex-wrap gap-1">
                 {discountValue && formattedDiscount && (
                   <ColorLabel text={formattedDiscount} color="green" />
@@ -322,7 +322,7 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
               </div>
 
               {priceDifference && (
-                <p className="text-[13px] sm:text-sm font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-gray-900">
                   <span className="text-gray-400 line-through">
                     ${oldPrice!.toLocaleString()}
                   </span>{' '}
@@ -348,11 +348,11 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
         </div>
 
         {/* FOOTER - Action area */}
-        <div className="flex items-center border-t border-gray-100 bg-gray-50/30 px-3 sm:px-4 py-2">
-          <span className="text-[13px] sm:text-sm font-medium text-[#0038FF] group-hover:text-[#0030E0] transition-colors duration-200">
+        <div className="flex items-center border-t border-gray-100 bg-gray-50/30 px-4 py-2">
+          <span className="text-sm font-medium text-[#0038FF] group-hover:text-[#0030E0] transition-colors duration-200">
             View offer
           </span>
-          <svg className="ml-1 h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#0038FF] group-hover:text-[#0030E0] group-hover:translate-x-0.5 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="ml-1 h-4 w-4 text-[#0038FF] group-hover:text-[#0030E0] group-hover:translate-x-0.5 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </div>

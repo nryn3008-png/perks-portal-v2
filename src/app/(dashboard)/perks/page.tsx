@@ -628,7 +628,7 @@ function PerksPageLoading() {
           <div className="h-10 w-10 rounded-xl bg-gray-100 animate-pulse" />
           <div className="h-8 w-40 rounded-lg bg-gray-100 animate-pulse" />
         </div>
-        <div className="h-5 w-96 rounded-lg bg-gray-100 animate-pulse" />
+        <div className="h-5 w-full max-w-96 rounded-lg bg-gray-100 animate-pulse" />
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3, 4, 5, 6].map((i) => (

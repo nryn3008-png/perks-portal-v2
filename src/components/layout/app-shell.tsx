@@ -21,7 +21,7 @@ interface AppShellProps {
 
 export function AppShell({ children, user, showApiHealth = false }: AppShellProps) {
   return (
-    <div className="flex min-h-screen flex-col bg-white transition-colors duration-150">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-white transition-colors duration-150">
       {/* Top Navigation */}
       <TopNav user={user} showApiHealth={showApiHealth} />
 
