@@ -8,7 +8,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 
-const BRIDGE_ACCOUNT_URL = 'https://app.brdg.app';
+const BRIDGE_ACCOUNT_URL = 'https://brdg.app';
 
 interface UserMenuProps {
   user: {
