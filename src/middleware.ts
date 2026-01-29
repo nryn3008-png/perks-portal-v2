@@ -141,10 +141,14 @@ interface BridgeUser {
  */
 async function getBridgeUser(sessionToken: string): Promise<BridgeUser | null> {
   if (!BRIDGE_API_KEY) {
+    console.log(`[Auth Debug] getBridgeUser: BRIDGE_API_KEY is NOT configured`);
     return null;
   }
 
   try {
+    console.log(`[Auth Debug] getBridgeUser: calling ${BRIDGE_API_BASE_URL}/api/v4/users/me`);
+    console.log(`[Auth Debug] getBridgeUser: sessionToken length=${sessionToken.length}, preview=${sessionToken.substring(0, 20)}...`);
+
     const response = await fetch(`${BRIDGE_API_BASE_URL}/api/v4/users/me`, {
       method: 'GET',
       headers: {
@@ -154,17 +158,23 @@ async function getBridgeUser(sessionToken: string): Promise<BridgeUser | null> {
       },
     });
 
+    console.log(`[Auth Debug] getBridgeUser: response status=${response.status}`);
+
     if (!response.ok) {
+      const errorBody = await response.text();
+      console.log(`[Auth Debug] getBridgeUser: error body=${errorBody.substring(0, 200)}`);
       return null;
     }
 
     const data = await response.json();
+    console.log(`[Auth Debug] getBridgeUser: success, user=${data.email}, id=${data.id}`);
     return {
       id: data.id,
       email: data.email,
       name: data.name,
     };
-  } catch {
+  } catch (error) {
+    console.error(`[Auth Debug] getBridgeUser: exception`, error);
     return null;
   }
 }
@@ -218,6 +228,21 @@ export async function middleware(request: NextRequest) {
     response.headers.set('x-user-is-admin', isUserAdmin(DEV_USER_EMAIL) ? 'true' : 'false');
     return response;
   }
+
+  // ── DEBUG: Cookie diagnostic (REMOVE BEFORE FINAL DEPLOY) ──
+  const allCookies = request.cookies.getAll();
+  console.log(`[Auth Debug] pathname: ${pathname}`);
+  console.log(`[Auth Debug] All cookies (${allCookies.length}):`, allCookies.map(c => ({
+    name: c.name,
+    valueLength: c.value?.length || 0,
+    valuePreview: c.value?.substring(0, 20) + '...',
+  })));
+  console.log(`[Auth Debug] Looking for: "${BRIDGE_SESSION_COOKIE}" and "${BRIDGE_TOKEN_COOKIE}"`);
+  console.log(`[Auth Debug] bridge_session:`, request.cookies.get(BRIDGE_SESSION_COOKIE)?.value ? 'PRESENT' : 'MISSING');
+  console.log(`[Auth Debug] bridge_token:`, request.cookies.get(BRIDGE_TOKEN_COOKIE)?.value ? 'PRESENT' : 'MISSING');
+  console.log(`[Auth Debug] Host:`, request.headers.get('host'));
+  console.log(`[Auth Debug] Origin:`, request.headers.get('origin'));
+  // ── END DEBUG ──
 
   // 3. Get session token from cookies
   const sessionToken =
