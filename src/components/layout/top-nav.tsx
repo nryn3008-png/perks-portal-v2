@@ -15,9 +15,11 @@ interface TopNavProps {
     email: string;
     avatarUrl?: string;
   };
+  /** Show API health badge — dev/internal only */
+  showApiHealth?: boolean;
 }
 
-export function TopNav({ user }: TopNavProps) {
+export function TopNav({ user, showApiHealth = false }: TopNavProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200/60 bg-white/80 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -49,8 +51,8 @@ export function TopNav({ user }: TopNavProps) {
 
         {/* Right: Status & User */}
         <div className="flex items-center gap-4">
-          {/* API Health Status */}
-          <ApiHealthBadge />
+          {/* API Health Status — dev/internal only */}
+          {showApiHealth && <ApiHealthBadge />}
 
           {/* Powered by GetProven */}
           <a
