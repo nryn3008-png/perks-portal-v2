@@ -72,19 +72,8 @@ export function TopNav({ user, showApiHealth = false }: TopNavProps) {
             />
           </a>
 
-          {/* User Menu or Login Button */}
-          {user ? (
-            <UserMenu user={user} />
-          ) : (
-            <a
-              href="https://brdg.app/login"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#0038FF] px-3.5 py-1.5 text-[13px] font-medium text-white hover:bg-[#0030E0] transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0038FF]/40 focus-visible:ring-offset-2"
-            >
-              Log in with Bridge
-            </a>
-          )}
+          {/* User Menu (only shown when logged in) */}
+          {user && <UserMenu user={user} />}
         </div>
       </div>
     </header>
