@@ -119,8 +119,17 @@ function getEmailDomain(email: string): string {
 
 /**
  * Check if user is an admin based on email or domain allowlists
+ *
+ * If no allowlists are configured, all authenticated Bridge users
+ * get admin access. Once ADMIN_EMAIL_ALLOWLIST or ADMIN_DOMAIN_ALLOWLIST
+ * is set in env vars, access will be restricted to those lists.
  */
 function isUserAdmin(email: string): boolean {
+  // If no allowlists configured, all authenticated users are admin
+  if (ADMIN_EMAIL_ALLOWLIST.length === 0 && ADMIN_DOMAIN_ALLOWLIST.length === 0) {
+    return true;
+  }
+
   const normalizedEmail = email.toLowerCase();
   const domain = getEmailDomain(normalizedEmail);
 
