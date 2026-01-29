@@ -4,6 +4,13 @@
  * Server-only module for resolving Bridge user identity from requests.
  * Handles session validation, user profile fetching, and admin determination.
  *
+ * Auth mechanism:
+ * - Reads the `authToken` cookie (set by Bridge on *.brdg.app)
+ *   OR the `bridge_api_key` cookie (set by /api/auth/login on other domains)
+ * - The cookie value IS the user's Bearer token
+ * - Calls /api/v4/users/me with Authorization: Bearer {token}
+ * - Bridge API returns the token owner's profile
+ *
  * IMPORTANT: This module is server-only. Never import in client components.
  */
 
@@ -55,11 +62,13 @@ export interface AuthResult {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BRIDGE_API_BASE_URL = process.env.BRIDGE_API_BASE_URL || 'https://api.brdg.app';
-const BRIDGE_API_KEY = process.env.BRIDGE_API_KEY;
 
-// Session cookie name used by Bridge
-const BRIDGE_SESSION_COOKIE = process.env.BRIDGE_SESSION_COOKIE || 'bridge_session';
-const BRIDGE_TOKEN_COOKIE = process.env.BRIDGE_TOKEN_COOKIE || 'bridge_token';
+// Bridge auth cookie — set by Bridge on *.brdg.app after login
+// The cookie value IS the user's Bearer token
+const BRIDGE_AUTH_COOKIE = 'authToken';
+
+// API key cookie — set by /api/auth/login on non-Bridge domains
+const BRIDGE_API_KEY_COOKIE = 'bridge_api_key';
 
 // Admin allowlists from environment (comma-separated)
 const ADMIN_EMAIL_ALLOWLIST = process.env.ADMIN_EMAIL_ALLOWLIST
@@ -133,22 +142,20 @@ function isUserAdmin(email: string): boolean {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Fetch user profile from Bridge API using session token
+ * Fetch user profile from Bridge API using a Bearer token.
+ *
+ * The token can be either:
+ * - The authToken cookie value (Bridge session on *.brdg.app)
+ * - A user's API key (from /login page on non-Bridge domains)
+ *
+ * Both resolve to the token owner's profile via Authorization: Bearer {token}
  */
-async function fetchBridgeUserProfile(sessionToken: string): Promise<BridgeUserProfile | null> {
-  if (!BRIDGE_API_KEY) {
-    logAuth('failure', { reason: 'BRIDGE_API_KEY not configured' });
-    return null;
-  }
-
+async function fetchBridgeUserProfile(token: string): Promise<BridgeUserProfile | null> {
   try {
-    // Bridge API endpoint for getting current user profile
-    // Uses the session token to identify the user
     const response = await fetch(`${BRIDGE_API_BASE_URL}/api/v4/users/me`, {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${BRIDGE_API_KEY}`,
-        'X-Bridge-Session': sessionToken,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       // Don't cache user profile
@@ -157,7 +164,7 @@ async function fetchBridgeUserProfile(sessionToken: string): Promise<BridgeUserP
 
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
-        logAuth('failure', { reason: 'Invalid or expired session' });
+        logAuth('failure', { reason: 'Invalid or expired token' });
         return null;
       }
       logAuth('failure', { reason: `API error: ${response.status}` });
@@ -165,7 +172,9 @@ async function fetchBridgeUserProfile(sessionToken: string): Promise<BridgeUserP
     }
 
     const data = await response.json();
-    return data as BridgeUserProfile;
+    // Bridge API returns { user: { id, email, ... }, message: "..." }
+    const user = data.user || data;
+    return user as BridgeUserProfile;
   } catch (error) {
     logAuth('failure', { reason: error instanceof Error ? error.message : 'Network error' });
     return null;
@@ -179,8 +188,9 @@ async function fetchBridgeUserProfile(sessionToken: string): Promise<BridgeUserP
 /**
  * Resolve Bridge user from the current request
  *
- * This function should be called in server components or API routes
- * to get the authenticated user.
+ * Checks for auth tokens in this order:
+ * 1. `authToken` cookie (Bridge session on *.brdg.app)
+ * 2. `bridge_api_key` cookie (API key on non-Bridge domains)
  *
  * @returns AuthResult with user data or null if unauthenticated
  */
@@ -189,13 +199,13 @@ export async function resolveAuth(): Promise<AuthResult> {
     // Get cookies from the request
     const cookieStore = await cookies();
 
-    // Try to get Bridge session token from cookies
-    const sessionToken =
-      cookieStore.get(BRIDGE_SESSION_COOKIE)?.value ||
-      cookieStore.get(BRIDGE_TOKEN_COOKIE)?.value;
+    // Try authToken cookie first (Bridge session), then API key cookie
+    const token =
+      cookieStore.get(BRIDGE_AUTH_COOKIE)?.value ||
+      cookieStore.get(BRIDGE_API_KEY_COOKIE)?.value;
 
-    if (!sessionToken) {
-      logAuth('failure', { reason: 'No session token found' });
+    if (!token) {
+      logAuth('failure', { reason: 'No auth token found' });
       return {
         authenticated: false,
         user: null,
@@ -203,8 +213,8 @@ export async function resolveAuth(): Promise<AuthResult> {
       };
     }
 
-    // Fetch user profile from Bridge API
-    const profile = await fetchBridgeUserProfile(sessionToken);
+    // Fetch user profile from Bridge API using the Bearer token
+    const profile = await fetchBridgeUserProfile(token);
 
     if (!profile) {
       return {

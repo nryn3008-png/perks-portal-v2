@@ -5,8 +5,12 @@
  * Uses Bridge identity for user resolution.
  *
  * Auth modes (checked in order):
- * 1. Cookie-based Bridge session (*.brdg.app domains)
+ * 1. Bridge `authToken` cookie (*.brdg.app domains — set by Bridge on login)
+ *    The authToken value IS the user's Bearer token. We call /api/v4/users/me
+ *    with Authorization: Bearer {authToken} to resolve the user.
  * 2. API key cookie (localhost, vercel.app, other non-Bridge domains)
+ *    User pastes their Bridge API key on /login page, stored as HttpOnly cookie.
+ *    Same mechanism — the API key IS a Bearer token.
  *
  * Route protection:
  * - Public routes: always allowed (static assets, API health, login)
@@ -27,13 +31,12 @@ const DEV_USER_EMAIL = process.env.DEV_USER_EMAIL || 'dev@brdg.app';
 
 // Bridge API configuration
 const BRIDGE_API_BASE_URL = process.env.BRIDGE_API_BASE_URL || 'https://api.brdg.app';
-const BRIDGE_API_KEY = process.env.BRIDGE_API_KEY;
 
-// Session cookie names (Bridge cookie-based auth)
-const BRIDGE_SESSION_COOKIE = process.env.BRIDGE_SESSION_COOKIE || 'bridge_session';
-const BRIDGE_TOKEN_COOKIE = process.env.BRIDGE_TOKEN_COOKIE || 'bridge_token';
+// Bridge auth cookie — set by Bridge on *.brdg.app after login
+// The cookie value is the user's Bearer token for Bridge API
+const BRIDGE_AUTH_COOKIE = 'authToken';
 
-// API key cookie name (non-Bridge domain auth)
+// API key cookie — set by /api/auth/login on non-Bridge domains
 const BRIDGE_API_KEY_COOKIE = 'bridge_api_key';
 
 // Admin allowlists
@@ -111,7 +114,7 @@ function isProtectedApiRoute(pathname: string): boolean {
 
 /**
  * Check if request is coming from a Bridge domain (*.brdg.app)
- * Cookie-based auth only works on Bridge domains.
+ * Cookie-based auth (authToken) only works on Bridge domains.
  * API key auth is used on all other domains.
  */
 function isBridgeDomain(request: NextRequest): boolean {
@@ -155,22 +158,21 @@ interface BridgeUser {
 }
 
 /**
- * Fetch user from Bridge API using session token (cookie-based auth)
+ * Resolve a Bridge user from a Bearer token.
  *
- * Used on *.brdg.app domains where Bridge sets session cookies.
- * Sends the session token via X-Bridge-Session header alongside the API key.
+ * This is the single auth mechanism for both auth modes:
+ * - On *.brdg.app: the `authToken` cookie value IS the Bearer token
+ * - On other domains: the `bridge_api_key` cookie value IS the Bearer token
+ *
+ * Both work identically: Authorization: Bearer {token} → /api/v4/users/me
+ * The token resolves to its owner's identity.
  */
-async function getBridgeUser(sessionToken: string): Promise<BridgeUser | null> {
-  if (!BRIDGE_API_KEY) {
-    return null;
-  }
-
+async function resolveUserFromToken(token: string): Promise<BridgeUser | null> {
   try {
     const response = await fetch(`${BRIDGE_API_BASE_URL}/api/v4/users/me`, {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${BRIDGE_API_KEY}`,
-        'X-Bridge-Session': sessionToken,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
@@ -182,42 +184,10 @@ async function getBridgeUser(sessionToken: string): Promise<BridgeUser | null> {
     const data = await response.json();
     // Bridge API returns { user: { id, email, ... }, message: "..." }
     const user = data.user || data;
-    return {
-      id: user.id,
-      email: user.email,
-      name: user.name || (user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : undefined),
-    };
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Fetch user from Bridge API using an API key directly
- *
- * Used on non-Bridge domains (localhost, vercel.app, etc.)
- * where cookie-based auth is unavailable.
- *
- * The API key resolves to its owner's identity — this is by design.
- * Each user has their own API key from Bridge Settings.
- */
-async function getBridgeUserFromApiKey(apiKey: string): Promise<BridgeUser | null> {
-  try {
-    const response = await fetch(`${BRIDGE_API_BASE_URL}/api/v4/users/me`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
+    if (!user || !user.id || !user.email) {
       return null;
     }
 
-    const data = await response.json();
-    // Bridge API returns { user: { id, email, ... }, message: "..." }
-    const user = data.user || data;
     return {
       id: user.id,
       email: user.email,
@@ -291,13 +261,12 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // 3. Try cookie-based Bridge session auth (primary — works on *.brdg.app)
-  const sessionToken =
-    request.cookies.get(BRIDGE_SESSION_COOKIE)?.value ||
-    request.cookies.get(BRIDGE_TOKEN_COOKIE)?.value;
+  // 3. Try Bridge authToken cookie (primary — works on *.brdg.app)
+  //    Bridge sets this cookie on login. The value IS the user's Bearer token.
+  const authToken = request.cookies.get(BRIDGE_AUTH_COOKIE)?.value;
 
-  if (sessionToken) {
-    const user = await getBridgeUser(sessionToken);
+  if (authToken) {
+    const user = await resolveUserFromToken(authToken);
 
     if (user) {
       logMiddleware('Auth mode: cookie', { pathname, userId: user.id });
@@ -311,17 +280,17 @@ export async function middleware(request: NextRequest) {
       return buildAuthResponse(user, 'cookie');
     }
 
-    // Session cookie exists but is invalid — fall through to next auth method
-    logMiddleware('Invalid session cookie', { pathname });
+    // authToken exists but is invalid — fall through to next auth method
+    logMiddleware('Invalid authToken cookie', { pathname });
   }
 
   // 4. Try API key cookie auth (fallback — works on non-Bridge domains)
-  //    API key auth is NEVER used on *.brdg.app — those domains use cookie auth only.
+  //    API key auth is NEVER used on *.brdg.app — those domains use authToken only.
   if (!isBridgeDomain(request)) {
     const apiKeyCookie = request.cookies.get(BRIDGE_API_KEY_COOKIE)?.value;
 
     if (apiKeyCookie) {
-      const user = await getBridgeUserFromApiKey(apiKeyCookie);
+      const user = await resolveUserFromToken(apiKeyCookie);
 
       if (user) {
         logMiddleware('Auth mode: api-key', { pathname, userId: user.id });
