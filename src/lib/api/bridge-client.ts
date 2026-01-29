@@ -17,8 +17,11 @@
  * Returns the number of warm introduction paths to an organization
  */
 export interface BridgeIntropathCountResponse {
-  intropath_count: number;
-  org_profile_url?: string;
+  people: unknown[];
+  organization: {
+    intropath_count: number;
+    org_profile_url?: string;
+  } | null;
 }
 
 /**
@@ -267,9 +270,14 @@ export async function getVendorIntropathCounts(
   try {
     const response = await bridgeClient.getIntropathCounts(domain);
 
+    // Extract data from nested organization object
+    if (!response.organization) {
+      return emptyResponse;
+    }
+
     return {
-      intropathCount: response.intropath_count,
-      orgProfileUrl: response.org_profile_url,
+      intropathCount: response.organization.intropath_count,
+      orgProfileUrl: response.organization.org_profile_url,
     };
   } catch (error) {
     // Log error server-side but don't throw - fail silently
