@@ -99,7 +99,7 @@ export function LandingPage() {
           href={BRIDGE_LOGIN_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-xl bg-[#0038FF] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#0038FF]/20 hover:bg-[#0030E0] hover:shadow-[#0038FF]/30 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0038FF]/40 focus-visible:ring-offset-2"
+          className="inline-flex items-center gap-2 rounded-full bg-[#0038FF] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#0038FF]/20 hover:bg-[#0030E0] hover:shadow-[#0038FF]/30 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0038FF]/40 focus-visible:ring-offset-2"
         >
           Log in to Browse Perks
           <ArrowRight className="h-4 w-4" />
