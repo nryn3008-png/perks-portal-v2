@@ -126,12 +126,14 @@ function logBridgeApiError(operation: string, error: unknown): void {
  */
 async function makeRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  userToken?: string
 ): Promise<T> {
-  if (!BRIDGE_API_KEY) {
+  const token = userToken || BRIDGE_API_KEY;
+  if (!token) {
     throw new BridgeApiError(
       'MISSING_API_KEY',
-      'Bridge API key is not configured',
+      'Bridge API key is not configured and no user token provided',
       500
     );
   }
@@ -141,7 +143,7 @@ async function makeRequest<T>(
   const response = await fetch(url, {
     ...options,
     headers: {
-      Authorization: `Bearer ${BRIDGE_API_KEY}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
       ...options.headers,
     },
@@ -178,10 +180,12 @@ export const bridgeClient = {
    * @param domain - The domain to look up (e.g., "stripe.com")
    * @returns Intropath count response or throws on error
    */
-  async getIntropathCounts(domain: string): Promise<BridgeIntropathCountResponse> {
+  async getIntropathCounts(domain: string, userToken?: string): Promise<BridgeIntropathCountResponse> {
     const params = new URLSearchParams({ domain });
     return makeRequest<BridgeIntropathCountResponse>(
-      `/api/v4/search/intropath_counts?${params.toString()}`
+      `/api/v4/search/intropath_counts?${params.toString()}`,
+      {},
+      userToken
     );
   },
 };
@@ -235,7 +239,8 @@ function getMockIntropathData(domain: string): VendorIntropathData {
  * @returns VendorIntropathData with count and optional profile URL, or null values on failure
  */
 export async function getVendorIntropathCounts(
-  websiteUrl: string | null
+  websiteUrl: string | null,
+  userToken?: string
 ): Promise<VendorIntropathData> {
   // Default response for failures
   const emptyResponse: VendorIntropathData = {
@@ -258,17 +263,17 @@ export async function getVendorIntropathCounts(
     return getMockIntropathData(domain);
   }
 
-  // Check if API key is configured
-  if (!BRIDGE_API_KEY) {
+  // Check if any auth token is available
+  if (!userToken && !BRIDGE_API_KEY) {
     // Log only in development/server
     if (typeof window === 'undefined' && process.env.NODE_ENV === 'development') {
-      console.warn('[Bridge API] BRIDGE_API_KEY not configured, skipping intropath fetch');
+      console.warn('[Bridge API] No user token or BRIDGE_API_KEY configured, skipping intropath fetch');
     }
     return emptyResponse;
   }
 
   try {
-    const response = await bridgeClient.getIntropathCounts(domain);
+    const response = await bridgeClient.getIntropathCounts(domain, userToken);
 
     // Extract data from nested organization object
     if (!response.organization) {

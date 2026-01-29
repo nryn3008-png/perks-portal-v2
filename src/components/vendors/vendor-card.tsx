@@ -134,7 +134,7 @@ export function VendorCard({ vendor, basePath = '/admin/vendors', perksCount }: 
   return (
     <Link
       href={`${basePath}/${vendor.id}`}
-      className="group block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-offset-2"
+      className="group block min-w-0 overflow-hidden rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-offset-2"
     >
       <div className="flex h-full flex-col overflow-hidden rounded-xl bg-white border border-gray-200/60 shadow-sm transition-all duration-200 ease-out group-hover:shadow-lg group-hover:border-gray-300/80 group-hover:-translate-y-1 group-hover:scale-[1.01]">
 

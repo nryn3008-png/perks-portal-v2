@@ -28,6 +28,7 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
+import { cookies } from 'next/headers';
 import { vendorsService, perksService, getVendorIntropathCounts } from '@/lib/api';
 import { OfferCard } from '@/components/perks';
 import { VendorCard } from '@/components/vendors';
@@ -263,9 +264,11 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
   const contacts = contactsResult.success ? contactsResult.data : [];
   const allUsers = allUsersResult.success ? allUsersResult.data : [];
 
-  // Fetch intropath counts from Bridge API (non-blocking, fails silently)
-  // Only fetch if vendor has a valid website
-  const intropathData: VendorIntropathData = await getVendorIntropathCounts(vendor.website);
+  // Fetch intropath counts from Bridge API using logged-in user's token
+  // This ensures counts reflect the user's own network connections
+  const cookieStore = await cookies();
+  const userToken = cookieStore.get('authToken')?.value || cookieStore.get('bridge_api_key')?.value;
+  const intropathData: VendorIntropathData = await getVendorIntropathCounts(vendor.website, userToken);
 
   // Filter perks for this vendor
   const allPerks: GetProvenDeal[] = perksResult.success ? perksResult.data.data : [];
