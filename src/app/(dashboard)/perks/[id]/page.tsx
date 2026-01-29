@@ -447,7 +447,7 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
                       <div className="p-2 rounded-xl bg-indigo-50">
                         <Info className="w-5 h-5 text-indigo-600" />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">About this Offer</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">What you get</h2>
                     </div>
                     <div
                       className="prose prose-gray prose-sm max-w-none text-gray-600 leading-relaxed"
@@ -556,7 +556,7 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
                     {offer.details_url && (
                       <MercuryButton href={offer.details_url} variant="ghost" className="w-full">
                         <ExternalLink className="w-4 h-4" />
-                        More Details
+                        View on vendor site
                       </MercuryButton>
                     )}
                   </div>
@@ -569,7 +569,7 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
                 </MercuryButton>
 
                 <p className="text-xs text-center text-gray-500 mt-4">
-                  You&apos;ll be redirected to complete redemption
+                  Opens on GetProven to complete redemption
                 </p>
 
                 {/* Who Can Redeem - Eligibility */}
@@ -592,7 +592,7 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
           <section className="mt-16">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-gray-900">More from {vendor.name}</h2>
-              <p className="text-sm text-gray-500 mt-1">Explore other offers from this vendor</p>
+              <p className="text-sm text-gray-500 mt-1">This vendor has {relatedPerks.length} more {relatedPerks.length === 1 ? 'perk' : 'perks'}</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -613,8 +613,8 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
         {similarPerks.length > 0 && (
           <section className="mt-16">
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">Similar Perks</h2>
-              <p className="text-sm text-gray-500 mt-1">Other offers you might find useful</p>
+              <h2 className="text-xl font-semibold text-gray-900">Similar Deals</h2>
+              <p className="text-sm text-gray-500 mt-1">Similar deals in this category</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -242,7 +242,7 @@ export function PerkCard({ perk, isLoading = false }: PerkCardProps) {
         {/* Footer with action */}
         <div className="border-t border-gray-100 bg-gray-50/30 px-4 py-2">
           <span className="text-sm font-medium text-indigo-600 group-hover:text-indigo-700 transition-colors duration-150">
-            View offer
+            View deal
           </span>
         </div>
       </div>

@@ -408,7 +408,7 @@ function AdminVendorsPageContent() {
       setVendors(data.data || []);
     } catch (err) {
       console.error('Vendors fetch error:', err);
-      setError('Unable to load vendors. Please try again.');
+      setError('Something went wrong loading vendors. Hit retry or refresh the page.');
       setVendors([]);
     } finally {
       setIsLoading(false);
@@ -469,7 +469,7 @@ function AdminVendorsPageContent() {
         <div>
           <h2 className="font-semibold text-amber-900 text-[15px]">Admin Only</h2>
           <p className="text-[13px] text-amber-700">
-            This page is restricted to administrators
+            Internal view — not visible to regular users.
           </p>
         </div>
       </div>
@@ -485,7 +485,7 @@ function AdminVendorsPageContent() {
           </h1>
         </div>
         <p className="text-[15px] text-gray-500 max-w-2xl">
-          View and manage vendor information
+          Browse all vendors and their available perks.
         </p>
       </div>
 
@@ -493,7 +493,7 @@ function AdminVendorsPageContent() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <SearchInput
           className="flex-1"
-          placeholder="Search by vendor name or service..."
+          placeholder="Search vendors by name or service..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           onClear={clearSearch}

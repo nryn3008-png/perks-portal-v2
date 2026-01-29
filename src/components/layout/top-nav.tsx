@@ -82,7 +82,7 @@ export function TopNav({ user, showApiHealth = false }: TopNavProps) {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-lg bg-[#0038FF] px-3.5 py-1.5 text-[13px] font-medium text-white hover:bg-[#0030E0] transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0038FF]/40 focus-visible:ring-offset-2"
             >
-              Login with Bridge
+              Log in with Bridge
             </a>
           )}
         </div>

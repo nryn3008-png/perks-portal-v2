@@ -313,7 +313,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
             <div>
               <h2 className="font-semibold text-amber-900 text-[15px]">Admin Only</h2>
               <p className="text-[13px] text-amber-700">
-                Viewing vendor details as an administrator
+                Internal view — includes raw API data and contacts.
               </p>
             </div>
           </div>
@@ -441,7 +441,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
               <GlassCard className="overflow-hidden">
                 <div className="p-6">
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                    Why Choose Us
+                    Vendor Story
                   </h2>
                   <div
                     className="prose prose-gray prose-sm max-w-none text-gray-600 leading-relaxed"
@@ -543,7 +543,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                 <GlassCard className="!rounded-xl">
                   <div className="flex flex-col items-center justify-center py-16">
                     <Gift className="h-12 w-12 text-gray-300 mb-4" />
-                    <p className="text-[14px] text-gray-500">No perks available for this vendor</p>
+                    <p className="text-[14px] text-gray-500">No perks listed for this vendor on GetProven.</p>
                   </div>
                 </GlassCard>
               )}
@@ -554,7 +554,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
               <section className="pt-8 border-t border-gray-200/50">
                 <div className="mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">Similar Vendors</h2>
-                  <p className="text-sm text-gray-500 mt-2">Other vendors with similar services and industries</p>
+                  <p className="text-sm text-gray-500 mt-2">Vendors offering similar services</p>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {similarVendors.map((similarVendor) => (
@@ -971,7 +971,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                 )}
 
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">
-                  Contact Vendor
+                  Quick Actions
                 </h3>
 
                 {/* Primary CTA - GetProven link */}
@@ -1004,7 +1004,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                     className="w-full mb-4"
                   >
                     <FileText className="h-4 w-4" />
-                    Download Brochure
+                    View Brochure
                   </MercuryButton>
                 )}
 

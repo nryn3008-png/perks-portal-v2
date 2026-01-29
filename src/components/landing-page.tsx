@@ -44,7 +44,7 @@ const BENEFITS = [
     icon: Zap,
     title: 'Skip the Vendor Hunt',
     description:
-      'Stop wasting hours comparing vendors. Every perk is hand-picked and ready to activate in minutes.',
+      'Every deal is pre-negotiated. Just pick a perk and redeem it — most take under 5 minutes.',
   },
   {
     icon: ShieldCheck,
@@ -101,12 +101,12 @@ export function LandingPage() {
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 rounded-xl bg-[#0038FF] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#0038FF]/20 hover:bg-[#0030E0] hover:shadow-[#0038FF]/30 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0038FF]/40 focus-visible:ring-offset-2"
         >
-          Browse Perks
+          Log in to Browse Perks
           <ArrowRight className="h-4 w-4" />
         </a>
 
         <p className="text-[13px] text-gray-400 mt-4">
-          Sign in with your Bridge account to unlock all perks
+          Free for all Bridge members
         </p>
       </div>
 

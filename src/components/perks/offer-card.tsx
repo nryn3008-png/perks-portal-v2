@@ -350,7 +350,7 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
         {/* FOOTER - Action area */}
         <div className="flex items-center border-t border-gray-100 bg-gray-50/30 px-4 py-2">
           <span className="text-sm font-medium text-[#0038FF] group-hover:text-[#0030E0] transition-colors duration-200">
-            View offer
+            View deal
           </span>
           <svg className="ml-1 h-4 w-4 text-[#0038FF] group-hover:text-[#0030E0] group-hover:translate-x-0.5 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

@@ -338,7 +338,7 @@ function PerksPageContent() {
       setOffers(data.data || []);
     } catch (err) {
       console.error('Offers fetch error:', err);
-      setError('Unable to load perks. Please try again.');
+      setError('Something went wrong loading perks. Hit retry or refresh the page.');
       setOffers([]);
     } finally {
       setIsLoading(false);
@@ -412,7 +412,7 @@ function PerksPageContent() {
     if (hasActiveFilters) {
       return 'No perks match your filters';
     }
-    return 'No perks available';
+    return 'No perks available yet — check back soon.';
   };
 
   return (
@@ -424,7 +424,7 @@ function PerksPageContent() {
             <Gift className="h-4 w-4 text-white" />
           </div>
           <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
-            Discover Perks
+            Your Perks
           </h1>
         </div>
         <p className="text-[15px] text-gray-500 max-w-2xl">
@@ -438,7 +438,7 @@ function PerksPageContent() {
               )}
             </>
           ) : (
-            'Access exclusive offers from trusted partners for your startup.'
+            'Exclusive discounts from vetted vendors — browse and redeem in minutes.'
           )}
         </p>
       </div>
@@ -447,7 +447,7 @@ function PerksPageContent() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <SearchInput
           className="flex-1"
-          placeholder="Search by vendor or service area..."
+          placeholder="Search tools, vendors, or categories..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onClear={() => setSearchQuery('')}
@@ -495,7 +495,7 @@ function PerksPageContent() {
               aria-pressed={viewMode === 'grid'}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">All perks</span>
+              <span className="hidden sm:inline">Grid</span>
             </button>
             <button
               type="button"
