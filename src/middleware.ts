@@ -210,10 +210,11 @@ async function resolveUserFromToken(token: string): Promise<BridgeUser | null> {
 /**
  * Build redirect URL to Bridge login with return URL
  */
-function buildLoginRedirect(request: NextRequest): NextResponse {
-  const returnUrl = encodeURIComponent(request.url);
-  const loginUrl = `${BRIDGE_LOGIN_URL}?return_to=${returnUrl}`;
-  return NextResponse.redirect(loginUrl);
+function buildLoginRedirect(_request: NextRequest): NextResponse {
+  // Note: Bridge login doesn't support return_to redirect param.
+  // After login on brdg.app, the authToken cookie is set on *.brdg.app,
+  // so users can navigate back to perks.brdg.app and will be authenticated.
+  return NextResponse.redirect(BRIDGE_LOGIN_URL);
 }
 
 /**
