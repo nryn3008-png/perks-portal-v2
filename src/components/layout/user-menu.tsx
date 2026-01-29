@@ -105,7 +105,11 @@ export function UserMenu({ user }: UserMenuProps) {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-              onClick={() => setOpen(false)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpen(false);
+                window.open(BRIDGE_ACCOUNT_URL, '_blank', 'noopener,noreferrer');
+              }}
             >
               {/* Bridge icon */}
               <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600">
