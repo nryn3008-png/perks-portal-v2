@@ -30,6 +30,7 @@ export interface BridgeUserProfile {
   first_name?: string;
   last_name?: string;
   avatar_url?: string;
+  profile_pic_url?: string;
   organization?: {
     id: string;
     name: string;
@@ -239,7 +240,7 @@ export async function resolveAuth(): Promise<AuthResult> {
       email: profile.email,
       name: profile.name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email,
       isAdmin: isUserAdmin(profile.email),
-      avatarUrl: profile.avatar_url,
+      avatarUrl: profile.profile_pic_url || profile.avatar_url,
     };
 
     logAuth('success', { userId: user.id });
