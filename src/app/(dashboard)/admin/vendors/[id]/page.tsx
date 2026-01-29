@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
+import { ClientsGrid } from '@/components/vendors/clients-grid';
 import {
   ArrowLeft,
   ExternalLink,
@@ -16,7 +17,6 @@ import {
   Play,
   FileText,
   Mail,
-  BadgeCheck,
   User,
   Shield,
   Database,
@@ -517,51 +517,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                   </div>
                   <h2 className="text-lg font-semibold text-gray-900">Clients</h2>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {clients.slice(0, 12).map((client) => (
-                    <GlassCard
-                      key={client.id}
-                      hover
-                      className="!rounded-xl"
-                    >
-                      <div className="flex flex-col items-center p-4">
-                        {client.logo ? (
-                          <div className="h-12 w-12 flex items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm mb-2">
-                            <Image
-                              src={client.logo}
-                              alt=""
-                              width={48}
-                              height={48}
-                              className="h-full w-full object-contain"
-                              unoptimized
-                            />
-                          </div>
-                        ) : (
-                          <div className="h-12 w-12 flex items-center justify-center rounded-lg bg-gray-100 mb-2">
-                            <Building2 className="h-6 w-6 text-gray-400" />
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1">
-                          <span className="text-[13px] font-medium text-gray-700 text-center line-clamp-2">
-                            {client.name}
-                          </span>
-                          {/* Verified badge - only if verified=true */}
-                          {client.verified && (
-                            <BadgeCheck
-                              className="h-4 w-4 text-[#0038FF] flex-shrink-0"
-                              aria-label="Verified"
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </GlassCard>
-                  ))}
-                </div>
-                {clients.length > 12 && (
-                  <p className="mt-4 text-[13px] text-gray-400 text-center">
-                    And {clients.length - 12} more clients
-                  </p>
-                )}
+                <ClientsGrid clients={clients} />
               </section>
             )}
 
