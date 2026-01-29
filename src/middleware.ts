@@ -49,7 +49,7 @@ const ADMIN_DOMAIN_ALLOWLIST = process.env.ADMIN_DOMAIN_ALLOWLIST
   : [];
 
 // Bridge login URL
-const BRIDGE_LOGIN_URL = process.env.BRIDGE_LOGIN_URL || 'https://app.brdg.app/login';
+const BRIDGE_LOGIN_URL = process.env.BRIDGE_LOGIN_URL || 'https://brdg.app/login';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ROUTE CLASSIFICATION
