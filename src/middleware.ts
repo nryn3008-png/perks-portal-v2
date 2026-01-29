@@ -4,8 +4,12 @@
  * Enforces authentication and authorization at the edge.
  * Uses Bridge identity for user resolution.
  *
+ * Auth modes (checked in order):
+ * 1. Cookie-based Bridge session (*.brdg.app domains)
+ * 2. API key cookie (localhost, vercel.app, other non-Bridge domains)
+ *
  * Route protection:
- * - Public routes: always allowed (static assets, API health)
+ * - Public routes: always allowed (static assets, API health, login)
  * - Founder routes (/perks/*): require authenticated Bridge user
  * - Admin routes (/admin/*): require authenticated + isAdmin
  */
@@ -25,9 +29,12 @@ const DEV_USER_EMAIL = process.env.DEV_USER_EMAIL || 'dev@brdg.app';
 const BRIDGE_API_BASE_URL = process.env.BRIDGE_API_BASE_URL || 'https://api.brdg.app';
 const BRIDGE_API_KEY = process.env.BRIDGE_API_KEY;
 
-// Session cookie names
+// Session cookie names (Bridge cookie-based auth)
 const BRIDGE_SESSION_COOKIE = process.env.BRIDGE_SESSION_COOKIE || 'bridge_session';
 const BRIDGE_TOKEN_COOKIE = process.env.BRIDGE_TOKEN_COOKIE || 'bridge_token';
+
+// API key cookie name (non-Bridge domain auth)
+const BRIDGE_API_KEY_COOKIE = 'bridge_api_key';
 
 // Admin allowlists
 const ADMIN_EMAIL_ALLOWLIST = process.env.ADMIN_EMAIL_ALLOWLIST
@@ -51,6 +58,8 @@ const BRIDGE_LOGIN_URL = process.env.BRIDGE_LOGIN_URL || 'https://app.brdg.app/l
 const PUBLIC_ROUTES = [
   '/_next',
   '/api/health',
+  '/api/auth',    // Auth API routes (login/logout)
+  '/login',       // API key login page
   '/favicon.ico',
   '/logos',
   '/images',
@@ -101,6 +110,16 @@ function isProtectedApiRoute(pathname: string): boolean {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
+ * Check if request is coming from a Bridge domain (*.brdg.app)
+ * Cookie-based auth only works on Bridge domains.
+ * API key auth is used on all other domains.
+ */
+function isBridgeDomain(request: NextRequest): boolean {
+  const host = request.headers.get('host') || '';
+  return host.endsWith('.brdg.app') || host === 'brdg.app';
+}
+
+/**
  * Extract domain from email address
  */
 function getEmailDomain(email: string): string {
@@ -136,19 +155,17 @@ interface BridgeUser {
 }
 
 /**
- * Fetch user from Bridge API using session token
- * Lightweight version for middleware - only fetches minimal data
+ * Fetch user from Bridge API using session token (cookie-based auth)
+ *
+ * Used on *.brdg.app domains where Bridge sets session cookies.
+ * Sends the session token via X-Bridge-Session header alongside the API key.
  */
 async function getBridgeUser(sessionToken: string): Promise<BridgeUser | null> {
   if (!BRIDGE_API_KEY) {
-    console.log(`[Auth Debug] getBridgeUser: BRIDGE_API_KEY is NOT configured`);
     return null;
   }
 
   try {
-    console.log(`[Auth Debug] getBridgeUser: calling ${BRIDGE_API_BASE_URL}/api/v4/users/me`);
-    console.log(`[Auth Debug] getBridgeUser: sessionToken length=${sessionToken.length}, preview=${sessionToken.substring(0, 20)}...`);
-
     const response = await fetch(`${BRIDGE_API_BASE_URL}/api/v4/users/me`, {
       method: 'GET',
       headers: {
@@ -158,23 +175,55 @@ async function getBridgeUser(sessionToken: string): Promise<BridgeUser | null> {
       },
     });
 
-    console.log(`[Auth Debug] getBridgeUser: response status=${response.status}`);
-
     if (!response.ok) {
-      const errorBody = await response.text();
-      console.log(`[Auth Debug] getBridgeUser: error body=${errorBody.substring(0, 200)}`);
       return null;
     }
 
     const data = await response.json();
-    console.log(`[Auth Debug] getBridgeUser: success, user=${data.email}, id=${data.id}`);
+    // Bridge API returns { user: { id, email, ... }, message: "..." }
+    const user = data.user || data;
     return {
-      id: data.id,
-      email: data.email,
-      name: data.name,
+      id: user.id,
+      email: user.email,
+      name: user.name || (user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : undefined),
     };
-  } catch (error) {
-    console.error(`[Auth Debug] getBridgeUser: exception`, error);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetch user from Bridge API using an API key directly
+ *
+ * Used on non-Bridge domains (localhost, vercel.app, etc.)
+ * where cookie-based auth is unavailable.
+ *
+ * The API key resolves to its owner's identity — this is by design.
+ * Each user has their own API key from Bridge Settings.
+ */
+async function getBridgeUserFromApiKey(apiKey: string): Promise<BridgeUser | null> {
+  try {
+    const response = await fetch(`${BRIDGE_API_BASE_URL}/api/v4/users/me`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    // Bridge API returns { user: { id, email, ... }, message: "..." }
+    const user = data.user || data;
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name || (user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : undefined),
+    };
+  } catch {
     return null;
   }
 }
@@ -186,6 +235,18 @@ function buildLoginRedirect(request: NextRequest): NextResponse {
   const returnUrl = encodeURIComponent(request.url);
   const loginUrl = `${BRIDGE_LOGIN_URL}?return_to=${returnUrl}`;
   return NextResponse.redirect(loginUrl);
+}
+
+/**
+ * Build authenticated response with user headers
+ */
+function buildAuthResponse(user: BridgeUser, authMode: string): NextResponse {
+  const response = NextResponse.next();
+  response.headers.set('x-user-id', user.id);
+  response.headers.set('x-user-email', user.email);
+  response.headers.set('x-user-is-admin', isUserAdmin(user.email) ? 'true' : 'false');
+  response.headers.set('x-auth-mode', authMode);
+  return response;
 }
 
 /**
@@ -226,87 +287,77 @@ export async function middleware(request: NextRequest) {
     response.headers.set('x-user-id', 'dev-user');
     response.headers.set('x-user-email', DEV_USER_EMAIL);
     response.headers.set('x-user-is-admin', isUserAdmin(DEV_USER_EMAIL) ? 'true' : 'false');
+    response.headers.set('x-auth-mode', 'bypass');
     return response;
   }
 
-  // ── DEBUG: Cookie diagnostic (REMOVE BEFORE FINAL DEPLOY) ──
-  const allCookies = request.cookies.getAll();
-  console.log(`[Auth Debug] pathname: ${pathname}`);
-  console.log(`[Auth Debug] All cookies (${allCookies.length}):`, allCookies.map(c => ({
-    name: c.name,
-    valueLength: c.value?.length || 0,
-    valuePreview: c.value?.substring(0, 20) + '...',
-  })));
-  console.log(`[Auth Debug] Looking for: "${BRIDGE_SESSION_COOKIE}" and "${BRIDGE_TOKEN_COOKIE}"`);
-  console.log(`[Auth Debug] bridge_session:`, request.cookies.get(BRIDGE_SESSION_COOKIE)?.value ? 'PRESENT' : 'MISSING');
-  console.log(`[Auth Debug] bridge_token:`, request.cookies.get(BRIDGE_TOKEN_COOKIE)?.value ? 'PRESENT' : 'MISSING');
-  console.log(`[Auth Debug] Host:`, request.headers.get('host'));
-  console.log(`[Auth Debug] Origin:`, request.headers.get('origin'));
-  // ── END DEBUG ──
-
-  // 3. Get session token from cookies
+  // 3. Try cookie-based Bridge session auth (primary — works on *.brdg.app)
   const sessionToken =
     request.cookies.get(BRIDGE_SESSION_COOKIE)?.value ||
     request.cookies.get(BRIDGE_TOKEN_COOKIE)?.value;
 
-  // 4. If no session, redirect to login (except for API routes)
-  if (!sessionToken) {
-    logMiddleware('No session', { pathname });
+  if (sessionToken) {
+    const user = await getBridgeUser(sessionToken);
 
-    // For API routes, return 401
-    if (pathname.startsWith('/api/')) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'Authentication required' },
-        { status: 401 }
-      );
+    if (user) {
+      logMiddleware('Auth mode: cookie', { pathname, userId: user.id });
+
+      // Check admin access
+      if (isAdminRoute(pathname) && !isUserAdmin(user.email)) {
+        logMiddleware('Admin access denied', { pathname, userId: user.id, email: user.email });
+        return NextResponse.rewrite(new URL('/not-found', request.url));
+      }
+
+      return buildAuthResponse(user, 'cookie');
     }
 
-    // For page routes, redirect to login
+    // Session cookie exists but is invalid — fall through to next auth method
+    logMiddleware('Invalid session cookie', { pathname });
+  }
+
+  // 4. Try API key cookie auth (fallback — works on non-Bridge domains)
+  //    API key auth is NEVER used on *.brdg.app — those domains use cookie auth only.
+  if (!isBridgeDomain(request)) {
+    const apiKeyCookie = request.cookies.get(BRIDGE_API_KEY_COOKIE)?.value;
+
+    if (apiKeyCookie) {
+      const user = await getBridgeUserFromApiKey(apiKeyCookie);
+
+      if (user) {
+        logMiddleware('Auth mode: api-key', { pathname, userId: user.id });
+
+        // Check admin access
+        if (isAdminRoute(pathname) && !isUserAdmin(user.email)) {
+          logMiddleware('Admin access denied (api-key)', { pathname, userId: user.id, email: user.email });
+          return NextResponse.rewrite(new URL('/not-found', request.url));
+        }
+
+        return buildAuthResponse(user, 'api-key');
+      }
+
+      // API key cookie exists but is invalid — fall through to redirect
+      logMiddleware('Invalid API key cookie', { pathname });
+    }
+  }
+
+  // 5. No valid auth found — redirect to appropriate login
+  logMiddleware('No valid auth', { pathname, isBridge: isBridgeDomain(request) });
+
+  // For API routes, return 401
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.json(
+      { error: 'Unauthorized', message: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
+  // On Bridge domains → redirect to Bridge login
+  if (isBridgeDomain(request)) {
     return buildLoginRedirect(request);
   }
 
-  // 5. Validate session with Bridge API
-  const user = await getBridgeUser(sessionToken);
-
-  if (!user) {
-    logMiddleware('Invalid session', { pathname });
-
-    // For API routes, return 401
-    if (pathname.startsWith('/api/')) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'Invalid or expired session' },
-        { status: 401 }
-      );
-    }
-
-    // For page routes, redirect to login
-    return buildLoginRedirect(request);
-  }
-
-  // 6. Check admin access for admin routes
-  if (isAdminRoute(pathname)) {
-    const isAdmin = isUserAdmin(user.email);
-
-    if (!isAdmin) {
-      logMiddleware('Admin access denied', { pathname, userId: user.id, email: user.email });
-
-      // Return 404 to hide admin routes from non-admins
-      return NextResponse.rewrite(new URL('/not-found', request.url));
-    }
-
-    logMiddleware('Admin access granted', { pathname, userId: user.id });
-  }
-
-  // 7. User is authenticated, proceed
-  logMiddleware('Auth success', { pathname, userId: user.id });
-
-  // Add user info to request headers for downstream use
-  const response = NextResponse.next();
-  response.headers.set('x-user-id', user.id);
-  response.headers.set('x-user-email', user.email);
-  response.headers.set('x-user-is-admin', isUserAdmin(user.email) ? 'true' : 'false');
-
-  return response;
+  // On non-Bridge domains → redirect to local /login page
+  return NextResponse.redirect(new URL('/login', request.url));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
