@@ -4,6 +4,7 @@
  */
 
 import { ApiHealthBadge } from './api-health-badge';
+import { UserMenu } from './user-menu';
 
 // External brand URLs
 const BRIDGE_URL = 'https://brdg.app/home/';
@@ -71,28 +72,8 @@ export function TopNav({ user, showApiHealth = false }: TopNavProps) {
             />
           </a>
 
-          {/* User Avatar */}
-          {user && (
-            <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
-              {user.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={user.avatarUrl}
-                  alt={user.name}
-                  className="h-7 w-7 rounded-full object-cover ring-1 ring-gray-200"
-                />
-              ) : (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 text-xs font-medium text-white">
-                  {user.name?.charAt(0) || 'U'}
-                </div>
-              )}
-              <div className="hidden sm:block">
-                <p className="text-[13px] font-medium text-gray-700">
-                  {user.name}
-                </p>
-              </div>
-            </div>
-          )}
+          {/* User Menu */}
+          {user && <UserMenu user={user} />}
         </div>
       </div>
     </header>
