@@ -7,9 +7,52 @@
  */
 
 import { useEffect } from 'react';
-import { Gift, Sparkles, Shield, TrendingUp } from 'lucide-react';
+import {
+  DollarSign,
+  Zap,
+  ShieldCheck,
+  Code,
+  BarChart3,
+  Cloud,
+  Megaphone,
+  Users,
+  Briefcase,
+  ArrowRight,
+} from 'lucide-react';
 
 const BRIDGE_LOGIN_URL = 'https://brdg.app/login';
+
+/* ── Category data ─────────────────────────────────────────── */
+const CATEGORIES = [
+  { icon: Code, label: 'Dev Tools' },
+  { icon: Cloud, label: 'Cloud & Infra' },
+  { icon: BarChart3, label: 'Analytics' },
+  { icon: Megaphone, label: 'Marketing' },
+  { icon: Users, label: 'HR & Hiring' },
+  { icon: Briefcase, label: 'Finance & Legal' },
+];
+
+/* ── Benefit data ──────────────────────────────────────────── */
+const BENEFITS = [
+  {
+    icon: DollarSign,
+    title: 'Save Thousands on Tools',
+    description:
+      'Get exclusive discounts on the software and services your startup already uses — or should be using.',
+  },
+  {
+    icon: Zap,
+    title: 'Skip the Vendor Hunt',
+    description:
+      'Stop wasting hours comparing vendors. Every perk is hand-picked and ready to activate in minutes.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Trusted & Vetted Partners',
+    description:
+      'Every offer comes from vendors verified by Bridge — so you can buy with confidence.',
+  },
+];
 
 export function LandingPage() {
   // Auto-reload when user returns to this tab after logging in on Bridge
@@ -34,73 +77,79 @@ export function LandingPage() {
 
   return (
     <div className="flex flex-col items-center animate-fade-in">
-      {/* Hero Section */}
-      <div className="w-full max-w-2xl text-center py-12 sm:py-20">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0038FF] to-[#0030E0] mb-6">
-          <Gift className="h-6 w-6 text-white" />
-        </div>
+      {/* ── Hero Section ──────────────────────────────────── */}
+      <div className="w-full max-w-2xl text-center pt-12 sm:pt-20 pb-10 sm:pb-14">
+        {/* Badge */}
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0038FF]/10 px-3.5 py-1 text-[12px] font-semibold text-[#0038FF] mb-5">
+          <Zap className="h-3.5 w-3.5" />
+          Exclusive to Bridge Members
+        </span>
 
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight mb-4">
-          Exclusive Perks for Bridge Members
+        <h1 className="text-3xl sm:text-5xl font-bold text-gray-900 tracking-tight mb-4 leading-[1.15]">
+          Save $10,000s on the tools
+          <br className="hidden sm:block" /> your startup needs
         </h1>
 
-        <p className="text-base sm:text-lg text-gray-500 max-w-xl mx-auto mb-8 leading-relaxed">
-          Access hundreds of exclusive offers from trusted partners — worth
-          millions in savings for your startup.
+        <p className="text-base sm:text-lg text-gray-500 max-w-lg mx-auto mb-8 leading-relaxed">
+          Hundreds of exclusive discounts on software, services, and platforms —
+          curated for founders building on Bridge.
         </p>
 
         <a
           href={BRIDGE_LOGIN_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-xl bg-[#0038FF] px-6 py-3 text-sm font-medium text-white hover:bg-[#0030E0] transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0038FF]/40 focus-visible:ring-offset-2"
+          className="inline-flex items-center gap-2 rounded-xl bg-[#0038FF] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#0038FF]/20 hover:bg-[#0030E0] hover:shadow-[#0038FF]/30 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0038FF]/40 focus-visible:ring-offset-2"
         >
-          Login with Bridge account
+          Browse Perks
+          <ArrowRight className="h-4 w-4" />
         </a>
 
         <p className="text-[13px] text-gray-400 mt-4">
-          Sign in with your Bridge account to browse all perks
+          Sign in with your Bridge account to unlock all perks
         </p>
       </div>
 
-      {/* Feature Highlights */}
-      <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-6 pb-16">
-        <FeatureCard
-          icon={<Sparkles className="h-5 w-5 text-[#0038FF]" />}
-          title="Exclusive Offers"
-          description="Access perks and discounts not available anywhere else"
-        />
-        <FeatureCard
-          icon={<Shield className="h-5 w-5 text-[#0038FF]" />}
-          title="Trusted Partners"
-          description="Every vendor is vetted and verified by our team"
-        />
-        <FeatureCard
-          icon={<TrendingUp className="h-5 w-5 text-[#0038FF]" />}
-          title="Real Savings"
-          description="Thousands in discounts across software, services, and more"
-        />
-      </div>
-    </div>
-  );
-}
+      {/* ── Categories — "What you'll find inside" ────────── */}
+      <div className="w-full max-w-3xl pb-12 sm:pb-16">
+        <h2 className="text-center text-sm font-semibold text-gray-400 uppercase tracking-wider mb-6">
+          What you&apos;ll find inside
+        </h2>
 
-function FeatureCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="flex flex-col items-center text-center rounded-xl border border-gray-200/60 bg-white p-6">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0038FF]/10 mb-3">
-        {icon}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {CATEGORIES.map(({ icon: Icon, label }) => (
+            <div
+              key={label}
+              className="flex items-center gap-3 rounded-xl border border-gray-200/60 bg-white px-4 py-3.5 transition-colors hover:border-[#0038FF]/20 hover:bg-[#0038FF]/[0.02]"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#0038FF]/10">
+                <Icon className="h-4.5 w-4.5 text-[#0038FF]" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">{label}</span>
+            </div>
+          ))}
+        </div>
       </div>
-      <h3 className="text-sm font-semibold text-gray-900 mb-1">{title}</h3>
-      <p className="text-[13px] text-gray-500 leading-relaxed">{description}</p>
+
+      {/* ── Benefits ──────────────────────────────────────── */}
+      <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-5 pb-16 sm:pb-20">
+        {BENEFITS.map(({ icon: Icon, title, description }) => (
+          <div
+            key={title}
+            className="flex flex-col rounded-xl border border-gray-200/60 bg-white p-6"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0038FF]/10 mb-4">
+              <Icon className="h-5 w-5 text-[#0038FF]" />
+            </div>
+            <h3 className="text-sm font-semibold text-gray-900 mb-1.5">
+              {title}
+            </h3>
+            <p className="text-[13px] text-gray-500 leading-relaxed">
+              {description}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
