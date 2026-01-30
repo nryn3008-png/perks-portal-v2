@@ -430,7 +430,7 @@ function PerksPageContent() {
         <p className="text-[15px] text-gray-500 max-w-2xl">
           {totals ? (
             <>
-              Access {totals.totalOffers}+ exclusive offers from trusted partners
+              Access exclusive offers from trusted partners
               {totals.totalSavings && totals.totalSavings !== 'No data' && (
                 <span className="text-[#0038FF] font-medium">
                   {' '}— worth over {totals.totalSavings} in savings
