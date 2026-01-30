@@ -12,6 +12,7 @@ import {
   Info,
 } from 'lucide-react';
 import { CopyButton, OfferCard } from '@/components/perks';
+import { RedeemButton } from '@/components/perks/redeem-button';
 import { perksService, vendorsService } from '@/lib/api';
 import { findSimilarPerks } from '@/lib/similarity';
 import type { GetProvenDeal, GetProvenVendor } from '@/types';
@@ -562,11 +563,14 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
                   </div>
                 )}
 
-                {/* Primary CTA */}
-                <MercuryButton href={offer.getproven_link} variant="primary" className="w-full">
-                  <Gift className="w-4 h-4" />
-                  Redeem Offer
-                </MercuryButton>
+                {/* Primary CTA — with redemption click tracking */}
+                <RedeemButton
+                  getprovenLink={offer.getproven_link}
+                  offerId={offer.id}
+                  offerName={offer.name}
+                  vendorName={vendor?.name ?? 'Unknown'}
+                  estimatedValue={offer.estimated_value}
+                />
 
                 <p className="text-xs text-center text-gray-500 mt-4">
                   Opens on GetProven to complete redemption

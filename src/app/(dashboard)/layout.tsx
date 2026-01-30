@@ -24,6 +24,7 @@ export default async function DashboardLayout({
   // Map to the shape expected by AppShell/TopNav
   const navUser = user
     ? {
+        id: user.id,
         name: user.name,
         email: user.email,
         avatarUrl: user.avatarUrl,

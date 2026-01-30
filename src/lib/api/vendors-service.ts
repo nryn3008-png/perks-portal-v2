@@ -37,7 +37,8 @@ async function fetchWithNextUrl(nextUrl: string): Promise<GetProvenListResponse<
       Authorization: `Token ${API_TOKEN}`,
       'Content-Type': 'application/json',
     },
-  });
+    next: { revalidate: 300 },
+  } as RequestInit);
   if (!res.ok) throw new Error('Failed to fetch next page');
   return res.json();
 }

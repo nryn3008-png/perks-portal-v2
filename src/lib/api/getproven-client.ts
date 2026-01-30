@@ -105,7 +105,9 @@ async function makeRequest<T>(
       'Content-Type': 'application/json',
       ...options.headers,
     },
-  });
+    // Cache responses for 5 minutes — revalidates on hard refresh or new session
+    next: { revalidate: 300 },
+  } as RequestInit);
 
   if (!response.ok) {
     let errorData: Record<string, unknown> = {};
