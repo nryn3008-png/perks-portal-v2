@@ -311,6 +311,24 @@ function PerksPageContent() {
         }
       }
       setVendorMap(map);
+
+      // Sync vendors with Supabase (non-blocking)
+      const vendorList = (data.data || []).filter((v: { id?: number }) => v.id);
+      if (vendorList.length > 0) {
+        fetch('/api/vendors/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            vendors: vendorList.map((v: { id: number; name?: string; primary_service?: string; logo?: string; website?: string }) => ({
+              vendor_id: v.id,
+              vendor_name: v.name || '',
+              primary_service: v.primary_service || null,
+              logo: v.logo || null,
+              website: v.website || null,
+            })),
+          }),
+        }).catch(() => { /* non-critical */ });
+      }
     } catch (err) {
       console.error('Failed to fetch vendors:', err);
     }
