@@ -339,28 +339,27 @@ function PerksPageContent() {
       const fetchedOffers: GetProvenDeal[] = data.data || [];
       setOffers(fetchedOffers);
 
-      // Sync offer IDs with Supabase to detect new perks
+      // Sync offer IDs with Supabase to detect new perks (non-blocking)
       if (fetchedOffers.length > 0) {
-        try {
-          const syncRes = await fetch('/api/perks/sync-new', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              offers: fetchedOffers.map((o) => ({
-                offer_id: o.id,
-                offer_name: o.name || '',
-                estimated_value: o.estimated_value || null,
-                getproven_link: o.getproven_link || null,
-              })),
-            }),
-          });
-          if (syncRes.ok) {
-            const syncData = await syncRes.json();
-            setNewOfferIds(new Set(syncData.new_offer_ids || []));
-          }
-        } catch {
-          // Silently fail — new badge is non-critical
-        }
+        fetch('/api/perks/sync-new', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            offers: fetchedOffers.map((o) => ({
+              offer_id: o.id,
+              offer_name: o.name || '',
+              estimated_value: o.estimated_value || null,
+              getproven_link: o.getproven_link || null,
+            })),
+          }),
+        })
+          .then((res) => res.ok ? res.json() : null)
+          .then((data) => {
+            if (data?.new_offer_ids) {
+              setNewOfferIds(new Set(data.new_offer_ids));
+            }
+          })
+          .catch(() => { /* non-critical */ });
       }
     } catch (err) {
       console.error('Offers fetch error:', err);
