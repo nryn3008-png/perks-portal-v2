@@ -405,7 +405,25 @@ function AdminVendorsPageContent() {
       if (!res.ok) throw new Error('Failed to fetch vendors');
 
       const data = await res.json();
-      setVendors(data.data || []);
+      const fetchedVendors: GetProvenVendor[] = data.data || [];
+      setVendors(fetchedVendors);
+
+      // Sync vendors with Supabase (non-blocking)
+      if (fetchedVendors.length > 0) {
+        fetch('/api/vendors/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            vendors: fetchedVendors.map((v) => ({
+              vendor_id: v.id,
+              vendor_name: v.name || '',
+              primary_service: v.primary_service || null,
+              logo: v.logo || null,
+              website: v.website || null,
+            })),
+          }),
+        }).catch(() => { /* non-critical */ });
+      }
     } catch (err) {
       console.error('Vendors fetch error:', err);
       setError('Something went wrong loading vendors. Hit retry or refresh the page.');
