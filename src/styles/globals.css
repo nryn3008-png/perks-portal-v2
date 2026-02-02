@@ -36,7 +36,7 @@
   }
 
   p {
-    @apply text-[15px] leading-relaxed text-gray-600;
+    @apply text-[14px] leading-relaxed text-gray-600;
   }
 
   /* Default link styling */
@@ -46,12 +46,12 @@
 
   /* Selection styles */
   ::selection {
-    @apply bg-indigo-500/20 text-indigo-900;
+    @apply bg-[#0038FF]/20 text-[#0038FF];
   }
 
   /* Focus styles */
   *:focus-visible {
-    @apply outline-none ring-2 ring-indigo-500/40 ring-offset-2 ring-offset-white;
+    @apply outline-none ring-2 ring-[#0038FF]/40 ring-offset-2 ring-offset-white;
   }
 
   /* Scrollbar styling */
@@ -95,11 +95,11 @@
 
   /* Badge variants - MercuryOS style */
   .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium;
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
   }
 
   .badge-primary {
-    @apply badge bg-indigo-50 text-indigo-700;
+    @apply badge bg-[#0038FF]/10 text-[#0038FF];
   }
 
   .badge-success {
@@ -108,18 +108,18 @@
 
   /* Input styles - MercuryOS */
   .input {
-    @apply w-full rounded-lg border border-gray-200 bg-white;
-    @apply px-4 py-3 text-gray-900;
+    @apply w-full rounded-full border border-gray-200 bg-white;
+    @apply px-4 py-2 text-gray-900;
     @apply placeholder:text-gray-400;
     @apply transition-all duration-150 ease-out;
     @apply hover:border-gray-300;
-    @apply focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20;
+    @apply focus:border-[#0038FF] focus:ring-2 focus:ring-[#0038FF]/20;
   }
 
   /* Button base styles - MercuryOS: medium weight, refined */
   .btn {
     @apply inline-flex items-center justify-center gap-2 font-medium;
-    @apply rounded-lg px-4 py-2;
+    @apply rounded-full px-4 py-2;
     @apply text-sm tracking-normal;
     @apply transition-all duration-150 ease-out;
     @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
@@ -127,9 +127,9 @@
   }
 
   .btn-primary {
-    @apply btn bg-indigo-600 text-white;
-    @apply hover:bg-indigo-700 active:bg-indigo-800;
-    @apply focus:ring-indigo-500 focus:ring-offset-white;
+    @apply btn bg-[#0038FF] text-white;
+    @apply hover:bg-[#0030E0] active:bg-[#0028C0];
+    @apply focus:ring-[#0038FF] focus:ring-offset-white;
   }
 
   .btn-secondary {
@@ -181,28 +181,113 @@
     text-wrap: balance;
   }
 
-  /* Fade in animation */
+  /* ── Landing Page Animations ────────────────────────────────── */
+
+  /* Basic fade-in */
   .animate-fade-in {
-    animation: fadeIn 0.2s ease-out;
+    animation: fadeIn 0.4s ease-out both;
   }
 
   .animate-fade-in-up {
-    animation: fadeInUp 0.2s ease-out;
+    animation: fadeInUp 0.5s ease-out both;
   }
+
+  /* Staggered delays */
+  .anim-delay-1 { animation-delay: 100ms; }
+  .anim-delay-2 { animation-delay: 200ms; }
+  .anim-delay-3 { animation-delay: 300ms; }
+  .anim-delay-4 { animation-delay: 400ms; }
+  .anim-delay-5 { animation-delay: 500ms; }
+  .anim-delay-6 { animation-delay: 600ms; }
+
+  /* Slide up from scroll trigger */
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out both;
+  }
+
+  /* Marquee — continuous horizontal scroll */
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+
+  .animate-marquee-reverse {
+    animation: marquee-reverse 30s linear infinite;
+  }
+
+  /* CTA glow pulse */
+  .animate-glow-pulse {
+    animation: glowPulse 2.5s ease-in-out infinite;
+  }
+
+  /* Step connector line draw */
+  .animate-line-draw {
+    animation: lineDraw 0.8s ease-out both;
+  }
+
+  /* Scroll-triggered: starts invisible, animation classes applied via JS */
+  .scroll-hidden {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  .scroll-visible {
+    animation: slideUp 0.6s ease-out both;
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-in,
+    .animate-fade-in-up,
+    .animate-slide-up,
+    .animate-marquee,
+    .animate-marquee-reverse,
+    .animate-glow-pulse,
+    .animate-line-draw,
+    .scroll-visible {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    .scroll-hidden {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* ── Keyframes ─────────────────────────────────────────────── */
 
   @keyframes fadeIn {
     from { opacity: 0; }
-    to { opacity: 1; }
+    to   { opacity: 1; }
   }
 
   @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes marquee {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  @keyframes marquee-reverse {
+    0%   { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+  }
+
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 24px rgba(0, 56, 255, 0.15); }
+    50%      { box-shadow: 0 0 48px rgba(0, 56, 255, 0.3); }
+  }
+
+  @keyframes lineDraw {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
   }
 }
