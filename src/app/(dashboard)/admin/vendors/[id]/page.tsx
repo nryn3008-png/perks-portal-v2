@@ -232,7 +232,7 @@ function ColorLabel({
   };
 
   return (
-    <span className={`inline-flex items-center rounded-lg px-2 py-1 text-[13px] font-medium ${styles[color]}`}>
+    <span className={`inline-flex items-center rounded-full px-2 py-1 text-[13px] font-medium ${styles[color]}`}>
       {text}
     </span>
   );
@@ -311,7 +311,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
               <Shield className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <h2 className="font-semibold text-amber-900 text-[15px]">Admin Only</h2>
+              <h2 className="font-semibold text-amber-900 text-[14px]">Admin Only</h2>
               <p className="text-[13px] text-amber-700">
                 Internal view — includes raw API data and contacts.
               </p>
@@ -328,7 +328,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
             hover:text-gray-900
             transition-colors duration-200
             focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-offset-2
-            rounded-lg px-2 py-1 -ml-2
+            rounded-xl px-2 py-1 -ml-2
           "
         >
           <ArrowLeft className="w-4 h-4" />
@@ -604,9 +604,9 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                           <dt className="text-gray-500 font-medium">is_visible</dt>
                           <dd className="mt-2">
                             {vendor.is_visible ? (
-                              <span className="inline-flex rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">true</span>
+                              <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[12px] font-medium text-emerald-700">true</span>
                             ) : (
-                              <span className="inline-flex rounded-md bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-700">false</span>
+                              <span className="inline-flex rounded-full bg-red-100 px-2 py-0.5 text-[12px] font-medium text-red-700">false</span>
                             )}
                           </dd>
                         </div>
@@ -614,9 +614,9 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                           <dt className="text-gray-500 font-medium">is_visible_non_whitelisted</dt>
                           <dd className="mt-2">
                             {vendor.is_visible_non_whitelisted ? (
-                              <span className="inline-flex rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">true</span>
+                              <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[12px] font-medium text-emerald-700">true</span>
                             ) : (
-                              <span className="inline-flex rounded-md bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-700">false</span>
+                              <span className="inline-flex rounded-full bg-red-100 px-2 py-0.5 text-[12px] font-medium text-red-700">false</span>
                             )}
                           </dd>
                         </div>
@@ -759,7 +759,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                             <dt className="text-gray-500 font-medium">Services</dt>
                             <dd className="flex flex-wrap gap-1 mt-2">
                               {vendor.services.map((s, idx) => (
-                                <span key={idx} className="inline-flex rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700">{s.name}</span>
+                                <span key={idx} className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-[12px] font-medium text-gray-700">{s.name}</span>
                               ))}
                             </dd>
                           </div>
@@ -769,7 +769,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                             <dt className="text-gray-500 font-medium">Industries</dt>
                             <dd className="flex flex-wrap gap-1 mt-2">
                               {vendor.industries.map((i, idx) => (
-                                <span key={idx} className="inline-flex rounded-md bg-[#0038FF]/10 px-2 py-0.5 text-[11px] font-medium text-[#0038FF]">{i.name}</span>
+                                <span key={idx} className="inline-flex rounded-full bg-[#0038FF]/10 px-2 py-0.5 text-[12px] font-medium text-[#0038FF]">{i.name}</span>
                               ))}
                             </dd>
                           </div>
@@ -779,7 +779,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                             <dt className="text-gray-500 font-medium">Vendor Groups</dt>
                             <dd className="flex flex-wrap gap-1 mt-2">
                               {vendor.vendor_groups.map((g, idx) => (
-                                <span key={idx} className="inline-flex rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">{g.name}</span>
+                                <span key={idx} className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[12px] font-medium text-emerald-700">{g.name}</span>
                               ))}
                             </dd>
                           </div>
@@ -837,9 +837,9 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                                 </td>
                                 <td className="px-6 py-4">
                                   {client.verified ? (
-                                    <span className="inline-flex rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">true</span>
+                                    <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[12px] font-medium text-emerald-700">true</span>
                                   ) : (
-                                    <span className="inline-flex rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700">false</span>
+                                    <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-[12px] font-medium text-gray-700">false</span>
                                   )}
                                 </td>
                               </tr>
@@ -915,7 +915,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                                 <td className="px-6 py-4">
                                   <div className="flex flex-wrap gap-1">
                                     {user.roles.map((role, idx) => (
-                                      <span key={idx} className="inline-flex rounded-md bg-[#0038FF]/10 px-2 py-0.5 text-[11px] font-medium text-[#0038FF]">
+                                      <span key={idx} className="inline-flex rounded-full bg-[#0038FF]/10 px-2 py-0.5 text-[12px] font-medium text-[#0038FF]">
                                         {role}
                                       </span>
                                     ))}
@@ -945,7 +945,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                         <Sparkles className="h-5 w-5 text-white" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#0038FF]/70 mb-1">
+                        <p className="text-[12px] font-semibold uppercase tracking-wider text-[#0038FF]/70 mb-1">
                           Warm Connections
                         </p>
                         <p className="text-2xl font-bold text-gray-900">
@@ -1011,7 +1011,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                 {/* Contact Section - Only if contacts exist */}
                 {hasContacts && (
                   <div className="border-t border-gray-200/50 pt-6 mt-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-4">
+                    <p className="text-[12px] font-semibold uppercase tracking-wider text-gray-400 mb-4">
                       Key Contacts
                     </p>
                     <div className="space-y-4">
@@ -1074,7 +1074,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                 {/* Social Links */}
                 {hasSocialLinks && (
                   <div className="border-t border-gray-200/50 pt-6 mt-6">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                    <p className="text-[12px] font-semibold uppercase tracking-wider text-gray-400 mb-2">
                       Connect
                     </p>
                     <div className="flex gap-2">
@@ -1117,7 +1117,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
 
                 {/* Company info */}
                 <div className="border-t border-gray-200/50 pt-6 mt-6">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-4">
+                  <p className="text-[12px] font-semibold uppercase tracking-wider text-gray-400 mb-4">
                     Company Info
                   </p>
                   <dl className="space-y-4 text-[13px]">
@@ -1127,7 +1127,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                           <Briefcase className="h-4 w-4 text-gray-500" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <dt className="text-[11px] text-gray-400">Primary Service</dt>
+                          <dt className="text-[12px] text-gray-400">Primary Service</dt>
                           <dd className="font-medium text-gray-900 truncate">
                             {vendor.primary_service}
                           </dd>
@@ -1140,7 +1140,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                           <Users className="h-4 w-4 text-gray-500" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <dt className="text-[11px] text-gray-400">Employees</dt>
+                          <dt className="text-[12px] text-gray-400">Employees</dt>
                           <dd className="font-medium text-gray-900">{employeeRange}</dd>
                         </div>
                       </div>
@@ -1151,7 +1151,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                           <Calendar className="h-4 w-4 text-gray-500" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <dt className="text-[11px] text-gray-400">Founded</dt>
+                          <dt className="text-[12px] text-gray-400">Founded</dt>
                           <dd className="font-medium text-gray-900">{vendor.founded}</dd>
                         </div>
                       </div>

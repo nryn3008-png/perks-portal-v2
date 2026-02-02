@@ -88,7 +88,7 @@ function IndividualAccessPageContent() {
           <Shield className="h-4 w-4 text-amber-600" />
         </div>
         <div>
-          <h2 className="font-semibold text-amber-900 text-[15px]">Admin Only</h2>
+          <h2 className="font-semibold text-amber-900 text-[14px]">Admin Only</h2>
           <p className="text-[13px] text-amber-700">
             This page is restricted to administrators
           </p>
@@ -106,7 +106,7 @@ function IndividualAccessPageContent() {
               Individual Access
             </h1>
           </div>
-          <p className="text-[15px] text-gray-500 max-w-2xl">
+          <p className="text-[14px] text-gray-500 max-w-2xl">
             Users with individual access to perks
           </p>
         </div>
@@ -194,7 +194,7 @@ function IndividualAccessPageContent() {
                           {user.offer_categories.map((cat, index) => (
                             <span
                               key={index}
-                              className="inline-flex rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700"
+                              className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-[12px] font-medium text-gray-700"
                             >
                               {cat.name}
                             </span>
@@ -206,7 +206,7 @@ function IndividualAccessPageContent() {
                     </td>
                     <td className="px-4 py-4 text-[13px] text-gray-600">
                       {user.investment_level ? (
-                        <span className="inline-flex rounded-md bg-[#0038FF]/10 px-2 py-0.5 text-[11px] font-medium text-[#0038FF]">
+                        <span className="inline-flex rounded-full bg-[#0038FF]/10 px-2 py-0.5 text-[12px] font-medium text-[#0038FF]">
                           {user.investment_level.name}
                         </span>
                       ) : (

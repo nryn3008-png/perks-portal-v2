@@ -306,13 +306,13 @@ function VendorsTable({
                         {vendor.services.slice(0, 2).map((service, idx) => (
                           <span
                             key={idx}
-                            className="inline-flex rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] text-gray-600"
+                            className="inline-flex rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[12px] text-gray-600"
                           >
                             {service.name}
                           </span>
                         ))}
                         {vendor.services.length > 2 && (
-                          <span className="text-[11px] text-gray-400">
+                          <span className="text-[12px] text-gray-400">
                             +{vendor.services.length - 2}
                           </span>
                         )}
@@ -445,7 +445,7 @@ function AdminVendorsPageContent() {
           perks_count: perksCountMap[v.id] || 0,
         })),
       }),
-    }).catch(() => { /* non-critical */ });
+    }).catch((error) => { if (process.env.NODE_ENV === 'development') console.error('Vendor sync failed:', error); });
   }, [vendors, perksCountMap]);
 
   // Clear search (client-side only)
@@ -489,7 +489,7 @@ function AdminVendorsPageContent() {
           <Shield className="h-4 w-4 text-amber-600" />
         </div>
         <div>
-          <h2 className="font-semibold text-amber-900 text-[15px]">Admin Only</h2>
+          <h2 className="font-semibold text-amber-900 text-[14px]">Admin Only</h2>
           <p className="text-[13px] text-amber-700">
             Internal view — not visible to regular users.
           </p>
@@ -506,7 +506,7 @@ function AdminVendorsPageContent() {
             Vendors Management
           </h1>
         </div>
-        <p className="text-[15px] text-gray-500 max-w-2xl">
+        <p className="text-[14px] text-gray-500 max-w-2xl">
           Browse all vendors and their available perks.
         </p>
       </div>

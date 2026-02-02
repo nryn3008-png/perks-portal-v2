@@ -125,7 +125,7 @@ function AnalyticsDashboard() {
           <Shield className="h-4 w-4 text-amber-600" />
         </div>
         <div>
-          <h2 className="font-semibold text-amber-900 text-[15px]">Admin Only</h2>
+          <h2 className="font-semibold text-amber-900 text-[14px]">Admin Only</h2>
           <p className="text-[13px] text-amber-700">
             Internal view — not visible to regular users.
           </p>
@@ -142,7 +142,7 @@ function AnalyticsDashboard() {
             Redemption Analytics
           </h1>
         </div>
-        <p className="text-[15px] text-gray-500 max-w-2xl">
+        <p className="text-[14px] text-gray-500 max-w-2xl">
           Track perk redemption activity and value delivered.
         </p>
       </div>

@@ -65,7 +65,7 @@ function FilterDropdown({
         <Filter className="h-3.5 w-3.5" />
         <span>{label}</span>
         {hasSelection && (
-          <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#0038FF] px-1 text-[10px] text-white">
+          <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#0038FF] px-1 text-[12px] text-white">
             {selected.length}
           </span>
         )}
@@ -382,7 +382,7 @@ function PerksPageContent() {
           setNewOfferIds(new Set(data.new_offer_ids));
         }
       })
-      .catch(() => { /* non-critical */ });
+      .catch((error) => { if (process.env.NODE_ENV === 'development') console.error('Offer sync failed:', error); });
   }, [offers, vendorMap]);
 
   const toggleFilter = (type: 'offerCategories' | 'investmentLevels', value: string) => {
@@ -457,7 +457,7 @@ function PerksPageContent() {
             Your Perks
           </h1>
         </div>
-        <p className="text-[15px] text-gray-500 max-w-2xl">
+        <p className="text-[14px] text-gray-500 max-w-2xl">
           {totals ? (
             <>
               Access exclusive offers from trusted partners

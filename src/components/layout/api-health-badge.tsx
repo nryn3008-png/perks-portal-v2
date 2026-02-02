@@ -127,7 +127,7 @@ export function ApiHealthBadge() {
   return (
     <div className="relative" ref={tooltipRef}>
       <button
-        className="hidden sm:flex items-center gap-1 text-[11px] hover:opacity-80 transition-opacity cursor-pointer"
+        className="hidden sm:flex items-center gap-1 text-[12px] hover:opacity-80 transition-opacity cursor-pointer"
         role="status"
         aria-live="polite"
         aria-haspopup="true"
@@ -155,12 +155,12 @@ export function ApiHealthBadge() {
           <div className="px-4 py-3 bg-gray-50/80 border-b border-gray-200/60">
             <h3 className="text-xs font-semibold text-gray-900">API Health Status</h3>
             {lastChecked && (
-              <p className="text-[10px] text-gray-500 mt-0.5">Last checked: {lastChecked}</p>
+              <p className="text-[12px] text-gray-500 mt-0.5">Last checked: {lastChecked}</p>
             )}
           </div>
 
           {/* API Status List */}
-          <div className="p-3 space-y-2">
+          <div className="p-4 space-y-2">
             {apiDetails ? (
               <>
                 {/* GetProven API */}
@@ -173,11 +173,11 @@ export function ApiHealthBadge() {
                   </div>
                   <div className="flex items-center gap-2">
                     {apiDetails.getproven.latency !== undefined && (
-                      <span className="text-[10px] text-gray-500">
+                      <span className="text-[12px] text-gray-500">
                         {formatLatency(apiDetails.getproven.latency)}
                       </span>
                     )}
-                    <span className={`text-[10px] font-medium ${apiStatusConfig[apiDetails.getproven.status].textClass}`}>
+                    <span className={`text-[12px] font-medium ${apiStatusConfig[apiDetails.getproven.status].textClass}`}>
                       {apiStatusConfig[apiDetails.getproven.status].label}
                     </span>
                   </div>
@@ -193,11 +193,11 @@ export function ApiHealthBadge() {
                   </div>
                   <div className="flex items-center gap-2">
                     {apiDetails.bridge.latency !== undefined && (
-                      <span className="text-[10px] text-gray-500">
+                      <span className="text-[12px] text-gray-500">
                         {formatLatency(apiDetails.bridge.latency)}
                       </span>
                     )}
-                    <span className={`text-[10px] font-medium ${apiStatusConfig[apiDetails.bridge.status].textClass}`}>
+                    <span className={`text-[12px] font-medium ${apiStatusConfig[apiDetails.bridge.status].textClass}`}>
                       {apiStatusConfig[apiDetails.bridge.status].label}
                     </span>
                   </div>
@@ -214,7 +214,7 @@ export function ApiHealthBadge() {
 
           {/* Footer */}
           <div className="px-4 py-2 bg-gray-50/50 border-t border-gray-200/60">
-            <p className="text-[10px] text-gray-500 text-center">
+            <p className="text-[12px] text-gray-500 text-center">
               Hover or tap for details
             </p>
           </div>

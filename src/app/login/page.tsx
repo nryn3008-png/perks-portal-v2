@@ -160,7 +160,7 @@ export default function LoginPage() {
           </div>
 
           {/* Footer note */}
-          <p className="text-[11px] text-gray-400 text-center mt-6">
+          <p className="text-[12px] text-gray-400 text-center mt-6">
             Your API key is stored securely as an HttpOnly cookie
           </p>
         </div>

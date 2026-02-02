@@ -38,8 +38,8 @@ const baseStyles = [
   'inline-flex items-center justify-center gap-2',
   // Typography - MercuryOS: medium weight, clean
   'font-medium text-[14px] tracking-normal',
-  // Shape - Rounded corners
-  'rounded-lg',
+  // Shape - Pill (Design System)
+  'rounded-full',
   // Transitions - Fast and smooth
   'transition-all duration-150 ease-out',
   // Focus
@@ -93,7 +93,7 @@ const variants: Record<ButtonVariant, string> = {
 const sizes: Record<ButtonSize, string> = {
   sm: 'px-2 py-1 text-[13px] min-h-[32px]',
   md: 'px-4 py-2 text-[14px] min-h-[38px]',
-  lg: 'px-6 py-4 text-[15px] min-h-[44px]',
+  lg: 'px-6 py-4 text-[14px] min-h-[44px]',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

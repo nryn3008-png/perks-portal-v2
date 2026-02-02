@@ -60,7 +60,7 @@ const iconStyles = 'h-4 w-4 text-gray-400 flex-shrink-0';
 
 // Clear button
 const clearButtonStyles = [
-  'flex-shrink-0 p-1 -m-1 rounded-md',
+  'flex-shrink-0 p-1 -m-1 rounded-full',
   'text-gray-400',
   'hover:text-gray-600 hover:bg-gray-100',
   'transition-colors duration-150',

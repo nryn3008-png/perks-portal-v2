@@ -47,7 +47,7 @@ const CardTitle = forwardRef<HTMLHeadingElement, HTMLAttributes<HTMLHeadingEleme
     <h3
       ref={ref}
       className={cn(
-        'text-[15px] font-semibold leading-snug tracking-tight',
+        'text-[14px] font-semibold leading-snug tracking-tight',
         'text-gray-900',
         className
       )}

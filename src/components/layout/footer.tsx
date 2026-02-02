@@ -13,7 +13,7 @@ export function Footer() {
           href={GETPROVEN_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+          className="flex items-center gap-1 text-[12px] text-gray-400 hover:text-gray-600 transition-colors"
           aria-label="Powered by GetProven - Opens in new tab"
         >
           <span className="font-normal">Powered by</span>

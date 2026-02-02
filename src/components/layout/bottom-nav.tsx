@@ -79,7 +79,7 @@ export function BottomNav({ isAdmin = false }: BottomNavProps) {
                   'flex items-center gap-2 rounded-lg px-4 py-4 text-sm font-medium transition-colors duration-150',
                   'min-h-[48px]',
                   active
-                    ? 'bg-indigo-50 text-indigo-700'
+                    ? 'bg-[#0038FF]/10 text-[#0038FF]'
                     : 'text-gray-600 hover:bg-gray-50'
                 )}
               >
@@ -106,7 +106,7 @@ export function BottomNav({ isAdmin = false }: BottomNavProps) {
                   'min-h-[56px] min-w-[64px]',
                   'transition-colors duration-150',
                   active
-                    ? 'text-indigo-600'
+                    ? 'text-[#0038FF]'
                     : 'text-gray-500 hover:text-gray-700'
                 )}
               >
@@ -114,14 +114,14 @@ export function BottomNav({ isAdmin = false }: BottomNavProps) {
                   <Icon
                     className={cn(
                       'h-6 w-6 transition-colors duration-150',
-                      active && 'text-indigo-600'
+                      active && 'text-[#0038FF]'
                     )}
                   />
                 )}
                 <span
                   className={cn(
-                    'text-[10px] font-medium leading-tight',
-                    active ? 'text-indigo-600' : 'text-gray-500'
+                    'text-[12px] font-medium leading-tight',
+                    active ? 'text-[#0038FF]' : 'text-gray-500'
                   )}
                 >
                   {item.name}
@@ -140,12 +140,12 @@ export function BottomNav({ isAdmin = false }: BottomNavProps) {
                 'min-h-[56px] min-w-[64px]',
                 'transition-colors duration-150',
                 showMore
-                  ? 'text-indigo-600'
+                  ? 'text-[#0038FF]'
                   : 'text-gray-500 hover:text-gray-700'
               )}
             >
               <MoreHorizontal className="h-6 w-6" />
-              <span className="text-[10px] font-medium leading-tight">More</span>
+              <span className="text-[12px] font-medium leading-tight">More</span>
             </button>
           )}
         </div>

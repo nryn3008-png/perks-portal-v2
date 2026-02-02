@@ -143,7 +143,7 @@ function WhitelistPageContent() {
           <Shield className="h-4 w-4 text-amber-600" />
         </div>
         <div>
-          <h2 className="font-semibold text-amber-900 text-[15px]">Admin Only</h2>
+          <h2 className="font-semibold text-amber-900 text-[14px]">Admin Only</h2>
           <p className="text-[13px] text-amber-700">
             This page is restricted to administrators
           </p>
@@ -161,7 +161,7 @@ function WhitelistPageContent() {
               Whitelisted Domains
             </h1>
           </div>
-          <p className="text-[15px] text-gray-500 max-w-2xl">
+          <p className="text-[14px] text-gray-500 max-w-2xl">
             Manage domains that are allowed to access perks
           </p>
         </div>
@@ -211,7 +211,7 @@ function WhitelistPageContent() {
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <h3 className={`font-semibold text-[15px] ${uploadResult.success ? 'text-emerald-900' : 'text-red-900'}`}>
+              <h3 className={`font-semibold text-[14px] ${uploadResult.success ? 'text-emerald-900' : 'text-red-900'}`}>
                 {uploadResult.message}
               </h3>
               {uploadResult.data !== undefined && uploadResult.data !== null && (
@@ -311,7 +311,7 @@ function WhitelistPageContent() {
                           {domain.offer_categories.map((cat, index) => (
                             <span
                               key={index}
-                              className="inline-flex rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700"
+                              className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-[12px] font-medium text-gray-700"
                             >
                               {cat.name}
                             </span>
@@ -323,7 +323,7 @@ function WhitelistPageContent() {
                     </td>
                     <td className="px-4 py-4 text-[13px] text-gray-600">
                       {domain.investment_level ? (
-                        <span className="inline-flex rounded-md bg-[#0038FF]/10 px-2 py-0.5 text-[11px] font-medium text-[#0038FF]">
+                        <span className="inline-flex rounded-full bg-[#0038FF]/10 px-2 py-0.5 text-[12px] font-medium text-[#0038FF]">
                           {domain.investment_level.name}
                         </span>
                       ) : (
@@ -332,11 +332,11 @@ function WhitelistPageContent() {
                     </td>
                     <td className="px-4 py-4 text-[13px]">
                       {domain.is_visible ? (
-                        <span className="inline-flex rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                        <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[12px] font-medium text-emerald-700">
                           Yes
                         </span>
                       ) : (
-                        <span className="inline-flex rounded-md bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-700">
+                        <span className="inline-flex rounded-full bg-red-100 px-2 py-0.5 text-[12px] font-medium text-red-700">
                           No
                         </span>
                       )}

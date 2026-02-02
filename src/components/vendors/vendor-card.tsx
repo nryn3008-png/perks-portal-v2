@@ -116,7 +116,7 @@ function ColorLabel({
 
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-medium ${styles[color]}`}
+      className={`inline-flex items-center rounded-full px-2 py-1 text-[12px] font-medium ${styles[color]}`}
     >
       {text}
     </span>
@@ -143,7 +143,7 @@ export function VendorCard({ vendor, basePath = '/admin/vendors', perksCount }: 
           <div className="flex items-center gap-2">
             <VendorLogo src={vendor.logo} alt={`${vendor.name} logo`} />
             <div className="min-w-0 flex-1">
-              <h3 className="truncate text-[15px] font-semibold text-gray-900">
+              <h3 className="truncate text-[14px] font-semibold text-gray-900">
                 {vendor.name}
               </h3>
               {vendor.primary_service && (
@@ -201,7 +201,7 @@ export function VendorCard({ vendor, basePath = '/admin/vendors', perksCount }: 
                 <ColorLabel key={idx} text={service.name} color="grey" />
               ))}
               {vendor.services.length > 3 && (
-                <span className="text-[11px] text-gray-400 ml-1">
+                <span className="text-[12px] text-gray-400 ml-1">
                   +{vendor.services.length - 3}
                 </span>
               )}
@@ -274,9 +274,9 @@ export function VendorCardSkeleton() {
 
         {/* Tag placeholders */}
         <div className="flex gap-1">
-          <div className="h-5 w-16 animate-pulse rounded-md bg-gray-100" />
-          <div className="h-5 w-20 animate-pulse rounded-md bg-gray-100" />
-          <div className="h-5 w-14 animate-pulse rounded-md bg-gray-100" />
+          <div className="h-5 w-16 animate-pulse rounded-full bg-gray-100" />
+          <div className="h-5 w-20 animate-pulse rounded-full bg-gray-100" />
+          <div className="h-5 w-14 animate-pulse rounded-full bg-gray-100" />
         </div>
       </div>
 

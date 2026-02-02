@@ -115,7 +115,7 @@ export function VendorGroup({
             <h3 className="truncate text-[14px] font-semibold text-gray-900">
               {vendorName}
             </h3>
-            <span className="shrink-0 rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+            <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[12px] font-medium text-gray-600">
               {offerCount} {offerCount === 1 ? 'perk' : 'perks'}
             </span>
           </div>

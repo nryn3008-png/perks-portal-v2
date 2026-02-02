@@ -77,7 +77,8 @@ export async function POST(request: NextRequest) {
     }
 
     return res;
-  } catch {
+  } catch (error) {
+    console.error('Login failed:', error);
     return NextResponse.json(
       { error: 'Failed to validate API key' },
       { status: 500 }

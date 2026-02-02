@@ -55,7 +55,8 @@ async function checkGetProvenEndpoint(
       critical,
       api: 'getproven',
     };
-  } catch {
+  } catch (error) {
+    console.error('GetProven health check failed:', error);
     return {
       endpoint,
       status: 'error',
@@ -96,7 +97,8 @@ async function checkBridgeApi(): Promise<ApiStatus> {
       status: response.ok ? 'ok' : 'error',
       latency,
     };
-  } catch {
+  } catch (error) {
+    console.error('Bridge API health check failed:', error);
     return {
       name: 'Bridge API',
       status: 'error',
@@ -131,7 +133,8 @@ async function checkGetProvenApiStatus(): Promise<ApiStatus> {
       status: response.ok ? 'ok' : 'error',
       latency,
     };
-  } catch {
+  } catch (error) {
+    console.error('GetProven API health check failed:', error);
     return {
       name: 'GetProven API',
       status: 'error',

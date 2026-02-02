@@ -80,7 +80,7 @@ export function RedemptionsTable({ data, page, totalPages, totalRows, onPageChan
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
               <span className="text-xs text-gray-500">
                 Page {page} of {totalPages}
               </span>
@@ -89,7 +89,7 @@ export function RedemptionsTable({ data, page, totalPages, totalRows, onPageChan
                   type="button"
                   onClick={() => onPageChange(page - 1)}
                   disabled={page <= 1}
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" /> Previous
                 </button>
@@ -97,7 +97,7 @@ export function RedemptionsTable({ data, page, totalPages, totalRows, onPageChan
                   type="button"
                   onClick={() => onPageChange(page + 1)}
                   disabled={page >= totalPages}
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Next <ChevronRight className="h-3.5 w-3.5" />
                 </button>
@@ -117,7 +117,7 @@ export function TableSkeleton() {
         <div className="h-5 w-44 rounded bg-gray-200 mb-1" />
         <div className="h-4 w-28 rounded bg-gray-200" />
       </div>
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-4">
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="flex gap-4">
             <div className="h-4 w-28 rounded bg-gray-200" />

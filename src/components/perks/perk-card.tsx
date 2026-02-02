@@ -135,7 +135,7 @@ function ValueBadge({
 
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${variants[variant]}`}
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${variants[variant]}`}
     >
       {text}
     </span>
@@ -216,13 +216,13 @@ export function PerkCard({ perk, isLoading = false }: PerkCardProps) {
         {/* Content section */}
         <div className="flex flex-1 flex-col gap-2 p-4">
           {/* Value type label */}
-          <span className="inline-flex w-fit items-center rounded bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+          <span className="inline-flex w-fit items-center rounded-full bg-gray-100 px-2 py-0.5 text-[12px] font-semibold uppercase tracking-wide text-gray-500">
             {valueTypeLabel}
           </span>
 
           {/* Title and description */}
           <div className="flex flex-col gap-1">
-            <h4 className="text-[15px] font-semibold leading-snug text-gray-900 line-clamp-2">
+            <h4 className="text-[14px] font-semibold leading-snug text-gray-900 line-clamp-2">
               {perk.title || 'Untitled Perk'}
             </h4>
             <p className="text-sm text-gray-500 leading-relaxed line-clamp-3">

@@ -17,7 +17,7 @@ export function Badge({
 }: BadgeProps) {
   const variants = {
     default: 'bg-gray-100 text-gray-600',
-    primary: 'bg-indigo-50 text-indigo-700',
+    primary: 'bg-[#0038FF]/10 text-[#0038FF]',
     success: 'bg-emerald-50 text-emerald-700',
     warning: 'bg-amber-50 text-amber-700',
     error: 'bg-red-50 text-red-700',
@@ -27,7 +27,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-md px-2 py-0.5 text-[12px] font-medium',
+        'inline-flex items-center rounded-full px-2 py-0.5 text-[12px] font-medium',
         'transition-colors duration-150',
         variants[variant],
         className
