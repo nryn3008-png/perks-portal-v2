@@ -339,28 +339,7 @@ function PerksPageContent() {
       const fetchedOffers: GetProvenDeal[] = data.data || [];
       setOffers(fetchedOffers);
 
-      // Sync offer IDs with Supabase to detect new perks (non-blocking)
-      if (fetchedOffers.length > 0) {
-        fetch('/api/perks/sync-new', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            offers: fetchedOffers.map((o) => ({
-              offer_id: o.id,
-              offer_name: o.name || '',
-              estimated_value: o.estimated_value || null,
-              getproven_link: o.getproven_link || null,
-            })),
-          }),
-        })
-          .then((res) => res.ok ? res.json() : null)
-          .then((data) => {
-            if (data?.new_offer_ids) {
-              setNewOfferIds(new Set(data.new_offer_ids));
-            }
-          })
-          .catch(() => { /* non-critical */ });
-      }
+      // Sync is handled by a separate useEffect that waits for both offers + vendors
     } catch (err) {
       console.error('Offers fetch error:', err);
       setError('Something went wrong loading perks. Hit retry or refresh the page.');
@@ -379,6 +358,32 @@ function PerksPageContent() {
   useEffect(() => {
     fetchOffers();
   }, [activeFilters, fetchOffers]);
+
+  // Sync offers with Supabase once both offers and vendors are loaded (non-blocking)
+  useEffect(() => {
+    if (offers.length === 0 || Object.keys(vendorMap).length === 0) return;
+
+    fetch('/api/perks/sync-new', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        offers: offers.map((o) => ({
+          offer_id: o.id,
+          offer_name: o.name || '',
+          vendor_name: vendorMap[o.vendor_id]?.name || '',
+          estimated_value: o.estimated_value || null,
+          getproven_link: o.getproven_link || null,
+        })),
+      }),
+    })
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data?.new_offer_ids) {
+          setNewOfferIds(new Set(data.new_offer_ids));
+        }
+      })
+      .catch(() => { /* non-critical */ });
+  }, [offers, vendorMap]);
 
   const toggleFilter = (type: 'offerCategories' | 'investmentLevels', value: string) => {
     setActiveFilters((prev) => {

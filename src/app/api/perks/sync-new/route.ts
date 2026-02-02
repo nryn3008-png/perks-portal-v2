@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 interface OfferInput {
   offer_id: number;
   offer_name: string;
+  vendor_name: string;
   estimated_value: string | null;
   getproven_link: string | null;
 }
@@ -25,6 +26,7 @@ export async function POST(request: NextRequest) {
     const offers: OfferInput[] = body.offers || (body.offer_ids || []).map((id: number) => ({
       offer_id: id,
       offer_name: '',
+      vendor_name: '',
       estimated_value: null,
       getproven_link: null,
     }));
@@ -60,6 +62,7 @@ export async function POST(request: NextRequest) {
         return {
           offer_id: o.offer_id,
           offer_name: o.offer_name || '',
+          vendor_name: o.vendor_name || '',
           estimated_value: o.estimated_value || null,
           getproven_link: o.getproven_link || null,
           status: isRecent ? 'new' : 'active',
@@ -70,6 +73,7 @@ export async function POST(request: NextRequest) {
       return {
         offer_id: o.offer_id,
         offer_name: o.offer_name || '',
+        vendor_name: o.vendor_name || '',
         estimated_value: o.estimated_value || null,
         getproven_link: o.getproven_link || null,
         status: 'new',
