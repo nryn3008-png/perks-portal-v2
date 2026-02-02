@@ -38,18 +38,18 @@ const STATS = [
 ];
 
 const PARTNERS = [
-  { name: 'AWS', domain: 'aws.amazon.com' },
+  { name: 'Zoom', domain: 'zoom.us' },
   { name: 'Notion', domain: 'notion.so' },
-  { name: 'Figma', domain: 'figma.com' },
+  { name: 'Framer', domain: 'framer.com' },
   { name: 'Linear', domain: 'linear.app' },
-  { name: 'Vercel', domain: 'vercel.com' },
+  { name: 'NVIDIA', domain: 'nvidia.com' },
   { name: 'Stripe', domain: 'stripe.com' },
   { name: 'HubSpot', domain: 'hubspot.com' },
   { name: 'Slack', domain: 'slack.com' },
   { name: 'Intercom', domain: 'intercom.com' },
-  { name: 'Segment', domain: 'segment.com' },
-  { name: 'Datadog', domain: 'datadoghq.com' },
-  { name: 'Loom', domain: 'loom.com' },
+  { name: 'Shopify', domain: 'shopify.com' },
+  { name: 'Google Cloud', domain: 'cloud.google.com' },
+  { name: 'Airtable', domain: 'airtable.com' },
 ];
 
 const CATEGORIES = [
@@ -350,7 +350,7 @@ export function LandingPage() {
           }`}
         >
           <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 tracking-tight mb-4">
-            Everything your startup needs
+            Everything <span className="text-[#0038FF]">your startup</span> needs
           </h2>
           <p className="text-[14px] text-gray-500 max-w-lg mx-auto">
             Organized by category, searchable by name. New perks added every week.
@@ -392,7 +392,7 @@ export function LandingPage() {
           }`}
         >
           <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 tracking-tight mb-4">
-            Built for founders who move fast
+            Built <span className="text-[#0038FF]">for founders</span> who move fast
           </h2>
           <p className="text-[14px] text-gray-500 max-w-lg mx-auto">
             No negotiation, no friction. Just savings.
@@ -435,7 +435,7 @@ export function LandingPage() {
           }`}
         >
           <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 tracking-tight">
-            Three steps to savings
+            Three steps to <span className="text-[#0038FF]">savings</span>
           </h2>
         </div>
 
