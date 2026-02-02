@@ -54,7 +54,7 @@ function FilterDropdown({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          flex items-center gap-1 rounded-lg px-2 py-2 text-[13px] font-medium
+          flex items-center gap-1 rounded-full px-3 py-2 text-[13px] font-medium
           border transition-all duration-150
           ${hasSelection
             ? 'border-[#0038FF]/20 bg-[#0038FF]/5 text-[#0038FF]'
@@ -161,7 +161,7 @@ function SortDropdown({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          flex items-center gap-1 rounded-lg px-2 py-2 text-[13px] font-medium
+          flex items-center gap-1 rounded-full px-3 py-2 text-[13px] font-medium
           border transition-all duration-150
           ${isActive
             ? 'border-[#0038FF]/20 bg-[#0038FF]/5 text-[#0038FF]'
@@ -483,11 +483,11 @@ function PerksPageContent() {
           <div className="h-6 w-px bg-gray-200 mx-1 hidden sm:block" />
 
           {/* View mode toggle */}
-          <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-0.5">
+          <div className="flex rounded-full border border-gray-200 bg-gray-50 p-0.5">
             <button
               type="button"
               onClick={() => setViewMode('grid')}
-              className={`flex items-center gap-1 rounded-md px-2 py-1 text-[13px] font-medium transition-all duration-150 ${
+              className={`flex items-center gap-1 rounded-full px-2 py-1 text-[13px] font-medium transition-all duration-150 ${
                 viewMode === 'grid'
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
@@ -500,7 +500,7 @@ function PerksPageContent() {
             <button
               type="button"
               onClick={() => setViewMode('grouped')}
-              className={`flex items-center gap-1 rounded-md px-2 py-1 text-[13px] font-medium transition-all duration-150 ${
+              className={`flex items-center gap-1 rounded-full px-2 py-1 text-[13px] font-medium transition-all duration-150 ${
                 viewMode === 'grouped'
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'

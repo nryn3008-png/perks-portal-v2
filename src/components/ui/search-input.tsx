@@ -29,7 +29,7 @@ const containerStyles = [
   // Layout
   'flex items-center gap-2',
   // Shape - Rounded
-  'rounded-lg',
+  'rounded-full',
   // Padding
   'px-4 py-2',
   // Background
