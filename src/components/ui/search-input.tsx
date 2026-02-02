@@ -39,9 +39,9 @@ const containerStyles = [
   // Transitions
   'transition-all duration-150 ease-out',
   // Hover
-  'hover:bg-white hover:border-gray-300',
+  'hover:bg-white hover:border-[#0038FF]/40',
   // Focus-within
-  'focus-within:bg-white focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20',
+  'focus-within:bg-white focus-within:border-[#0038FF] focus-within:ring-2 focus-within:ring-[#0038FF]/20',
 ].join(' ');
 
 // Input - transparent
