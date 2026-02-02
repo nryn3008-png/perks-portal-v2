@@ -24,7 +24,7 @@ interface AppShellProps {
 export function AppShell({ children, user, showApiHealth = false }: AppShellProps) {
   return (
     <UserProvider user={user ? { id: user.id, email: user.email, name: user.name } : undefined}>
-      <div className="flex min-h-screen flex-col overflow-x-hidden bg-white transition-colors duration-150">
+      <div className="flex min-h-screen flex-col bg-white transition-colors duration-150" style={{ overflowX: 'clip' }}>
         {/* Top Navigation */}
         <TopNav user={user} showApiHealth={showApiHealth} />
 
