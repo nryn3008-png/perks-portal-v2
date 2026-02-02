@@ -272,7 +272,7 @@ export function LandingPage() {
 
         {/* Sub */}
         <p className="animate-fade-in-up anim-delay-3 text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto mb-12 leading-relaxed">
-          Pre-negotiated discounts on 200+ SaaS products, services, and platforms.
+          Pre-negotiated discounts on 400+ SaaS products, services, and platforms.
           Curated exclusively for Bridge portfolio founders.
         </p>
 
