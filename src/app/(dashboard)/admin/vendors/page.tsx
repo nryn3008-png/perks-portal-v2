@@ -408,22 +408,7 @@ function AdminVendorsPageContent() {
       const fetchedVendors: GetProvenVendor[] = data.data || [];
       setVendors(fetchedVendors);
 
-      // Sync vendors with Supabase (non-blocking)
-      if (fetchedVendors.length > 0) {
-        fetch('/api/vendors/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            vendors: fetchedVendors.map((v) => ({
-              vendor_id: v.id,
-              vendor_name: v.name || '',
-              primary_service: v.primary_service || null,
-              logo: v.logo || null,
-              website: v.website || null,
-            })),
-          }),
-        }).catch(() => { /* non-critical */ });
-      }
+      // Sync is handled by a separate useEffect that waits for perksCountMap
     } catch (err) {
       console.error('Vendors fetch error:', err);
       setError('Something went wrong loading vendors. Hit retry or refresh the page.');
@@ -443,6 +428,25 @@ function AdminVendorsPageContent() {
   useEffect(() => {
     fetchVendors();
   }, [fetchVendors]);
+
+  // Sync vendors with Supabase once both vendors and perks count are loaded
+  useEffect(() => {
+    if (vendors.length === 0 || Object.keys(perksCountMap).length === 0) return;
+
+    fetch('/api/vendors/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vendors: vendors.map((v) => ({
+          vendor_id: v.id,
+          vendor_name: v.name || '',
+          primary_service: v.primary_service || null,
+          website: v.website || null,
+          perks_count: perksCountMap[v.id] || 0,
+        })),
+      }),
+    }).catch(() => { /* non-critical */ });
+  }, [vendors, perksCountMap]);
 
   // Clear search (client-side only)
   const clearSearch = () => {

@@ -5,8 +5,8 @@ interface VendorInput {
   vendor_id: number;
   vendor_name: string;
   primary_service: string | null;
-  logo: string | null;
   website: string | null;
+  perks_count: number;
 }
 
 /**
@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
           vendor_id: v.vendor_id,
           vendor_name: v.vendor_name || '',
           primary_service: v.primary_service || null,
-          logo: v.logo || null,
           website: v.website || null,
+          perks_count: v.perks_count || 0,
           status: isRecent ? 'new' : 'active',
           first_seen_at: existing.first_seen_at,
         };
@@ -66,8 +66,8 @@ export async function POST(request: NextRequest) {
         vendor_id: v.vendor_id,
         vendor_name: v.vendor_name || '',
         primary_service: v.primary_service || null,
-        logo: v.logo || null,
         website: v.website || null,
+        perks_count: v.perks_count || 0,
         status: 'new',
       };
     });
