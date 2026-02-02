@@ -345,7 +345,14 @@ function PerksPageContent() {
           const syncRes = await fetch('/api/perks/sync-new', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ offer_ids: fetchedOffers.map((o) => o.id) }),
+            body: JSON.stringify({
+              offers: fetchedOffers.map((o) => ({
+                offer_id: o.id,
+                offer_name: o.name || '',
+                estimated_value: o.estimated_value || null,
+                getproven_link: o.getproven_link || null,
+              })),
+            }),
           });
           if (syncRes.ok) {
             const syncData = await syncRes.json();
