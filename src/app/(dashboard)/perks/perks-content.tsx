@@ -237,6 +237,7 @@ function PerksPageContent() {
   });
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState<SortOption>('default');
+  const [newOfferIds, setNewOfferIds] = useState<Set<number>>(new Set());
 
   // Scroll restoration - save position before leaving, restore on mount
   useEffect(() => {
@@ -335,7 +336,25 @@ function PerksPageContent() {
       if (!res.ok) throw new Error('Failed to fetch offers');
 
       const data = await res.json();
-      setOffers(data.data || []);
+      const fetchedOffers: GetProvenDeal[] = data.data || [];
+      setOffers(fetchedOffers);
+
+      // Sync offer IDs with Supabase to detect new perks
+      if (fetchedOffers.length > 0) {
+        try {
+          const syncRes = await fetch('/api/perks/sync-new', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ offer_ids: fetchedOffers.map((o) => o.id) }),
+          });
+          if (syncRes.ok) {
+            const syncData = await syncRes.json();
+            setNewOfferIds(new Set(syncData.new_offer_ids || []));
+          }
+        } catch {
+          // Silently fail — new badge is non-critical
+        }
+      }
     } catch (err) {
       console.error('Offers fetch error:', err);
       setError('Something went wrong loading perks. Hit retry or refresh the page.');
@@ -597,11 +616,34 @@ function PerksPageContent() {
           )}
         </div>
 
+        {/* New Perks Section */}
+        {!isLoading && newOfferIds.size > 0 && (() => {
+          const newPerks = finalOffers.filter((o) => newOfferIds.has(o.id));
+          if (newPerks.length === 0) return null;
+          return (
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-600/10">
+                  New
+                </span>
+                <h2 className="text-base font-semibold text-gray-900">Recently Added</h2>
+                <span className="text-xs text-gray-400">({newPerks.length})</span>
+              </div>
+              <OffersGrid
+                offers={newPerks}
+                vendorMap={vendorMap}
+                newOfferIds={newOfferIds}
+              />
+            </div>
+          );
+        })()}
+
         {/* Offers Grid */}
         <OffersGrid
           key={`${searchQuery}-${viewMode}-${sortBy}-${finalOffers.length}`}
           offers={finalOffers}
           vendorMap={vendorMap}
+          newOfferIds={newOfferIds}
           isLoading={isLoading}
           emptyMessage={getEmptyMessage()}
           groupByVendor={viewMode === 'grouped'}

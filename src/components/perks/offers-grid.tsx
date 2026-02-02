@@ -22,6 +22,7 @@ interface VendorInfo {
 interface OffersGridProps {
   offers: GetProvenDeal[];
   vendorMap?: Record<number, VendorInfo>;
+  newOfferIds?: Set<number>;
   isLoading?: boolean;
   emptyMessage?: string;
   /** When true, groups offers by vendor with collapsible sections */
@@ -39,6 +40,7 @@ interface VendorGroupData {
 export function OffersGrid({
   offers,
   vendorMap = {},
+  newOfferIds,
   isLoading = false,
   emptyMessage = 'No perks available',
   groupByVendor = false,
@@ -135,6 +137,7 @@ export function OffersGrid({
             vendorLogo={vendor?.logo}
             vendorName={vendor?.name}
             vendorPrimaryService={vendor?.primaryService}
+            isNew={newOfferIds?.has(offer.id)}
             className="w-full"
           />
         );

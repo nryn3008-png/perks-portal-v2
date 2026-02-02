@@ -31,6 +31,7 @@ interface OfferCardProps {
   vendorLogo?: string | null;           // Logo from vendors API (takes precedence over offer.picture)
   vendorName?: string;                  // Vendor name from vendors API
   vendorPrimaryService?: string | null; // Primary service from vendors API
+  isNew?: boolean;                      // Show "New" badge
   isLoading?: boolean;
   className?: string;                   // Additional CSS classes for the card wrapper
 }
@@ -216,7 +217,7 @@ export function OfferCardSkeleton() {
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService, isLoading = false, className = '' }: OfferCardProps) {
+export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService, isNew = false, isLoading = false, className = '' }: OfferCardProps) {
   // Loading state → Figma "loading" variant
   if (isLoading) {
     return <OfferCardSkeleton />;
@@ -281,6 +282,11 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
                   </p>
                 )}
               </div>
+            )}
+            {isNew && (
+              <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-600/10">
+                New
+              </span>
             )}
           </div>
         </div>
