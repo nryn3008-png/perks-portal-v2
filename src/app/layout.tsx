@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Mulish } from 'next/font/google';
 import '@/styles/globals.css';
 
-const inter = Inter({
+const mulish = Mulish({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-mulish',
 });
 
 export const metadata: Metadata = {
@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={mulish.variable}>
       <body className="font-sans">
         {children}
       </body>
