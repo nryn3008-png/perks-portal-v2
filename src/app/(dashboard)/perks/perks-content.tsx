@@ -616,8 +616,8 @@ function PerksPageContent() {
           )}
         </div>
 
-        {/* New Perks Section */}
-        {!isLoading && newOfferIds.size > 0 && (() => {
+        {/* New Perks Section (hidden in grouped view) */}
+        {!isLoading && viewMode !== 'grouped' && newOfferIds.size > 0 && (() => {
           const newPerks = finalOffers.filter((o) => newOfferIds.has(o.id));
           if (newPerks.length === 0) return null;
           return (
