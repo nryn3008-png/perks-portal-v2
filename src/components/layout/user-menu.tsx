@@ -112,9 +112,8 @@ export function UserMenu({ user }: UserMenuProps) {
               }}
             >
               {/* Bridge icon */}
-              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600">
-                <span className="text-[9px] font-bold text-white">B</span>
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logos/bridge-icon.svg" alt="Bridge" className="h-5 w-5 rounded-full" />
               <span className="font-medium">Bridge account</span>
               <ExternalLink className="ml-auto h-3.5 w-3.5 text-gray-400" />
             </a>
