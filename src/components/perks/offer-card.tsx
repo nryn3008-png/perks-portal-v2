@@ -283,11 +283,6 @@ export function OfferCard({ offer, vendorLogo, vendorName, vendorPrimaryService,
                 )}
               </div>
             )}
-            {isNew && (
-              <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-600/10">
-                New
-              </span>
-            )}
           </div>
         </div>
 
