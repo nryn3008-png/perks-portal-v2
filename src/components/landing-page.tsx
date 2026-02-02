@@ -32,9 +32,9 @@ const BRIDGE_LOGIN_URL = 'https://brdg.app/login';
 /* ── Data ────────────────────────────────────────────────────── */
 
 const STATS = [
-  { value: 200, suffix: '+', label: 'Exclusive Perks', icon: Gift },
+  { value: 400, suffix: '+', label: 'Exclusive Perks', icon: Gift },
   { value: 2, prefix: '$', suffix: 'M+', label: 'Saved by Founders', icon: TrendingUp },
-  { value: 50, suffix: '+', label: 'Verified Partners', icon: Shield },
+  { value: 300, suffix: '+', label: 'Verified Partners', icon: Shield },
 ];
 
 const PARTNERS = [
@@ -211,7 +211,7 @@ function MarqueeRow({ reverse = false }: { reverse?: boolean }) {
               className="h-6 w-6 rounded object-contain opacity-40 group-hover:opacity-70 transition-opacity duration-150"
               loading="lazy"
             />
-            <span className="text-[14px] font-semibold text-gray-300 group-hover:text-gray-500 transition-colors duration-150">
+            <span className="text-[14px] font-semibold text-gray-400 group-hover:text-gray-600 transition-colors duration-150">
               {partner.name}
             </span>
           </div>
@@ -297,7 +297,7 @@ export function LandingPage() {
             Browse All Perks
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
           </a>
-          <span className="text-[13px] text-gray-400">
+          <span className="text-[13px] text-gray-500">
             Log in with Bridge account · Free for all Bridge members
           </span>
         </div>
@@ -328,7 +328,7 @@ export function LandingPage() {
       ═══════════════════════════════════════════════════════════ */}
       <section ref={partners.ref} className="w-full max-w-5xl px-6 pb-24 overflow-hidden">
         <p
-          className={`text-center text-[12px] font-semibold text-gray-400 uppercase tracking-wider mb-8 ${
+          className={`text-center text-[12px] font-semibold text-gray-500 uppercase tracking-wider mb-8 ${
             partners.isVisible ? 'animate-fade-in' : 'opacity-0'
           }`}
         >
@@ -375,7 +375,7 @@ export function LandingPage() {
               </div>
               <div>
                 <div className="text-[14px] font-semibold text-gray-900">{label}</div>
-                <div className="text-[12px] text-gray-400">{count} perks</div>
+                <div className="text-[12px] text-gray-500">{count} perks</div>
               </div>
             </div>
           ))}
@@ -477,20 +477,16 @@ export function LandingPage() {
       ═══════════════════════════════════════════════════════════ */}
       <section ref={cta.ref} className="w-full max-w-5xl px-6 pb-24">
         <div
-          className={`relative overflow-hidden rounded-2xl bg-gray-900 px-8 py-16 sm:px-16 sm:py-24 text-center ${
+          className={`relative overflow-hidden rounded-2xl bg-gradient-to-l from-[#0038FF] to-[#0085FF] px-8 py-16 sm:px-16 sm:py-24 text-center ${
             cta.isVisible ? 'animate-slide-up' : 'opacity-0 translate-y-4'
           }`}
         >
-          {/* Gradient accents */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0038FF]/15 via-transparent to-transparent" />
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-[#0038FF]/10 via-transparent to-transparent rounded-full blur-3xl" />
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gradient-radial from-[#0038FF]/5 to-transparent rounded-full" />
 
           <div className="relative">
             <h2 className="text-2xl sm:text-4xl font-bold text-white tracking-tight mb-4">
               Start saving today
             </h2>
-            <p className="text-[14px] text-gray-400 max-w-md mx-auto mb-8 leading-relaxed">
+            <p className="text-[14px] text-white max-w-md mx-auto mb-8 leading-relaxed">
               Join thousands of founders who&apos;ve saved millions
               on the tools they use every day.
             </p>
@@ -506,7 +502,7 @@ export function LandingPage() {
                 hover:bg-gray-100 hover:shadow-[0_8px_32px_rgba(255,255,255,0.2)] hover:scale-[1.02]
                 active:scale-[0.98]
                 transition-all duration-200
-                focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0038FF]
               "
             >
               Get Started
