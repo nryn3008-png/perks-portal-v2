@@ -13,7 +13,8 @@ import {
 } from 'lucide-react';
 import { CopyButton, OfferCard } from '@/components/perks';
 import { RedeemButton } from '@/components/perks/redeem-button';
-import { perksService, vendorsService } from '@/lib/api';
+import { getDefaultProvider } from '@/lib/providers';
+import { createClientFromProvider, createPerksService, createVendorsService } from '@/lib/api';
 import { findSimilarPerks } from '@/lib/similarity';
 import type { GetProvenDeal, GetProvenVendor } from '@/types';
 
@@ -271,6 +272,16 @@ function MercuryButton({
 
 export default async function OfferDetailPage({ params }: OfferDetailPageProps) {
   const { id } = await params;
+
+  // Get provider from database
+  const provider = await getDefaultProvider();
+  if (!provider) {
+    notFound();
+  }
+
+  const client = createClientFromProvider(provider);
+  const perksService = createPerksService(client, provider.api_token);
+  const vendorsService = createVendorsService(client, provider.api_token);
 
   const result = await perksService.getOfferById(id);
   if (!result.success || !result.data) {

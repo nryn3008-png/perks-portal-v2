@@ -15,6 +15,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button, Card, SearchInput } from '@/components/ui';
 import { VendorsGrid } from '@/components/vendors';
+import { AdminNav } from '@/components/admin/admin-nav';
 import type { GetProvenVendor } from '@/types';
 
 /**
@@ -483,6 +484,9 @@ function AdminVendorsPageContent() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Admin Navigation */}
+      <AdminNav />
+
       {/* Admin Header - Mercury OS style */}
       <div className="flex items-center gap-4 rounded-xl bg-amber-50/80 border border-amber-200/60 p-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100">

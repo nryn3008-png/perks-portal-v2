@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { vendorsService } from '@/lib/api';
+import { getDefaultProvider } from '@/lib/providers';
+import { createClientFromProvider, createVendorsService } from '@/lib/api';
 
 /**
  * GET /api/vendors/filters
@@ -7,6 +8,17 @@ import { vendorsService } from '@/lib/api';
  * Returns unique services and vendor groups from API data
  */
 export async function GET() {
+  const provider = await getDefaultProvider();
+  if (!provider) {
+    return NextResponse.json(
+      { error: { code: 'PROVIDER_ERROR', message: 'No active provider configured', status: 500 } },
+      { status: 500 }
+    );
+  }
+
+  const client = createClientFromProvider(provider);
+  const vendorsService = createVendorsService(client, provider.api_token);
+
   const filters = await vendorsService.getFilterOptions();
   return NextResponse.json(filters);
 }

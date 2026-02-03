@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveAuth } from '@/lib/bridge/auth';
 import { supabase } from '@/lib/supabase';
+import { getDefaultProvider } from '@/lib/providers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,6 +22,7 @@ export async function POST(request: NextRequest) {
       vendor_name,
       estimated_value,
       getproven_link,
+      provider_id: bodyProviderId,
     } = body;
 
     // Validate required fields
@@ -31,6 +33,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get provider_id from body or use default provider
+    let providerId = bodyProviderId;
+    if (!providerId) {
+      const defaultProvider = await getDefaultProvider();
+      providerId = defaultProvider?.id || null;
+    }
+
     const { error } = await supabase.from('redemption_clicks').insert({
       user_id: user.id,
       user_email: user.email,
@@ -39,6 +48,7 @@ export async function POST(request: NextRequest) {
       vendor_name,
       estimated_value,
       getproven_link,
+      provider_id: providerId,
     });
 
     if (error) {

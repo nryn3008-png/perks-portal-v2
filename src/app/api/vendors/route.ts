@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { vendorsService } from '@/lib/api';
+import { getDefaultProvider } from '@/lib/providers';
+import { createClientFromProvider, createVendorsService } from '@/lib/api';
 
 /**
  * GET /api/vendors
@@ -14,6 +15,17 @@ import { vendorsService } from '@/lib/api';
  * - next: API-provided next URL for pagination
  */
 export async function GET(request: NextRequest) {
+  const provider = await getDefaultProvider();
+  if (!provider) {
+    return NextResponse.json(
+      { error: { code: 'PROVIDER_ERROR', message: 'No active provider configured', status: 500 } },
+      { status: 500 }
+    );
+  }
+
+  const client = createClientFromProvider(provider);
+  const vendorsService = createVendorsService(client, provider.api_token);
+
   const searchParams = request.nextUrl.searchParams;
 
   const page = parseInt(searchParams.get('page') || '1');

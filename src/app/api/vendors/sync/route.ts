@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { getDefaultProvider } from '@/lib/providers';
 
 interface VendorInput {
   vendor_id: number;
@@ -13,6 +14,7 @@ interface VendorInput {
  * POST /api/vendors/sync
  *
  * Syncs vendors with the vendor_tracker table in Supabase.
+ * Now includes provider_id to track vendors per provider.
  *
  * Status lifecycle:
  *   - "new"     → first seen within the last 7 days
@@ -22,6 +24,14 @@ interface VendorInput {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
+    // Get provider_id from body or use default provider
+    let providerId = body.provider_id;
+    if (!providerId) {
+      const defaultProvider = await getDefaultProvider();
+      providerId = defaultProvider?.id || null;
+    }
+
     const vendors: VendorInput[] = body.vendors || [];
 
     if (vendors.length === 0) {
@@ -32,10 +42,16 @@ export async function POST(request: NextRequest) {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    // 1. Get ALL tracked vendors
-    const { data: allTracked, error: fetchError } = await supabase
+    // 1. Get tracked vendors for this provider
+    let trackedQuery = supabase
       .from('vendor_tracker')
       .select('vendor_id, first_seen_at, status');
+
+    if (providerId) {
+      trackedQuery = trackedQuery.eq('provider_id', providerId);
+    }
+
+    const { data: allTracked, error: fetchError } = await trackedQuery;
 
     if (fetchError) {
       console.error('[Vendor Sync] Failed to fetch tracked vendors:', fetchError);
@@ -60,6 +76,7 @@ export async function POST(request: NextRequest) {
           perks_count: v.perks_count || 0,
           status: isRecent ? 'new' : 'active',
           first_seen_at: existing.first_seen_at,
+          provider_id: providerId,
         };
       }
       return {
@@ -69,18 +86,20 @@ export async function POST(request: NextRequest) {
         website: v.website || null,
         perks_count: v.perks_count || 0,
         status: 'new',
+        provider_id: providerId,
       };
     });
 
+    // Use composite key for upsert (vendor_id + provider_id)
     const { error: upsertError } = await supabase
       .from('vendor_tracker')
-      .upsert(upsertRows, { onConflict: 'vendor_id' });
+      .upsert(upsertRows, { onConflict: 'vendor_id,provider_id' });
 
     if (upsertError) {
       console.error('[Vendor Sync] Failed to upsert vendors:', upsertError);
     }
 
-    // 3. Mark removed vendors
+    // 3. Mark removed vendors (for this provider only)
     const removedIds: number[] = [];
     for (const [vendorId, info] of Array.from(trackedMap.entries())) {
       if (!currentVendorIds.has(vendorId) && info.status !== 'removed') {
@@ -89,10 +108,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (removedIds.length > 0) {
-      await supabase
+      let removeQuery = supabase
         .from('vendor_tracker')
         .update({ status: 'removed' })
         .in('vendor_id', removedIds);
+
+      if (providerId) {
+        removeQuery = removeQuery.eq('provider_id', providerId);
+      }
+
+      await removeQuery;
     }
 
     // 4. Return new vendor IDs

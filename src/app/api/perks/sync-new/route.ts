@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { getDefaultProvider } from '@/lib/providers';
 
 interface OfferInput {
   offer_id: number;
@@ -13,6 +14,7 @@ interface OfferInput {
  * POST /api/perks/sync-new
  *
  * Syncs offers with the offer_tracker table in Supabase.
+ * Now includes provider_id to track offers per provider.
  *
  * Status lifecycle:
  *   - "new"     → first seen within the last 7 days
@@ -22,6 +24,13 @@ interface OfferInput {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
+    // Get provider_id from body or use default provider
+    let providerId = body.provider_id;
+    if (!providerId) {
+      const defaultProvider = await getDefaultProvider();
+      providerId = defaultProvider?.id || null;
+    }
 
     const offers: OfferInput[] = body.offers || (body.offer_ids || []).map((id: number) => ({
       offer_id: id,
@@ -39,10 +48,16 @@ export async function POST(request: NextRequest) {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    // 1. Get ALL tracked offers in one query
-    const { data: allTracked, error: fetchError } = await supabase
+    // 1. Get tracked offers for this provider
+    let trackedQuery = supabase
       .from('offer_tracker')
       .select('offer_id, first_seen_at, status');
+
+    if (providerId) {
+      trackedQuery = trackedQuery.eq('provider_id', providerId);
+    }
+
+    const { data: allTracked, error: fetchError } = await trackedQuery;
 
     if (fetchError) {
       console.error('[Sync New] Failed to fetch tracked offers:', fetchError);
@@ -67,6 +82,7 @@ export async function POST(request: NextRequest) {
           getproven_link: o.getproven_link || null,
           status: isRecent ? 'new' : 'active',
           first_seen_at: existing.first_seen_at, // preserve original
+          provider_id: providerId,
         };
       }
       // Brand new offer
@@ -77,18 +93,20 @@ export async function POST(request: NextRequest) {
         estimated_value: o.estimated_value || null,
         getproven_link: o.getproven_link || null,
         status: 'new',
+        provider_id: providerId,
       };
     });
 
+    // Use composite key for upsert (offer_id + provider_id)
     const { error: upsertError } = await supabase
       .from('offer_tracker')
-      .upsert(upsertRows, { onConflict: 'offer_id' });
+      .upsert(upsertRows, { onConflict: 'offer_id,provider_id' });
 
     if (upsertError) {
       console.error('[Sync New] Failed to upsert offers:', upsertError);
     }
 
-    // 3. Mark removed offers in one batch query
+    // 3. Mark removed offers in one batch query (for this provider only)
     const removedIds: number[] = [];
     for (const [offerId, info] of Array.from(trackedMap.entries())) {
       if (!currentOfferIds.has(offerId) && info.status !== 'removed') {
@@ -97,10 +115,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (removedIds.length > 0) {
-      await supabase
+      let removeQuery = supabase
         .from('offer_tracker')
         .update({ status: 'removed' })
         .in('offer_id', removedIds);
+
+      if (providerId) {
+        removeQuery = removeQuery.eq('provider_id', providerId);
+      }
+
+      await removeQuery;
     }
 
     // 4. Return IDs with status "new"

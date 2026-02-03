@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { perksService } from '@/lib/api';
+import { getDefaultProvider } from '@/lib/providers';
+import { createClientFromProvider, createPerksService } from '@/lib/api';
 
 /**
  * GET /api/perks/totals
@@ -11,6 +12,17 @@ import { perksService } from '@/lib/api';
  * - totalSavingsRaw: number (raw sum for calculations)
  */
 export async function GET() {
+  const provider = await getDefaultProvider();
+  if (!provider) {
+    return NextResponse.json(
+      { error: { code: 'PROVIDER_ERROR', message: 'No active provider configured', status: 500 } },
+      { status: 500 }
+    );
+  }
+
+  const client = createClientFromProvider(provider);
+  const perksService = createPerksService(client, provider.api_token);
+
   const stats = await perksService.getDashboardStats();
 
   return NextResponse.json({

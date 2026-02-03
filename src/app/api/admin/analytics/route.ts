@@ -9,6 +9,7 @@ import { requireAdmin } from '@/lib/bridge/auth';
  * Query params:
  *   - range: "7d" | "30d" | "90d" | "all" (default: "30d")
  *   - page: number (for table pagination, default: 1)
+ *   - provider_id: UUID (optional, filter by provider; omit for all providers)
  */
 export async function GET(request: NextRequest) {
   // Admin-only access
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const range = searchParams.get('range') || '30d';
   const page = parseInt(searchParams.get('page') || '1', 10);
+  const providerId = searchParams.get('provider_id') || null;
   const pageSize = 20;
 
   // Calculate date range
@@ -38,6 +40,9 @@ export async function GET(request: NextRequest) {
     let baseQuery = supabase.from('redemption_clicks').select('*');
     if (rangeDate) {
       baseQuery = baseQuery.gte('clicked_at', rangeDate.toISOString());
+    }
+    if (providerId) {
+      baseQuery = baseQuery.eq('provider_id', providerId);
     }
 
     // Fetch all clicks in range (for aggregation)
@@ -66,11 +71,17 @@ export async function GET(request: NextRequest) {
     ).length;
 
     // Need separate query for last month (might be outside range)
-    const { data: lastMonthData } = await supabase
+    let lastMonthQuery = supabase
       .from('redemption_clicks')
       .select('id')
       .gte('clicked_at', lastMonthStart.toISOString())
       .lte('clicked_at', lastMonthEnd.toISOString());
+
+    if (providerId) {
+      lastMonthQuery = lastMonthQuery.eq('provider_id', providerId);
+    }
+
+    const { data: lastMonthData } = await lastMonthQuery;
 
     const lastMonthClicks = lastMonthData?.length || 0;
     const monthOverMonth = lastMonthClicks === 0

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { perksService } from '@/lib/api';
+import { getDefaultProvider } from '@/lib/providers';
+import { createClientFromProvider, createPerksService } from '@/lib/api';
 
 /**
  * GET /api/perks/[id]
@@ -9,6 +10,17 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const provider = await getDefaultProvider();
+  if (!provider) {
+    return NextResponse.json(
+      { error: { code: 'PROVIDER_ERROR', message: 'No active provider configured', status: 500 } },
+      { status: 500 }
+    );
+  }
+
+  const client = createClientFromProvider(provider);
+  const perksService = createPerksService(client, provider.api_token);
+
   const { id } = await params;
   const result = await perksService.getOfferById(id);
 

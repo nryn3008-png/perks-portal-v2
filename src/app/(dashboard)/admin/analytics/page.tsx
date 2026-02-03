@@ -9,8 +9,10 @@
 
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { MousePointerClick, Users, DollarSign, TrendingUp, Shield, BarChart3 } from 'lucide-react';
+import { AdminNav } from '@/components/admin/admin-nav';
 import { StatCard, StatCardSkeleton } from '@/components/admin/stat-card';
 import { DateRangeFilter, type DateRange } from '@/components/admin/date-range-filter';
+import { ProviderFilter } from '@/components/admin/provider-filter';
 import { ExportButton } from '@/components/admin/export-button';
 import {
   RedemptionsOverTimeChart,
@@ -67,18 +69,27 @@ function formatValue(val: number): string {
 
 function AnalyticsDashboard() {
   const [range, setRange] = useState<DateRange>('30d');
+  const [providerId, setProviderId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [allRows, setAllRows] = useState<AnalyticsData['_allRows']>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async (currentRange: DateRange, currentPage: number) => {
+  const fetchData = useCallback(async (currentRange: DateRange, currentPage: number, currentProviderId: string | null) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const res = await fetch(`/api/admin/analytics?range=${currentRange}&page=${currentPage}`);
+      const params = new URLSearchParams({
+        range: currentRange,
+        page: String(currentPage),
+      });
+      if (currentProviderId) {
+        params.set('provider_id', currentProviderId);
+      }
+
+      const res = await fetch(`/api/admin/analytics?${params.toString()}`);
       if (!res.ok) {
         if (res.status === 401) {
           setError('Unauthorized. Admin access required.');
@@ -92,7 +103,7 @@ function AnalyticsDashboard() {
       // On first page load, store all rows for export
       if (currentPage === 1) {
         // Fetch all for export (no pagination)
-        const allRes = await fetch(`/api/admin/analytics?range=${currentRange}&page=1`);
+        const allRes = await fetch(`/api/admin/analytics?${params.toString()}`);
         if (allRes.ok) {
           const allJson = await allRes.json();
           setAllRows(allJson.table.data);
@@ -108,17 +119,20 @@ function AnalyticsDashboard() {
 
   useEffect(() => {
     setPage(1);
-    fetchData(range, 1);
-  }, [range, fetchData]);
+    fetchData(range, 1, providerId);
+  }, [range, providerId, fetchData]);
 
   useEffect(() => {
     if (page > 1) {
-      fetchData(range, page);
+      fetchData(range, page, providerId);
     }
-  }, [page, range, fetchData]);
+  }, [page, range, providerId, fetchData]);
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Admin Navigation */}
+      <AdminNav />
+
       {/* Admin Header - Mercury OS style */}
       <div className="flex items-center gap-4 rounded-xl bg-amber-50/80 border border-amber-200/60 p-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100">
@@ -148,7 +162,8 @@ function AnalyticsDashboard() {
       </div>
 
       {/* Controls */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <ProviderFilter value={providerId} onChange={setProviderId} />
         <DateRangeFilter value={range} onChange={setRange} />
         <ExportButton data={allRows || []} disabled={isLoading} />
       </div>

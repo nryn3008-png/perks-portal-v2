@@ -29,7 +29,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { cookies } from 'next/headers';
-import { vendorsService, perksService, getVendorIntropathCounts } from '@/lib/api';
+import { getDefaultProvider } from '@/lib/providers';
+import { createClientFromProvider, createVendorsService, createPerksService, getVendorIntropathCounts } from '@/lib/api';
 import { OfferCard } from '@/components/perks';
 import { VendorCard } from '@/components/vendors';
 import { findSimilarVendors } from '@/lib/similarity';
@@ -244,6 +245,16 @@ function ColorLabel({
 
 export default async function AdminVendorDetailPage({ params }: AdminVendorDetailPageProps) {
   const { id } = await params;
+
+  // Get provider from database
+  const provider = await getDefaultProvider();
+  if (!provider) {
+    notFound();
+  }
+
+  const client = createClientFromProvider(provider);
+  const vendorsService = createVendorsService(client, provider.api_token);
+  const perksService = createPerksService(client, provider.api_token);
 
   // Fetch all vendor data in parallel (including perks and all vendors for similarity)
   const [vendorResult, clientsResult, contactsResult, allUsersResult, perksResult, allVendorsResult] = await Promise.all([

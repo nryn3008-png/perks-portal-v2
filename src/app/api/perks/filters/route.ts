@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { perksService } from '@/lib/api';
+import { getDefaultProvider } from '@/lib/providers';
+import { createClientFromProvider, createPerksService } from '@/lib/api';
 
 /**
  * GET /api/perks/filters
@@ -13,6 +14,17 @@ import { perksService } from '@/lib/api';
  * DO NOT hardcode filter options.
  */
 export async function GET() {
+  const provider = await getDefaultProvider();
+  if (!provider) {
+    return NextResponse.json(
+      { error: { code: 'PROVIDER_ERROR', message: 'No active provider configured', status: 500 } },
+      { status: 500 }
+    );
+  }
+
+  const client = createClientFromProvider(provider);
+  const perksService = createPerksService(client, provider.api_token);
+
   const filters = await perksService.getFilterOptions();
   return NextResponse.json(filters);
 }

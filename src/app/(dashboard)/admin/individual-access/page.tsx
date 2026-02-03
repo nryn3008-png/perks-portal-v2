@@ -12,6 +12,7 @@
 import { Suspense, useEffect, useState, useCallback } from 'react';
 import { AlertCircle, Loader2, Shield, UserCheck, Users } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
+import { AdminNav } from '@/components/admin/admin-nav';
 import type { IndividualAccess } from '@/types';
 
 const PAGE_SIZE = 50;
@@ -82,6 +83,9 @@ function IndividualAccessPageContent() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Admin Navigation */}
+      <AdminNav />
+
       {/* Admin Header - Mercury OS style */}
       <div className="flex items-center gap-4 rounded-xl bg-amber-50/80 border border-amber-200/60 p-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100">

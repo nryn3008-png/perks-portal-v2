@@ -7,10 +7,15 @@
  * STRICT: Real API data only. NO mock data exports.
  */
 
-export { perksService } from './perks-service';
-export { vendorsService } from './vendors-service';
+export { createPerksService } from './perks-service';
+export type { PerksService, PerksFilters, PerksResponse } from './perks-service';
+
+export { createVendorsService } from './vendors-service';
+export type { VendorsService, VendorsFilters, VendorsResponse } from './vendors-service';
+
 export { whitelistService } from './whitelist-service';
-export { getProvenClient, GetProvenApiError } from './getproven-client';
+export { createClient, createClientFromProvider, GetProvenApiError } from './getproven-client';
+export type { GetProvenClient, ProviderConfig } from './getproven-client';
 
 // Bridge API (server-only) - for intropath counts
 export {
