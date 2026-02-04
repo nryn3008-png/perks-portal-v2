@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidateTag } from 'next/cache';
-import { supabaseAdmin } from '@/lib/supabase-server';
+import { revalidatePath } from 'next/cache';
+import { createSupabaseAdmin } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +13,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const supabase = createSupabaseAdmin();
 
   try {
     const body = await request.json();
@@ -20,7 +21,7 @@ export async function PATCH(
 
     // If setting as default, first unset all others
     if (is_default === true) {
-      const { error: unsetError } = await supabaseAdmin
+      const { error: unsetError } = await supabase
         .from('providers')
         .update({ is_default: false })
         .neq('id', id);
@@ -44,7 +45,7 @@ export async function PATCH(
     if (is_default !== undefined) updateData.is_default = is_default;
 
     // Update the provider
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('providers')
       .update(updateData)
       .eq('id', id)
@@ -66,8 +67,11 @@ export async function PATCH(
       );
     }
 
-    // Invalidate cached provider data when provider settings change
-    revalidateTag('provider-data');
+    // Purge all cached data for perks and vendors routes
+    // revalidatePath purges both Data Cache and Full Route Cache
+    revalidatePath('/api/perks', 'page');
+    revalidatePath('/api/vendors', 'page');
+    revalidatePath('/perks', 'layout');
 
     return NextResponse.json({ provider: data });
   } catch (err) {
@@ -88,9 +92,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const supabase = createSupabaseAdmin();
 
   // Check if this is the default provider
-  const { data: provider } = await supabaseAdmin
+  const { data: provider } = await supabase
     .from('providers')
     .select('is_default')
     .eq('id', id)
@@ -103,7 +108,7 @@ export async function DELETE(
     );
   }
 
-  const { error } = await supabaseAdmin
+  const { error } = await supabase
     .from('providers')
     .delete()
     .eq('id', id);
@@ -128,8 +133,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const supabase = createSupabaseAdmin();
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabase
     .from('providers')
     .select('id, name, slug, api_url, is_active, is_default, created_at')
     .eq('id', id)

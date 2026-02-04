@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase-server';
+import { createSupabaseAdmin } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +8,9 @@ export const dynamic = 'force-dynamic';
  * List all providers (tokens masked for security)
  */
 export async function GET() {
-  const { data, error } = await supabaseAdmin
+  const supabase = createSupabaseAdmin();
+
+  const { data, error } = await supabase
     .from('providers')
     .select('id, name, slug, api_url, is_active, is_default, created_at')
     .order('is_default', { ascending: false })
@@ -30,6 +32,8 @@ export async function GET() {
  * Create a new provider
  */
 export async function POST(request: NextRequest) {
+  const supabase = createSupabaseAdmin();
+
   try {
     const body = await request.json();
     const { name, slug, api_url, api_token } = body;
@@ -43,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if slug already exists
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await supabase
       .from('providers')
       .select('id')
       .eq('slug', slug)
@@ -57,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert new provider
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('providers')
       .insert({
         name,
