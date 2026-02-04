@@ -4,7 +4,7 @@
  * Manages whitelisted domains via GetProven API.
  * STRICT: Returns RAW API data only. NO normalization.
  * ADMIN ONLY: This service should only be used by admin pages.
- * Uses the admin provider (getproven-admin) for sync operations.
+ * Uses the default provider for whitelist operations.
  */
 
 import type {
@@ -13,7 +13,7 @@ import type {
   GetProvenListResponse,
   ApiResponse,
 } from '@/types';
-import { getProviderBySlug } from '@/lib/providers';
+import { getDefaultProvider } from '@/lib/providers';
 import { createClientFromProvider, GetProvenApiError, GetProvenClient } from './getproven-client';
 
 /**
@@ -29,12 +29,12 @@ function logApiError(operation: string, error: unknown): void {
 }
 
 /**
- * Get admin client for whitelist operations
+ * Get client for whitelist operations using default provider
  */
-async function getAdminClient(): Promise<GetProvenClient | null> {
-  const provider = await getProviderBySlug('getproven-admin');
+async function getWhitelistClient(): Promise<GetProvenClient | null> {
+  const provider = await getDefaultProvider();
   if (!provider) {
-    console.error('[Whitelist Service] Admin provider not found');
+    console.error('[Whitelist Service] Default provider not found');
     return null;
   }
   return createClientFromProvider(provider);
@@ -70,13 +70,13 @@ export const whitelistService = {
     pageSize = 50
   ): Promise<ApiResponse<WhitelistResponse>> {
     try {
-      const client = await getAdminClient();
+      const client = await getWhitelistClient();
       if (!client) {
         return {
           success: false,
           error: {
             code: 'PROVIDER_ERROR',
-            message: 'Admin provider not configured',
+            message: 'No active provider configured',
             status: 500,
           },
         };
@@ -124,13 +124,13 @@ export const whitelistService = {
     pageSize = 50
   ): Promise<ApiResponse<IndividualAccessResponse>> {
     try {
-      const client = await getAdminClient();
+      const client = await getWhitelistClient();
       if (!client) {
         return {
           success: false,
           error: {
             code: 'PROVIDER_ERROR',
-            message: 'Admin provider not configured',
+            message: 'No active provider configured',
             status: 500,
           },
         };
@@ -176,13 +176,13 @@ export const whitelistService = {
    */
   async uploadCsv(formData: FormData): Promise<ApiResponse<unknown>> {
     try {
-      const client = await getAdminClient();
+      const client = await getWhitelistClient();
       if (!client) {
         return {
           success: false,
           error: {
             code: 'PROVIDER_ERROR',
-            message: 'Admin provider not configured',
+            message: 'No active provider configured',
             status: 500,
           },
         };
