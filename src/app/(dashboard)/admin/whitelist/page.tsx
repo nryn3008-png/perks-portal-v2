@@ -236,18 +236,10 @@ function WhitelistPageContent() {
 
       {/* Error State */}
       {error && (
-        <Card className="border-red-200 bg-red-50 p-4">
+        <Card className="border-gray-200 bg-gray-50 p-4">
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-600" aria-hidden="true" />
-            <p className="text-[14px] text-red-700">{error}</p>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => fetchDomains(1)}
-              className="ml-auto"
-            >
-              Retry
-            </Button>
+            <AlertCircle className="h-4 w-4 flex-shrink-0 text-gray-500" aria-hidden="true" />
+            <p className="text-[14px] text-gray-600">{error}</p>
           </div>
         </Card>
       )}
@@ -270,20 +262,9 @@ function WhitelistPageContent() {
 
       {/* Empty State */}
       {!isLoading && domains.length === 0 && !error && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-gray-100 bg-gradient-to-b from-white to-gray-50/80 py-16 px-8">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0038FF]/10 to-[#0038FF]/5 mb-5">
-            <Globe className="h-8 w-8 text-[#0038FF]/60" />
-          </div>
-          <h3 className="text-[15px] font-semibold text-gray-900 mb-2">
-            No domains whitelisted yet
-          </h3>
-          <p className="text-[13px] text-gray-500 text-center max-w-sm mb-6">
-            Whitelisted domains allow users from specific organizations to access perks automatically.
-          </p>
-          <div className="flex items-center gap-2 text-[12px] text-gray-400">
-            <Upload className="h-3.5 w-3.5" />
-            <span>Upload a CSV file to add domains</span>
-          </div>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-gray-50/50 py-16 px-8">
+          <Globe className="h-10 w-10 text-gray-300 mb-4" />
+          <p className="text-[14px] text-gray-500">No whitelisted domains yet.</p>
         </div>
       )}
 
