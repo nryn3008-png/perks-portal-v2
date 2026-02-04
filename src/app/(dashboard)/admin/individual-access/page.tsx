@@ -125,7 +125,7 @@ function IndividualAccessPageContent() {
         <Card className="border-gray-200 bg-gray-50 p-4">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 flex-shrink-0 text-gray-500" aria-hidden="true" />
-            <p className="text-[14px] text-gray-600">{error}</p>
+            <p className="text-[14px] text-gray-600">Unable to load individual access list.</p>
           </div>
         </Card>
       )}
