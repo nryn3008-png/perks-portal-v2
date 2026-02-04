@@ -16,16 +16,24 @@ export const dynamic = 'force-dynamic';
  * - next: API-provided next URL for pagination
  */
 export async function GET(request: NextRequest) {
-  // Debug: fetch all providers to see their state
+  // Query provider directly to avoid any module-level caching
   const { supabaseAdmin } = await import('@/lib/supabase-server');
+
   const { data: allProviders } = await supabaseAdmin
     .from('providers')
     .select('slug, is_default, is_active');
 
-  const provider = await getDefaultProvider();
-  if (!provider) {
+  // Get default provider directly instead of using getDefaultProvider()
+  const { data: provider, error } = await supabaseAdmin
+    .from('providers')
+    .select('*')
+    .eq('is_default', true)
+    .eq('is_active', true)
+    .single();
+
+  if (error || !provider) {
     return NextResponse.json(
-      { error: { code: 'PROVIDER_ERROR', message: 'No active provider configured', status: 500 }, _allProviders: allProviders },
+      { error: { code: 'PROVIDER_ERROR', message: 'No active provider configured', status: 500 }, _allProviders: allProviders, _error: error },
       { status: 500 }
     );
   }
