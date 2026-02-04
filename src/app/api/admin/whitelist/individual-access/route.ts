@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { whitelistService } from '@/lib/api';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/whitelist/individual-access
  * Fetch paginated list of individually whitelisted users from GetProven API

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { whitelistService } from '@/lib/api';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/whitelist/domains
  * Fetch paginated list of whitelisted domains from GetProven API
