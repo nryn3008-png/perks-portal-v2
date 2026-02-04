@@ -36,8 +36,8 @@ async function fetchWithNextUrl(
       Authorization: `Token ${apiToken}`,
       'Content-Type': 'application/json',
     },
-    next: { revalidate: 300, tags: ['provider-data'] },
-  } as RequestInit);
+    cache: 'no-store',
+  });
   if (!res.ok) throw new Error('Failed to fetch next page');
   return res.json();
 }
