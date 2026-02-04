@@ -107,9 +107,8 @@ function createMakeRequest(config: ProviderConfig) {
         'Content-Type': 'application/json',
         ...options.headers,
       },
-      // Cache responses for 5 minutes with tags for invalidation
-      next: { revalidate: 300, tags: ['provider-data'] },
-    } as RequestInit);
+      cache: 'no-store',
+    });
 
     if (!response.ok) {
       let errorData: Record<string, unknown> = {};
