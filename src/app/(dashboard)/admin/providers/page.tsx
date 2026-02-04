@@ -259,18 +259,21 @@ export default function AdminProvidersPage() {
 
       {/* Empty State */}
       {!isLoading && providers.length === 0 && !error && (
-        <Card className="p-8">
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 mb-4">
-              <Database className="h-6 w-6 text-gray-400" />
-            </div>
-            <p className="text-[14px] text-gray-500 mb-4">No providers configured yet</p>
-            <Button onClick={openAddModal} variant="outline">
-              <Plus className="h-4 w-4" />
-              Add your first provider
-            </Button>
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-gray-100 bg-gradient-to-b from-white to-gray-50/80 py-16 px-8">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0038FF]/10 to-[#0038FF]/5 mb-5">
+            <Database className="h-8 w-8 text-[#0038FF]/60" />
           </div>
-        </Card>
+          <h3 className="text-[15px] font-semibold text-gray-900 mb-2">
+            No providers configured
+          </h3>
+          <p className="text-[13px] text-gray-500 text-center max-w-sm mb-6">
+            Providers connect to GetProven API endpoints to fetch perks data. Add a provider to get started.
+          </p>
+          <Button onClick={openAddModal} className="bg-gradient-to-br from-[#0038FF] to-[#0030E0] text-white hover:shadow-lg hover:shadow-[#0038FF]/25">
+            <Plus className="h-4 w-4" />
+            Add your first provider
+          </Button>
+        </div>
       )}
 
       {/* Providers Table */}

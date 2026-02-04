@@ -209,9 +209,20 @@ function VendorsTable({
 
   // Empty state
   if (vendors.length === 0) {
+    const isSearchResult = emptyMessage.includes('for "');
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/50 py-16">
-        <p className="text-[14px] text-gray-500">{emptyMessage}</p>
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-gray-100 bg-gradient-to-b from-white to-gray-50/80 py-16 px-8">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 mb-4">
+          <Building2 className="h-7 w-7 text-gray-400" />
+        </div>
+        <p className="text-[14px] text-gray-600 font-medium mb-1">
+          {isSearchResult ? 'No matching vendors' : 'No vendors available'}
+        </p>
+        <p className="text-[13px] text-gray-400 text-center max-w-xs">
+          {isSearchResult
+            ? 'Try adjusting your search or filters'
+            : 'Vendors will appear here once synced from the API'}
+        </p>
       </div>
     );
   }

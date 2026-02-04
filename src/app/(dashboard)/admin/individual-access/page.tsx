@@ -156,9 +156,20 @@ function IndividualAccessPageContent() {
 
       {/* Empty State */}
       {!isLoading && users.length === 0 && !error && (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/50 py-16">
-          <Users className="h-12 w-12 text-gray-300 mb-4" />
-          <p className="text-[14px] text-gray-500">No individually whitelisted users</p>
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-gray-100 bg-gradient-to-b from-white to-gray-50/80 py-16 px-8">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0038FF]/10 to-[#0038FF]/5 mb-5">
+            <UserCheck className="h-8 w-8 text-[#0038FF]/60" />
+          </div>
+          <h3 className="text-[15px] font-semibold text-gray-900 mb-2">
+            No individual access granted
+          </h3>
+          <p className="text-[13px] text-gray-500 text-center max-w-sm mb-6">
+            Individual access allows specific users to access perks without being on a whitelisted domain.
+          </p>
+          <div className="flex items-center gap-2 rounded-full bg-gray-100/80 px-3 py-1.5 text-[12px] text-gray-500">
+            <Shield className="h-3.5 w-3.5" />
+            <span>Manage access via GetProven dashboard</span>
+          </div>
         </div>
       )}
 
