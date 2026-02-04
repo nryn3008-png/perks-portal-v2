@@ -8,6 +8,21 @@ const nextConfig = {
     scrollRestoration: true,
   },
 
+  // Prevent caching of API routes
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, proxy-revalidate' },
+          { key: 'Pragma', value: 'no-cache' },
+          { key: 'Expires', value: '0' },
+          { key: 'Surrogate-Control', value: 'no-store' },
+        ],
+      },
+    ];
+  },
+
   // Image optimization for perk logos/images
   images: {
     remotePatterns: [
