@@ -229,12 +229,18 @@ function buildLoginRedirect(_request: NextRequest): NextResponse {
 /**
  * Build authenticated response with user headers
  */
-function buildAuthResponse(user: BridgeUser, authMode: string): NextResponse {
+function buildAuthResponse(user: BridgeUser, authMode: string, pathname: string): NextResponse {
   const response = NextResponse.next();
   response.headers.set('x-user-id', user.id);
   response.headers.set('x-user-email', user.email);
   response.headers.set('x-user-is-admin', isUserAdmin(user.email) ? 'true' : 'false');
   response.headers.set('x-auth-mode', authMode);
+  // Prevent caching for API routes
+  if (pathname.startsWith('/api/')) {
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+  }
   return response;
 }
 
@@ -261,7 +267,7 @@ export async function middleware(request: NextRequest) {
     if (authToken) {
       const user = await resolveUserFromToken(authToken);
       if (user) {
-        return buildAuthResponse(user, 'cookie');
+        return buildAuthResponse(user, 'cookie', pathname);
       }
     }
     // Not authenticated on Bridge domain — try API key cookie
@@ -270,7 +276,7 @@ export async function middleware(request: NextRequest) {
       if (apiKeyCookie) {
         const user = await resolveUserFromToken(apiKeyCookie);
         if (user) {
-          return buildAuthResponse(user, 'api-key');
+          return buildAuthResponse(user, 'api-key', pathname);
         }
       }
     }
@@ -296,6 +302,12 @@ export async function middleware(request: NextRequest) {
     response.headers.set('x-user-email', DEV_USER_EMAIL);
     response.headers.set('x-user-is-admin', isUserAdmin(DEV_USER_EMAIL) ? 'true' : 'false');
     response.headers.set('x-auth-mode', 'bypass');
+    // Prevent caching for API routes
+    if (pathname.startsWith('/api/')) {
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
+    }
     return response;
   }
 
@@ -315,7 +327,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.rewrite(new URL('/not-found', request.url));
       }
 
-      return buildAuthResponse(user, 'cookie');
+      return buildAuthResponse(user, 'cookie', pathname);
     }
 
     // authToken exists but is invalid — fall through to next auth method
@@ -339,7 +351,7 @@ export async function middleware(request: NextRequest) {
           return NextResponse.rewrite(new URL('/not-found', request.url));
         }
 
-        return buildAuthResponse(user, 'api-key');
+        return buildAuthResponse(user, 'api-key', pathname);
       }
 
       // API key cookie exists but is invalid — fall through to redirect

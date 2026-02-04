@@ -41,11 +41,15 @@ export async function GET(request: NextRequest) {
   }, nextUrl);
 
   if (!result.success) {
-    return NextResponse.json(
+    const errorResponse = NextResponse.json(
       { error: result.error },
       { status: result.error.status }
     );
+    errorResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    return errorResponse;
   }
 
-  return NextResponse.json(result.data);
+  const response = NextResponse.json(result.data);
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  return response;
 }
