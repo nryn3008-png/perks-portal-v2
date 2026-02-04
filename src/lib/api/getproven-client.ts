@@ -107,8 +107,8 @@ function createMakeRequest(config: ProviderConfig) {
         'Content-Type': 'application/json',
         ...options.headers,
       },
-      // Cache responses for 5 minutes — revalidates on hard refresh or new session
-      next: { revalidate: 300 },
+      // Cache responses for 5 minutes with tags for invalidation
+      next: { revalidate: 300, tags: ['provider-data'] },
     } as RequestInit);
 
     if (!response.ok) {

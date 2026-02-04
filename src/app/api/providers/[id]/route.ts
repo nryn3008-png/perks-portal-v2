@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase-server';
 
 /**
@@ -62,6 +63,9 @@ export async function PATCH(
         { status: 404 }
       );
     }
+
+    // Invalidate cached provider data when provider settings change
+    revalidateTag('provider-data');
 
     return NextResponse.json({ provider: data });
   } catch (err) {
