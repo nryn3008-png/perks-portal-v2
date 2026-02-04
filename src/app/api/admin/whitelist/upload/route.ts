@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { whitelistService } from '@/lib/api';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/admin/whitelist/upload
  * Upload CSV file to add whitelisted domains

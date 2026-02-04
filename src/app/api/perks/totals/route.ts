@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getDefaultProvider } from '@/lib/providers';
 import { createClientFromProvider, createPerksService } from '@/lib/api';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/perks/totals
  * Returns total offers count and total savings value

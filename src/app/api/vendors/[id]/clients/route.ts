@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDefaultProvider } from '@/lib/providers';
 import { createClientFromProvider, createVendorsService } from '@/lib/api';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/vendors/[id]/clients
  * Fetch vendor clients from GetProven API

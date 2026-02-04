@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDefaultProvider } from '@/lib/providers';
 import { createClientFromProvider, createPerksService } from '@/lib/api';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/perks/[id]
  * Fetch single offer by ID from GetProven API

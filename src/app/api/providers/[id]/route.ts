@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase-server';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * PATCH /api/providers/[id]
  * Update a provider (set default, edit details)

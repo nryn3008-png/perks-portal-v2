@@ -3,6 +3,8 @@ import { getDefaultProvider } from '@/lib/providers';
 import { createClientFromProvider, createVendorsService } from '@/lib/api';
 import type { VendorUser } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/vendors/[id]/contacts
  * Fetch vendor contacts from GetProven API

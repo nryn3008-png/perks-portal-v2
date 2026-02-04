@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getDefaultProvider } from '@/lib/providers';
 import { createClientFromProvider, createVendorsService } from '@/lib/api';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/vendors/filters
  * Fetch available filter options for vendors
