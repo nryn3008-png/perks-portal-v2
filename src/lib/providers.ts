@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase-server'
+import { createSupabaseAdmin } from './supabase-server'
 
 interface Provider {
   id: string
@@ -11,7 +11,10 @@ interface Provider {
 }
 
 export async function getDefaultProvider(): Promise<Provider | null> {
-  const { data, error } = await supabaseAdmin
+  // Create fresh client to avoid any connection-level caching
+  const supabase = createSupabaseAdmin()
+
+  const { data, error } = await supabase
     .from('providers')
     .select('*')
     .eq('is_default', true)
@@ -26,7 +29,10 @@ export async function getDefaultProvider(): Promise<Provider | null> {
 }
 
 export async function getProviderBySlug(slug: string): Promise<Provider | null> {
-  const { data, error } = await supabaseAdmin
+  // Create fresh client to avoid any connection-level caching
+  const supabase = createSupabaseAdmin()
+
+  const { data, error } = await supabase
     .from('providers')
     .select('*')
     .eq('slug', slug)

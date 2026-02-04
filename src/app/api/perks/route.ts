@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDefaultProvider } from '@/lib/providers';
 import { createClientFromProvider, createPerksService } from '@/lib/api';
+import { createSupabaseAdmin } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,15 +16,15 @@ export const dynamic = 'force-dynamic';
  * - next: API-provided next URL for pagination
  */
 export async function GET(request: NextRequest) {
-  // Query provider directly to avoid any module-level caching
-  const { supabaseAdmin } = await import('@/lib/supabase-server');
+  // Create fresh Supabase client to avoid any caching
+  const supabase = createSupabaseAdmin();
 
-  const { data: allProviders } = await supabaseAdmin
+  const { data: allProviders } = await supabase
     .from('providers')
     .select('slug, is_default, is_active');
 
-  // Get default provider directly instead of using getDefaultProvider()
-  const { data: provider, error } = await supabaseAdmin
+  // Get default provider directly
+  const { data: provider, error } = await supabase
     .from('providers')
     .select('*')
     .eq('is_default', true)
