@@ -49,7 +49,14 @@ export async function GET(request: NextRequest) {
     return errorResponse;
   }
 
-  const response = NextResponse.json(result.data);
+  const response = NextResponse.json({
+    ...result.data,
+    _debug: {
+      provider: provider.slug,
+      api_url: provider.api_url,
+      timestamp: new Date().toISOString(),
+    },
+  });
   response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   return response;
 }
