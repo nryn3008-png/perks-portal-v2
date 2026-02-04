@@ -3,6 +3,8 @@ import { revalidatePath } from 'next/cache';
 import { createSupabaseAdmin } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 
 /**
  * PATCH /api/providers/[id]

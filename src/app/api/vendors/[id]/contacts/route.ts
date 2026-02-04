@@ -4,6 +4,8 @@ import { createClientFromProvider, createVendorsService } from '@/lib/api';
 import type { VendorUser } from '@/types';
 
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 
 /**
  * GET /api/vendors/[id]/contacts
