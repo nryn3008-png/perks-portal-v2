@@ -8,6 +8,11 @@ const nextConfig = {
     scrollRestoration: true,
   },
 
+  // Completely disable Vercel Data Cache for dynamic routes
+  // This forces all fetch requests to go to origin
+  // See: https://nextjs.org/docs/app/api-reference/next-config-js/staleTimes
+  cacheMaxMemorySize: 0, // Disable in-memory cache
+
   // Prevent caching of API routes
   async headers() {
     return [
