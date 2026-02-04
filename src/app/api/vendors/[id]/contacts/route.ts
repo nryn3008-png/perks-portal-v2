@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDefaultProvider } from '@/lib/providers';
 import { createClientFromProvider, createVendorsService } from '@/lib/api';
+import { createSupabaseAdmin } from '@/lib/supabase-server';
 import type { VendorUser } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -17,8 +17,18 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const provider = await getDefaultProvider();
-  if (!provider) {
+  // Create fresh Supabase client to avoid any caching
+  const supabase = createSupabaseAdmin();
+
+  // Get default provider directly
+  const { data: provider, error } = await supabase
+    .from('providers')
+    .select('*')
+    .eq('is_default', true)
+    .eq('is_active', true)
+    .single();
+
+  if (error || !provider) {
     return NextResponse.json(
       { error: { code: 'PROVIDER_ERROR', message: 'No active provider configured', status: 500 } },
       { status: 500 }
@@ -32,14 +42,18 @@ export async function GET(
   const result = await vendorsService.getVendorContacts(id);
 
   if (!result.success) {
-    return NextResponse.json(
+    const errorResponse = NextResponse.json(
       { error: result.error },
       { status: result.error.status }
     );
+    errorResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    return errorResponse;
   }
 
   // Strip phone numbers from response for privacy
   const contactsWithoutPhone = result.data.map(({ phone, ...contact }: VendorUser) => contact);
 
-  return NextResponse.json(contactsWithoutPhone);
+  const response = NextResponse.json(contactsWithoutPhone);
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  return response;
 }

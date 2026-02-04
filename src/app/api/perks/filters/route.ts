@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getDefaultProvider } from '@/lib/providers';
 import { createClientFromProvider, createPerksService } from '@/lib/api';
+import { createSupabaseAdmin } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -18,8 +18,18 @@ export const revalidate = 0;
  * DO NOT hardcode filter options.
  */
 export async function GET() {
-  const provider = await getDefaultProvider();
-  if (!provider) {
+  // Create fresh Supabase client to avoid any caching
+  const supabase = createSupabaseAdmin();
+
+  // Get default provider directly
+  const { data: provider, error } = await supabase
+    .from('providers')
+    .select('*')
+    .eq('is_default', true)
+    .eq('is_active', true)
+    .single();
+
+  if (error || !provider) {
     return NextResponse.json(
       { error: { code: 'PROVIDER_ERROR', message: 'No active provider configured', status: 500 } },
       { status: 500 }
@@ -30,5 +40,14 @@ export async function GET() {
   const perksService = createPerksService(client, provider.api_token);
 
   const filters = await perksService.getFilterOptions();
-  return NextResponse.json(filters);
+
+  const response = NextResponse.json({
+    ...filters,
+    _debug: {
+      provider: provider.slug,
+      timestamp: new Date().toISOString(),
+    },
+  });
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  return response;
 }
