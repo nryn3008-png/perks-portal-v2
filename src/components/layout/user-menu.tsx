@@ -2,13 +2,28 @@
 
 /**
  * User Menu Dropdown — MercuryOS Design System
- * Clickable avatar that opens a popover with user info and Bridge account link.
+ * Clickable avatar that opens a popover with user info, connected accounts, and Bridge account link.
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Mail, Loader2, Globe } from 'lucide-react';
 
 const BRIDGE_ACCOUNT_URL = 'https://brdg.app/account/';
+const BRIDGE_CONNECTED_ACCOUNTS_URL = 'https://brdg.app/connected-accounts/';
+
+/**
+ * Get favicon URL for a domain using Google's favicon service
+ */
+function getFaviconUrl(domain: string): string {
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+}
+
+interface ConnectedAccount {
+  email: string;
+  domain: string;
+  isPrimary: boolean;
+  isPersonalEmail: boolean;
+}
 
 interface UserMenuProps {
   user: {
@@ -20,7 +35,30 @@ interface UserMenuProps {
 
 export function UserMenu({ user }: UserMenuProps) {
   const [open, setOpen] = useState(false);
+  const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [fetched, setFetched] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Fetch connected accounts when menu opens
+  useEffect(() => {
+    if (open && !fetched) {
+      setLoading(true);
+      fetch('/api/user/connected-accounts')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.connectedAccounts) {
+            setConnectedAccounts(data.connectedAccounts);
+          }
+          setFetched(true);
+        })
+        .catch((err) => {
+          console.error('Failed to fetch connected accounts:', err);
+          setFetched(true);
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [open, fetched]);
 
   // Close on click outside
   useEffect(() => {
@@ -43,6 +81,9 @@ export function UserMenu({ user }: UserMenuProps) {
       document.removeEventListener('keydown', handleEscape);
     };
   }, [open]);
+
+  // Filter to show only non-personal email accounts
+  const workAccounts = connectedAccounts.filter((acc) => !acc.isPersonalEmail && acc.domain);
 
   return (
     <div ref={menuRef} className="relative pl-3 border-l border-gray-200">
@@ -69,7 +110,7 @@ export function UserMenu({ user }: UserMenuProps) {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-72 rounded-xl bg-white shadow-lg ring-1 ring-gray-200/60 border border-gray-100 animate-fade-in z-50">
+        <div className="absolute right-0 top-full mt-2 w-80 rounded-xl bg-white shadow-lg ring-1 ring-gray-200/60 border border-gray-100 animate-fade-in z-50">
           <div className="p-4">
             {/* Header */}
             <p className="text-xs font-medium text-gray-400 mb-3">Signed in as</p>
@@ -92,6 +133,71 @@ export function UserMenu({ user }: UserMenuProps) {
                 <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
                 <p className="text-[13px] text-gray-500 truncate">{user.email}</p>
               </div>
+            </div>
+          </div>
+
+          {/* Connected Accounts Section */}
+          <div className="border-t border-gray-100">
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-gray-400">Connected Accounts</p>
+                <a
+                  href={BRIDGE_CONNECTED_ACCOUNTS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-indigo-600 hover:text-indigo-700 font-medium"
+                >
+                  Manage
+                </a>
+              </div>
+
+              {loading ? (
+                <div className="flex items-center justify-center py-3">
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                </div>
+              ) : workAccounts.length > 0 ? (
+                <div className="space-y-2">
+                  {workAccounts.map((account) => (
+                    <div
+                      key={account.email}
+                      className="flex items-center gap-2.5 rounded-lg bg-gray-50 px-3 py-2"
+                    >
+                      {/* Favicon */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={getFaviconUrl(account.domain)}
+                        alt={account.domain}
+                        className="h-6 w-6 rounded-sm"
+                        onError={(e) => {
+                          // Fallback to Globe icon if favicon fails
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                      <div className="hidden h-6 w-6 items-center justify-center rounded-sm bg-gray-200">
+                        <Globe className="h-3.5 w-3.5 text-gray-500" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13px] font-medium text-gray-700 truncate">
+                          {account.domain}
+                        </p>
+                        <p className="text-[11px] text-gray-400 truncate">{account.email}</p>
+                      </div>
+                      {account.isPrimary && (
+                        <span className="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                          Primary
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-[13px] text-gray-400 py-2">
+                  <Mail className="h-4 w-4" />
+                  <span>No work accounts connected</span>
+                </div>
+              )}
             </div>
           </div>
 
