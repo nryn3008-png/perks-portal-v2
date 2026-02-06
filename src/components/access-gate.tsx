@@ -50,7 +50,6 @@ const TOTAL_DURATION = 8000;
 const FADE_OUT_OFFSET = 800;
 const GRANTED_DURATION = 2500;
 const GRANTED_FADE_OFFSET = 500;
-const SESSION_KEY = 'access-gate-shown';
 
 // VCs for the scanning conveyor
 const SCAN_VCS = FEATURED_VCS.slice(0, 12);
@@ -378,11 +377,11 @@ export function AccessGate({
   const [vcScanIndex, setVcScanIndex] = useState(0);
   const [fadeOut, setFadeOut] = useState(false);
 
+  // Skip animation only when there's nothing to scan (personal email)
+  // or user prefers reduced motion. No session caching — every login
+  // re-verifies because connected domains may have changed.
   const shouldSkip = useCallback(() => {
     if (connectedDomains.length === 0) return true;
-    try {
-      if (sessionStorage.getItem(SESSION_KEY)) return true;
-    } catch {}
     if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       return true;
     }
@@ -395,10 +394,6 @@ export function AccessGate({
       setPhase('result');
       return;
     }
-
-    try {
-      sessionStorage.setItem(SESSION_KEY, 'true');
-    } catch {}
 
     const timers: ReturnType<typeof setTimeout>[] = [];
 
