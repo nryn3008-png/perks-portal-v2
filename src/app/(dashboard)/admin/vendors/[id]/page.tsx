@@ -18,7 +18,6 @@ import {
   FileText,
   Mail,
   User,
-  Shield,
   Database,
   Eye,
   EyeOff,
@@ -315,21 +314,6 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
       </div>
 
       <div className="mx-auto max-w-6xl px-6 py-8">
-        {/* Admin Header - Mercury OS style with amber */}
-        <GlassCard className="mb-8 !bg-amber-50/70 !border-amber-200/40">
-          <div className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
-              <Shield className="h-5 w-5 text-amber-600" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-amber-900 text-[14px]">Admin Only</h2>
-              <p className="text-[13px] text-amber-700">
-                Internal view — includes raw API data and contacts.
-              </p>
-            </div>
-          </div>
-        </GlassCard>
-
         {/* Back Navigation - Minimal */}
         <Link
           href="/admin/vendors"
