@@ -146,9 +146,9 @@ export function VendorCard({ vendor, basePath = '/admin/vendors', perksCount }: 
               <h3 className="truncate text-[14px] font-semibold text-gray-900">
                 {vendor.name}
               </h3>
-              {vendor.primary_service && (
+              {(vendor.primary_service || vendor.services?.[0]?.name) && (
                 <p className="truncate text-[13px] text-gray-500">
-                  {vendor.primary_service}
+                  {vendor.primary_service || vendor.services[0].name}
                 </p>
               )}
             </div>

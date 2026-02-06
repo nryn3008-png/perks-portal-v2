@@ -349,9 +349,9 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
 
                 <div className="flex-1 min-w-0">
                   {/* Primary service */}
-                  {vendor.primary_service && (
+                  {(vendor.primary_service || vendor.services?.[0]?.name) && (
                     <p className="text-sm font-medium text-[#0038FF] mb-1">
-                      {vendor.primary_service}
+                      {vendor.primary_service || vendor.services[0].name}
                     </p>
                   )}
 
@@ -522,7 +522,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                       offer={perk}
                       vendorLogo={vendor.logo}
                       vendorName={vendor.name}
-                      vendorPrimaryService={vendor.primary_service}
+                      vendorPrimaryService={vendor.primary_service || vendor.services?.[0]?.name}
                     />
                   ))}
                 </div>
@@ -725,7 +725,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                         </div>
                         <div>
                           <dt className="text-gray-500 font-medium">Primary Service</dt>
-                          <dd className="text-gray-900">{vendor.primary_service || <span className="text-gray-400">-</span>}</dd>
+                          <dd className="text-gray-900">{vendor.primary_service || vendor.services?.[0]?.name || <span className="text-gray-400">-</span>}</dd>
                         </div>
                         <div>
                           <dt className="text-gray-500 font-medium">Founded</dt>
@@ -1108,7 +1108,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                     Company Info
                   </p>
                   <dl className="space-y-4 text-[13px]">
-                    {vendor.primary_service && (
+                    {(vendor.primary_service || vendor.services?.[0]?.name) && (
                       <div className="flex items-center gap-2">
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
                           <Briefcase className="h-4 w-4 text-gray-500" />
@@ -1116,7 +1116,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                         <div className="flex-1 min-w-0">
                           <dt className="text-[12px] text-gray-400">Primary Service</dt>
                           <dd className="font-medium text-gray-900 truncate">
-                            {vendor.primary_service}
+                            {vendor.primary_service || vendor.services[0].name}
                           </dd>
                         </div>
                       </div>

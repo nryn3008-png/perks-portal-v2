@@ -327,7 +327,7 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
         vendorMap[v.id] = {
           logo: v.logo,
           name: v.name,
-          primaryService: v.primary_service,
+          primaryService: v.primary_service || v.services?.[0]?.name || null,
         };
       }
     }
@@ -396,8 +396,8 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
                   {vendor && (
                     <h2 className="text-lg font-semibold text-gray-900">{vendor.name}</h2>
                   )}
-                  {vendor?.primary_service && (
-                    <p className="text-sm text-gray-500">{vendor.primary_service}</p>
+                  {(vendor?.primary_service || vendor?.services?.[0]?.name) && (
+                    <p className="text-sm text-gray-500">{vendor.primary_service || vendor.services?.[0]?.name}</p>
                   )}
                 </div>
 
@@ -629,7 +629,7 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
                   offer={perk}
                   vendorLogo={vendor.logo}
                   vendorName={vendor.name}
-                  vendorPrimaryService={vendor.primary_service}
+                  vendorPrimaryService={vendor.primary_service || vendor.services?.[0]?.name}
                 />
               ))}
             </div>

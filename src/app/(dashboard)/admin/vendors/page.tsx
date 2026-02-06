@@ -281,7 +281,7 @@ function VendorsTable({
                     </Link>
                   </td>
                   <td className="px-4 py-4 text-[13px] text-gray-600">
-                    {vendor.primary_service || <span className="text-gray-400">—</span>}
+                    {vendor.primary_service || vendor.services?.[0]?.name || <span className="text-gray-400">—</span>}
                   </td>
                   <td className="px-4 py-4">
                     {perksCount !== undefined ? (
@@ -453,7 +453,7 @@ function AdminVendorsPageContent() {
         vendors: vendors.map((v) => ({
           vendor_id: v.id,
           vendor_name: v.name || '',
-          primary_service: v.primary_service || null,
+          primary_service: v.primary_service || v.services?.[0]?.name || null,
           website: v.website || null,
           perks_count: perksCountMap[v.id] || 0,
         })),
@@ -486,7 +486,7 @@ function AdminVendorsPageContent() {
   const finalVendors = isSearchActive
     ? vendors.filter((vendor) =>
         vendor.name.toLowerCase().includes(searchInput.toLowerCase()) ||
-        (vendor.primary_service && vendor.primary_service.toLowerCase().includes(searchInput.toLowerCase()))
+        ((vendor.primary_service || vendor.services?.[0]?.name || '').toLowerCase().includes(searchInput.toLowerCase()))
       )
     : vendors;
 

@@ -307,7 +307,7 @@ function PerksPageContent() {
           map[vendor.id] = {
             logo: vendor.logo || null,
             name: vendor.name || '',
-            primaryService: vendor.primary_service || null,
+            primaryService: vendor.primary_service || vendor.services?.[0]?.name || null,
           };
         }
       }
