@@ -14,6 +14,7 @@ import { AlertCircle, X, LayoutGrid, List, Gift, ChevronDown, Check, Filter, Arr
 import { Button, Card, SearchInput } from '@/components/ui';
 import { OffersGrid } from '@/components/perks';
 import type { GetProvenDeal } from '@/types';
+import { logger } from '@/lib/logger';
 
 /**
  * Filter Dropdown Component
@@ -280,7 +281,7 @@ function PerksPageContent() {
       const data = await res.json();
       setFilterOptions(data);
     } catch (err) {
-      console.error('Failed to fetch filter options:', err);
+      logger.error('Failed to fetch filter options:', err);
     }
   }, []);
 
@@ -291,7 +292,7 @@ function PerksPageContent() {
       const data = await res.json();
       setTotals(data);
     } catch (err) {
-      console.error('Failed to fetch totals:', err);
+      logger.error('Failed to fetch totals:', err);
     }
   }, []);
 
@@ -312,7 +313,7 @@ function PerksPageContent() {
       }
       setVendorMap(map);
     } catch (err) {
-      console.error('Failed to fetch vendors:', err);
+      logger.error('Failed to fetch vendors:', err);
     }
   }, []);
 
@@ -341,7 +342,7 @@ function PerksPageContent() {
 
       // Sync is handled by a separate useEffect that waits for both offers + vendors
     } catch (err) {
-      console.error('Offers fetch error:', err);
+      logger.error('Offers fetch error:', err);
       setError('Something went wrong loading perks. Hit retry or refresh the page.');
       setOffers([]);
     } finally {
@@ -382,7 +383,7 @@ function PerksPageContent() {
           setNewOfferIds(new Set(data.new_offer_ids));
         }
       })
-      .catch((error) => { if (process.env.NODE_ENV === 'development') console.error('Offer sync failed:', error); });
+      .catch((error) => { if (process.env.NODE_ENV === 'development') logger.error('Offer sync failed:', error); });
   }, [offers, vendorMap]);
 
   const toggleFilter = (type: 'offerCategories' | 'investmentLevels', value: string) => {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { whitelistService } from '@/lib/api';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     // Return raw API response verbatim
     return NextResponse.json(result.data);
   } catch (error) {
-    console.error('[Admin Whitelist Upload] Error:', error);
+    logger.error('[Admin Whitelist Upload] Error:', error);
     return NextResponse.json(
       { error: { code: 'UPLOAD_ERROR', message: 'Failed to process upload', status: 500 } },
       { status: 500 }

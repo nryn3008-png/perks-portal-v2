@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseAdmin } from '@/lib/supabase-server';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -19,9 +20,9 @@ export async function GET() {
     .order('name');
 
   if (error) {
-    console.error('Failed to fetch providers:', error.message, error.details, error.hint);
+    logger.error('Failed to fetch providers:', error.message, error.details, error.hint);
     return NextResponse.json(
-      { error: { code: 'FETCH_ERROR', message: `Failed to fetch providers: ${error.message}`, status: 500, details: error.details } },
+      { error: { code: 'FETCH_ERROR', message: 'Failed to fetch providers', status: 500 } },
       { status: 500 }
     );
   }
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Failed to create provider:', error);
+      logger.error('Failed to create provider:', error);
       return NextResponse.json(
         { error: { code: 'CREATE_ERROR', message: 'Failed to create provider', status: 500 } },
         { status: 500 }
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ provider: data }, { status: 201 });
   } catch (err) {
-    console.error('Invalid request body:', err);
+    logger.error('Invalid request body:', err);
     return NextResponse.json(
       { error: { code: 'INVALID_BODY', message: 'Invalid request body', status: 400 } },
       { status: 400 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { getDefaultProvider } from '@/lib/providers';
+import { logger } from '@/lib/logger';
 
 interface OfferInput {
   offer_id: number;
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
     const { data: allTracked, error: fetchError } = await trackedQuery;
 
     if (fetchError) {
-      console.error('[Sync New] Failed to fetch tracked offers:', fetchError);
+      logger.error('[Sync New] Failed to fetch tracked offers:', fetchError);
       return NextResponse.json({ new_offer_ids: [] });
     }
 
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
       .upsert(upsertRows, { onConflict: 'offer_id,provider_id' });
 
     if (upsertError) {
-      console.error('[Sync New] Failed to upsert offers:', upsertError);
+      logger.error('[Sync New] Failed to upsert offers:', upsertError);
     }
 
     // 3. Mark removed offers in one batch query (for this provider only)
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ new_offer_ids: newOfferIds });
   } catch (err) {
-    console.error('[Sync New] Unexpected error:', err);
+    logger.error('[Sync New] Unexpected error:', err);
     return NextResponse.json({ new_offer_ids: [] });
   }
 }

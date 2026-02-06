@@ -29,6 +29,16 @@ export type {
   VendorIntropathData,
 } from './bridge-client';
 
+// Access control (server-only) - domain-based access gating
+export { accessService } from './access-service';
+export { fetchPortfolioDomains } from './portfolio-client';
+export {
+  getCachedWhitelistDomains,
+  getCachedPortfolioDomains,
+  clearAccessCache,
+} from './access-cache';
+export { checkApiAccess } from './check-api-access';
+
 // Re-export normalizers for advanced use cases
 export {
   normalizeDeal,

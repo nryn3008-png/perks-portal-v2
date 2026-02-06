@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClientFromProvider, createPerksService } from '@/lib/api';
 import { createSupabaseAdmin } from '@/lib/supabase-server';
+import { checkApiAccess } from '@/lib/api/check-api-access';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -14,6 +15,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Domain-based access check
+  const denied = checkApiAccess(request);
+  if (denied) return denied;
+
   // Create fresh Supabase client to avoid any caching
   const supabase = createSupabaseAdmin();
 
@@ -52,14 +57,5 @@ export async function GET(
   return response;
 }
 
-// TODO: Implement PATCH for updating perk visibility/settings (admin only)
-// export async function PATCH(request: NextRequest, { params }) {
-//   // Verify admin auth
-//   // Update perk settings
-// }
-
-// TODO: Implement DELETE for removing custom perks (admin only)
-// export async function DELETE(request: NextRequest, { params }) {
-//   // Verify admin auth
-//   // Delete perk
-// }
+// FUTURE: PATCH for updating perk visibility/settings (admin only)
+// FUTURE: DELETE for removing custom perks (admin only)

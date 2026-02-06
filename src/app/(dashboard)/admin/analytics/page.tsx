@@ -8,8 +8,7 @@
  */
 
 import { useEffect, useState, useCallback, Suspense } from 'react';
-import { MousePointerClick, Users, DollarSign, TrendingUp, Shield, BarChart3 } from 'lucide-react';
-import { AdminNav } from '@/components/admin/admin-nav';
+import { MousePointerClick, Users, DollarSign, TrendingUp, BarChart3 } from 'lucide-react';
 import { StatCard, StatCardSkeleton } from '@/components/admin/stat-card';
 import { DateRangeFilter, type DateRange } from '@/components/admin/date-range-filter';
 import { ProviderFilter } from '@/components/admin/provider-filter';
@@ -22,6 +21,7 @@ import {
   ChartSkeleton,
 } from '@/components/admin/redemption-chart';
 import { RedemptionsTable, TableSkeleton } from '@/components/admin/redemptions-table';
+import { logger } from '@/lib/logger';
 
 interface AnalyticsData {
   stats: {
@@ -110,7 +110,7 @@ function AnalyticsDashboard() {
         }
       }
     } catch (err) {
-      console.error('Analytics fetch error:', err);
+      logger.error('Analytics fetch error:', err);
       setError('Failed to load analytics data.');
     } finally {
       setIsLoading(false);
@@ -130,40 +130,28 @@ function AnalyticsDashboard() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Admin Navigation */}
-      <AdminNav />
-
-      {/* Admin Header - Mercury OS style */}
-      <div className="flex items-center gap-4 rounded-xl bg-amber-50/80 border border-amber-200/60 p-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100">
-          <Shield className="h-4 w-4 text-amber-600" />
-        </div>
-        <div>
-          <h2 className="font-semibold text-amber-900 text-[14px]">Admin Only</h2>
-          <p className="text-[13px] text-amber-700">
-            Internal view — not visible to regular users.
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#0038FF] to-[#0030E0]">
+              <BarChart3 className="h-4 w-4 text-white" />
+            </div>
+            <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
+              Redemption Analytics
+            </h1>
+          </div>
+          <p className="text-[14px] text-gray-500 max-w-2xl">
+            Track perk redemption activity and value delivered.
           </p>
         </div>
-      </div>
 
-      {/* Page Header - MercuryOS style */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#0038FF] to-[#0030E0]">
-            <BarChart3 className="h-4 w-4 text-white" />
-          </div>
-          <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
-            Redemption Analytics
-          </h1>
-        </div>
-        <p className="text-[14px] text-gray-500 max-w-2xl">
-          Track perk redemption activity and value delivered.
-        </p>
+        {/* Provider Filter */}
+        <ProviderFilter value={providerId} onChange={setProviderId} />
       </div>
 
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-2">
-        <ProviderFilter value={providerId} onChange={setProviderId} />
         <DateRangeFilter value={range} onChange={setRange} />
         <ExportButton data={allRows || []} disabled={isLoading} />
       </div>

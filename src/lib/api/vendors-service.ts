@@ -13,13 +13,14 @@ import type {
   ApiResponse,
 } from '@/types';
 import { GetProvenApiError, GetProvenClient } from './getproven-client';
+import { logger } from '@/lib/logger';
 
 /**
  * Log API errors (server-side only)
  */
 function logApiError(operation: string, error: unknown): void {
   if (typeof window === 'undefined') {
-    console.error(`[Vendors Service] ${operation} failed:`, {
+    logger.error(`[Vendors Service] ${operation} failed:`, {
       message: error instanceof Error ? error.message : 'Unknown error',
       code: error instanceof GetProvenApiError ? error.code : undefined,
     });

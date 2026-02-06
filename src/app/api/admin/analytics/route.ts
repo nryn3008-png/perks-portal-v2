@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { requireAdmin } from '@/lib/bridge/auth';
+import { logger } from '@/lib/logger';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/admin/analytics
@@ -50,7 +53,7 @@ export async function GET(request: NextRequest) {
       .order('clicked_at', { ascending: false });
 
     if (clicksError) {
-      console.error('[Analytics] Failed to fetch clicks:', clicksError);
+      logger.error('[Analytics] Failed to fetch clicks:', clicksError);
       return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
     }
 
@@ -180,7 +183,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (err) {
-    console.error('[Analytics] Unexpected error:', err);
+    logger.error('[Analytics] Unexpected error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

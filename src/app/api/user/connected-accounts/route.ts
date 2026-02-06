@@ -36,12 +36,6 @@ export async function GET() {
     connectedAccounts: user.connectedAccounts,
     networkDomains: user.networkDomains,
     connectedDomains: user.connectedDomains,
-    _debug: {
-      timestamp: new Date().toISOString(),
-      totalAccounts: user.connectedAccounts.length,
-      totalDomains: user.connectedDomains.length,
-      totalNetworks: user.networkDomains.length,
-    },
   });
 
   response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');

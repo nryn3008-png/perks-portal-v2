@@ -17,11 +17,11 @@ import type {
   GetProvenCategory,
 } from '@/types';
 
+import { logger } from '@/lib/logger';
+
 // Server-side only logging (never expose to client)
 const logWarning = (message: string, context?: Record<string, unknown>) => {
-  if (typeof window === 'undefined') {
-    console.warn(`[GetProven Normalizer] ${message}`, context || '');
-  }
+  logger.warn(`[GetProven Normalizer] ${message}`, context || '');
 };
 
 /**

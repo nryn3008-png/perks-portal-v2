@@ -10,10 +10,10 @@
  */
 
 import { Suspense, useEffect, useState, useCallback } from 'react';
-import { AlertCircle, Loader2, Shield, UserCheck, Users } from 'lucide-react';
+import { AlertCircle, Loader2, UserCheck, Users } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
-import { AdminNav } from '@/components/admin/admin-nav';
 import type { IndividualAccess } from '@/types';
+import { logger } from '@/lib/logger';
 
 const PAGE_SIZE = 50;
 
@@ -67,7 +67,7 @@ function IndividualAccessPageContent() {
       setCurrentPage(page);
       setHasMore(data.pagination.next !== null);
     } catch (err) {
-      console.error('Individual access fetch error:', err);
+      logger.error('Individual access fetch error:', err);
       setError(err instanceof Error ? err.message : 'Unable to load individual access list');
       if (!loadMore) setUsers([]);
     } finally {
@@ -83,23 +83,7 @@ function IndividualAccessPageContent() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Admin Navigation */}
-      <AdminNav />
-
-      {/* Admin Header - Mercury OS style */}
-      <div className="flex items-center gap-4 rounded-xl bg-amber-50/80 border border-amber-200/60 p-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100">
-          <Shield className="h-4 w-4 text-amber-600" />
-        </div>
-        <div>
-          <h2 className="font-semibold text-amber-900 text-[14px]">Admin Only</h2>
-          <p className="text-[13px] text-amber-700">
-            This page is restricted to administrators
-          </p>
-        </div>
-      </div>
-
-      {/* Page Header - MercuryOS style */}
+      {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -129,15 +113,6 @@ function IndividualAccessPageContent() {
           </div>
         </Card>
       )}
-
-      {/* Results count */}
-      <div className="flex items-center gap-2" aria-live="polite">
-        <span className="text-[13px] text-gray-400">
-          {isLoading
-            ? 'Loading users...'
-            : `${totalCount} ${totalCount === 1 ? 'user' : 'users'} found`}
-        </span>
-      </div>
 
       {/* Loading State */}
       {isLoading && (

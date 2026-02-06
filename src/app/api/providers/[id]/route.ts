@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { createSupabaseAdmin } from '@/lib/supabase-server';
+import { clearAccessCache } from '@/lib/api/access-cache';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -29,7 +31,7 @@ export async function PATCH(
         .neq('id', id);
 
       if (unsetError) {
-        console.error('Failed to unset default providers:', unsetError);
+        logger.error('Failed to unset default providers:', unsetError);
         return NextResponse.json(
           { error: { code: 'UPDATE_ERROR', message: 'Failed to update default status', status: 500 } },
           { status: 500 }
@@ -55,7 +57,7 @@ export async function PATCH(
       .single();
 
     if (error) {
-      console.error('Failed to update provider:', error);
+      logger.error('Failed to update provider:', error);
       return NextResponse.json(
         { error: { code: 'UPDATE_ERROR', message: 'Failed to update provider', status: 500 } },
         { status: 500 }
@@ -75,9 +77,14 @@ export async function PATCH(
     revalidatePath('/api/vendors', 'page');
     revalidatePath('/perks', 'layout');
 
+    // Clear access control cache (whitelist + portfolio data may differ per provider)
+    if (is_default === true) {
+      clearAccessCache();
+    }
+
     return NextResponse.json({ provider: data });
   } catch (err) {
-    console.error('Invalid request body:', err);
+    logger.error('Invalid request body:', err);
     return NextResponse.json(
       { error: { code: 'INVALID_BODY', message: 'Invalid request body', status: 400 } },
       { status: 400 }
@@ -116,7 +123,7 @@ export async function DELETE(
     .eq('id', id);
 
   if (error) {
-    console.error('Failed to delete provider:', error);
+    logger.error('Failed to delete provider:', error);
     return NextResponse.json(
       { error: { code: 'DELETE_ERROR', message: 'Failed to delete provider', status: 500 } },
       { status: 500 }

@@ -7,6 +7,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { ExternalLink, Mail, Loader2, Building2 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const BRIDGE_ACCOUNT_URL = 'https://brdg.app/account/';
 const BRIDGE_CONNECTED_ACCOUNTS_URL = 'https://brdg.app/connected-accounts/';
@@ -61,7 +62,7 @@ export function UserMenu({ user }: UserMenuProps) {
           setFetched(true);
         })
         .catch((err) => {
-          console.error('Failed to fetch connected accounts:', err);
+          logger.error('Failed to fetch connected accounts:', err);
           setFetched(true);
         })
         .finally(() => setLoading(false));

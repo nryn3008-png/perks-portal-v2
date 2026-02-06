@@ -1,4 +1,5 @@
 import { createSupabaseAdmin } from './supabase-server'
+import { logger } from '@/lib/logger'
 
 interface Provider {
   id: string
@@ -22,7 +23,7 @@ export async function getDefaultProvider(): Promise<Provider | null> {
     .single()
 
   if (error) {
-    console.error('Failed to get default provider:', error)
+    logger.error('Failed to get default provider:', error)
     return null
   }
   return data
@@ -40,7 +41,7 @@ export async function getProviderBySlug(slug: string): Promise<Provider | null> 
     .single()
 
   if (error) {
-    console.error('Failed to get provider:', error)
+    logger.error('Failed to get provider:', error)
     return null
   }
   return data

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, Check, Database } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface Provider {
   id: string;
@@ -30,7 +31,7 @@ export function ProviderFilter({ value, onChange }: ProviderFilterProps) {
           setProviders(data.providers || []);
         }
       } catch (err) {
-        console.error('Failed to fetch providers:', err);
+        logger.error('Failed to fetch providers:', err);
       } finally {
         setIsLoading(false);
       }
@@ -53,9 +54,9 @@ export function ProviderFilter({ value, onChange }: ProviderFilterProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5">
-        <Database className="h-3.5 w-3.5 text-gray-400" />
-        <span className="text-[13px] text-gray-400">Loading...</span>
+      <div className="inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-[14px] min-h-[38px] font-medium bg-gradient-to-br from-[#0038FF] to-[#0030E0] text-white opacity-50">
+        <Database className="h-4 w-4" />
+        <span>Loading...</span>
       </div>
     );
   }
@@ -65,22 +66,15 @@ export function ProviderFilter({ value, onChange }: ProviderFilterProps) {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`
-          flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium
-          border transition-all duration-150
-          ${value
-            ? 'border-[#0038FF]/20 bg-[#0038FF]/5 text-[#0038FF]'
-            : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300'
-          }
-        `}
+        className="inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-[14px] min-h-[38px] font-medium transition-all duration-150 bg-gradient-to-br from-[#0038FF] to-[#0030E0] text-white hover:shadow-lg hover:shadow-[#0038FF]/25"
       >
-        <Database className="h-3.5 w-3.5" />
+        <Database className="h-4 w-4" />
         <span>{displayLabel}</span>
-        <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-4 w-4 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-1.5 min-w-[200px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg animate-fade-in">
+        <div className="absolute right-0 top-full z-50 mt-1.5 min-w-[200px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg animate-fade-in">
           {/* All Providers option */}
           <button
             type="button"

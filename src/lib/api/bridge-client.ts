@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Bridge API Client
  *
@@ -110,7 +111,7 @@ export function extractDomainFromUrl(url: string | null): string | null {
  */
 function logBridgeApiError(operation: string, error: unknown): void {
   if (typeof window === 'undefined') {
-    console.error(`[Bridge API] ${operation} failed:`, {
+    logger.error(`[Bridge API] ${operation} failed:`, {
       message: error instanceof Error ? error.message : 'Unknown error',
       code: error instanceof BridgeApiError ? error.code : undefined,
     });
@@ -258,7 +259,7 @@ export async function getVendorIntropathCounts(
   // Return mock data if enabled (for testing UI)
   if (USE_MOCK_INTROPATH_DATA) {
     if (typeof window === 'undefined') {
-      console.log(`[Bridge API] Using mock data for domain: ${domain}`);
+      logger.info(`[Bridge API] Using mock data for domain: ${domain}`);
     }
     return getMockIntropathData(domain);
   }
@@ -267,7 +268,7 @@ export async function getVendorIntropathCounts(
   if (!userToken && !BRIDGE_API_KEY) {
     // Log only in development/server
     if (typeof window === 'undefined' && process.env.NODE_ENV === 'development') {
-      console.warn('[Bridge API] No user token or BRIDGE_API_KEY configured, skipping intropath fetch');
+      logger.warn('[Bridge API] No user token or BRIDGE_API_KEY configured, skipping intropath fetch');
     }
     return emptyResponse;
   }

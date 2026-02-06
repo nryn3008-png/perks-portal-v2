@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { getDefaultProvider } from '@/lib/providers';
+import { logger } from '@/lib/logger';
 
 interface VendorInput {
   vendor_id: number;
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
     const { data: allTracked, error: fetchError } = await trackedQuery;
 
     if (fetchError) {
-      console.error('[Vendor Sync] Failed to fetch tracked vendors:', fetchError);
+      logger.error('[Vendor Sync] Failed to fetch tracked vendors:', fetchError);
       return NextResponse.json({ new_vendor_ids: [] });
     }
 
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
       .upsert(upsertRows, { onConflict: 'vendor_id,provider_id' });
 
     if (upsertError) {
-      console.error('[Vendor Sync] Failed to upsert vendors:', upsertError);
+      logger.error('[Vendor Sync] Failed to upsert vendors:', upsertError);
     }
 
     // 3. Mark removed vendors (for this provider only)
@@ -127,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ new_vendor_ids: newVendorIds });
   } catch (err) {
-    console.error('[Vendor Sync] Unexpected error:', err);
+    logger.error('[Vendor Sync] Unexpected error:', err);
     return NextResponse.json({ new_vendor_ids: [] });
   }
 }

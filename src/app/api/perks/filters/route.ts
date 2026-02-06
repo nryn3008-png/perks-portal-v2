@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { createClientFromProvider, createPerksService } from '@/lib/api';
 import { createSupabaseAdmin } from '@/lib/supabase-server';
+import { checkApiAccess } from '@/lib/api/check-api-access';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -17,7 +18,11 @@ export const revalidate = 0;
  * Filter values are extracted dynamically from actual offer data.
  * DO NOT hardcode filter options.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Domain-based access check
+  const denied = checkApiAccess(request);
+  if (denied) return denied;
+
   // Create fresh Supabase client to avoid any caching
   const supabase = createSupabaseAdmin();
 
@@ -41,13 +46,7 @@ export async function GET() {
 
   const filters = await perksService.getFilterOptions();
 
-  const response = NextResponse.json({
-    ...filters,
-    _debug: {
-      provider: provider.slug,
-      timestamp: new Date().toISOString(),
-    },
-  });
+  const response = NextResponse.json(filters);
   response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   return response;
 }

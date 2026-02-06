@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClientFromProvider, createPerksService } from '@/lib/api';
 import { createSupabaseAdmin } from '@/lib/supabase-server';
+import { checkApiAccess } from '@/lib/api/check-api-access';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -18,12 +19,12 @@ export const revalidate = 0;
  * - next: API-provided next URL for pagination
  */
 export async function GET(request: NextRequest) {
+  // Domain-based access check
+  const denied = checkApiAccess(request);
+  if (denied) return denied;
+
   // Create fresh Supabase client to avoid any caching
   const supabase = createSupabaseAdmin();
-
-  const { data: allProviders } = await supabase
-    .from('providers')
-    .select('slug, is_default, is_active');
 
   // Get default provider directly
   const { data: provider, error } = await supabase
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
 
   if (error || !provider) {
     return NextResponse.json(
-      { error: { code: 'PROVIDER_ERROR', message: 'No active provider configured', status: 500 }, _allProviders: allProviders, _error: error },
+      { error: { code: 'PROVIDER_ERROR', message: 'No active provider configured', status: 500 } },
       { status: 500 }
     );
   }
@@ -65,15 +66,7 @@ export async function GET(request: NextRequest) {
     return errorResponse;
   }
 
-  const response = NextResponse.json({
-    ...result.data,
-    _debug: {
-      provider: provider.slug,
-      api_url: provider.api_url,
-      timestamp: new Date().toISOString(),
-      allProviders,
-    },
-  });
+  const response = NextResponse.json(result.data);
   response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   return response;
 }

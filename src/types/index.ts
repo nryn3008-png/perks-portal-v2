@@ -5,3 +5,4 @@
 export * from './perk';
 export * from './user';
 export * from './api';
+export * from './access';

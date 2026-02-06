@@ -15,6 +15,7 @@
  */
 
 import { cookies } from 'next/headers';
+import { logger } from '@/lib/logger';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -166,13 +167,13 @@ function logAuth(event: 'success' | 'failure' | 'admin_denied', details?: Record
 
   switch (event) {
     case 'success':
-      console.log(`${prefix} ${timestamp} Auth success:`, { userId: details?.userId });
+      logger.info(`${prefix} ${timestamp} Auth success:`, { userId: details?.userId });
       break;
     case 'failure':
-      console.warn(`${prefix} ${timestamp} Auth failure:`, { reason: details?.reason });
+      logger.warn(`${prefix} ${timestamp} Auth failure:`, { reason: details?.reason });
       break;
     case 'admin_denied':
-      console.warn(`${prefix} ${timestamp} Admin access denied:`, { userId: details?.userId, email: details?.email });
+      logger.warn(`${prefix} ${timestamp} Admin access denied:`, { userId: details?.userId, email: details?.email });
       break;
   }
 }
@@ -196,7 +197,7 @@ function getEmailDomain(email: string): string {
  * get admin access. Once ADMIN_EMAIL_ALLOWLIST or ADMIN_DOMAIN_ALLOWLIST
  * is set in env vars, access will be restricted to those lists.
  */
-function isUserAdmin(email: string): boolean {
+function isUserAdmin(email: string, connectedDomains?: string[]): boolean {
   // If no allowlists configured, all authenticated users are admin
   if (ADMIN_EMAIL_ALLOWLIST.length === 0 && ADMIN_DOMAIN_ALLOWLIST.length === 0) {
     return true;
@@ -213,6 +214,16 @@ function isUserAdmin(email: string): boolean {
   // Check domain allowlist
   if (domain && ADMIN_DOMAIN_ALLOWLIST.includes(domain)) {
     return true;
+  }
+
+  // Check connected account domains (e.g. user's Bridge account is gmail
+  // but they have a connected work email @brdg.app)
+  if (connectedDomains && ADMIN_DOMAIN_ALLOWLIST.length > 0) {
+    for (const connDomain of connectedDomains) {
+      if (ADMIN_DOMAIN_ALLOWLIST.includes(connDomain.toLowerCase())) {
+        return true;
+      }
+    }
   }
 
   return false;
@@ -305,12 +316,25 @@ export async function resolveAuth(): Promise<AuthResult> {
       };
     }
 
+    // Extract connected account domains for admin check
+    const connectedDomains: string[] = [];
+    if (Array.isArray(profile.tokens)) {
+      for (const token of profile.tokens) {
+        if (token.email && !token.is_personal_email) {
+          const tokenDomain = getEmailDomain(token.email);
+          if (tokenDomain && !connectedDomains.includes(tokenDomain)) {
+            connectedDomains.push(tokenDomain);
+          }
+        }
+      }
+    }
+
     // Normalize user data
     const user: AuthUser = {
       id: profile.id,
       email: profile.email,
       name: profile.name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email,
-      isAdmin: isUserAdmin(profile.email),
+      isAdmin: isUserAdmin(profile.email, connectedDomains),
       avatarUrl: profile.profile_pic_url || profile.avatar_url,
     };
 
@@ -335,7 +359,7 @@ export async function resolveAuth(): Promise<AuthResult> {
  * Returns the user if admin, null otherwise
  */
 export async function requireAdmin(): Promise<AuthUser | null> {
-  const { authenticated, user } = await resolveAuth();
+  const { authenticated, user, error } = await resolveAuth();
 
   if (!authenticated || !user) {
     return null;
@@ -455,7 +479,7 @@ export async function resolveAuthWithAccounts(): Promise<AuthResultWithAccounts>
       id: profile.id,
       email: profile.email,
       name: profile.name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email,
-      isAdmin: isUserAdmin(profile.email),
+      isAdmin: isUserAdmin(profile.email, connectedDomains),
       avatarUrl: profile.profile_pic_url || profile.avatar_url,
       connectedAccounts,
       networkDomains,

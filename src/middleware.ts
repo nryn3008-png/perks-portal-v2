@@ -91,6 +91,7 @@ const PROTECTED_API_ROUTES = [
  */
 const ADMIN_ROUTES = [
   '/admin',
+  '/api/admin',
 ];
 
 /**
@@ -146,7 +147,7 @@ function getEmailDomain(email: string): string {
  * get admin access. Once ADMIN_EMAIL_ALLOWLIST or ADMIN_DOMAIN_ALLOWLIST
  * is set in env vars, access will be restricted to those lists.
  */
-function isUserAdmin(email: string): boolean {
+function isUserAdmin(email: string, connectedDomains?: string[]): boolean {
   // If no allowlists configured, all authenticated users are admin
   if (ADMIN_EMAIL_ALLOWLIST.length === 0 && ADMIN_DOMAIN_ALLOWLIST.length === 0) {
     return true;
@@ -155,12 +156,23 @@ function isUserAdmin(email: string): boolean {
   const normalizedEmail = email.toLowerCase();
   const domain = getEmailDomain(normalizedEmail);
 
+  // Check primary email
   if (ADMIN_EMAIL_ALLOWLIST.includes(normalizedEmail)) {
     return true;
   }
 
   if (domain && ADMIN_DOMAIN_ALLOWLIST.includes(domain)) {
     return true;
+  }
+
+  // Check connected account domains (e.g. user's Bridge account is gmail
+  // but they have a connected work email @brdg.app)
+  if (connectedDomains && ADMIN_DOMAIN_ALLOWLIST.length > 0) {
+    for (const connDomain of connectedDomains) {
+      if (ADMIN_DOMAIN_ALLOWLIST.includes(connDomain.toLowerCase())) {
+        return true;
+      }
+    }
   }
 
   return false;
@@ -173,6 +185,8 @@ interface BridgeUser {
   id: string;
   email: string;
   name?: string;
+  /** All email domains from connected accounts (for admin check) */
+  connectedDomains?: string[];
 }
 
 /**
@@ -206,10 +220,24 @@ async function resolveUserFromToken(token: string): Promise<BridgeUser | null> {
       return null;
     }
 
+    // Extract unique domains from connected accounts (tokens)
+    const connectedDomains: string[] = [];
+    if (Array.isArray(user.tokens)) {
+      for (const token of user.tokens) {
+        if (token.email && !token.is_personal_email) {
+          const domain = getEmailDomain(token.email);
+          if (domain && !connectedDomains.includes(domain)) {
+            connectedDomains.push(domain);
+          }
+        }
+      }
+    }
+
     return {
       id: user.id,
       email: user.email,
       name: user.name || (user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : undefined),
+      connectedDomains,
     };
   } catch {
     return null;
@@ -233,7 +261,7 @@ function buildAuthResponse(user: BridgeUser, authMode: string, pathname: string)
   const response = NextResponse.next();
   response.headers.set('x-user-id', user.id);
   response.headers.set('x-user-email', user.email);
-  response.headers.set('x-user-is-admin', isUserAdmin(user.email) ? 'true' : 'false');
+  response.headers.set('x-user-is-admin', isUserAdmin(user.email, user.connectedDomains) ? 'true' : 'false');
   response.headers.set('x-auth-mode', authMode);
   // Prevent caching for API routes
   if (pathname.startsWith('/api/')) {
@@ -322,7 +350,7 @@ export async function middleware(request: NextRequest) {
       logMiddleware('Auth mode: cookie', { pathname, userId: user.id });
 
       // Check admin access
-      if (isAdminRoute(pathname) && !isUserAdmin(user.email)) {
+      if (isAdminRoute(pathname) && !isUserAdmin(user.email, user.connectedDomains)) {
         logMiddleware('Admin access denied', { pathname, userId: user.id, email: user.email });
         return NextResponse.rewrite(new URL('/not-found', request.url));
       }
@@ -346,7 +374,7 @@ export async function middleware(request: NextRequest) {
         logMiddleware('Auth mode: api-key', { pathname, userId: user.id });
 
         // Check admin access
-        if (isAdminRoute(pathname) && !isUserAdmin(user.email)) {
+        if (isAdminRoute(pathname) && !isUserAdmin(user.email, user.connectedDomains)) {
           logMiddleware('Admin access denied (api-key)', { pathname, userId: user.id, email: user.email });
           return NextResponse.rewrite(new URL('/not-found', request.url));
         }

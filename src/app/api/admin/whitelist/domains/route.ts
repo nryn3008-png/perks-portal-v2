@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClientFromProvider } from '@/lib/api';
 import { createSupabaseAdmin } from '@/lib/supabase-server';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -50,16 +51,11 @@ export async function GET(request: NextRequest) {
         next: data.next,
         previous: data.previous,
       },
-      _debug: {
-        provider: provider.slug,
-        api_url: provider.api_url,
-        timestamp: new Date().toISOString(),
-      },
     });
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     return response;
   } catch (err) {
-    console.error('[Whitelist Domains] Failed to fetch:', err);
+    logger.error('[Whitelist Domains] Failed to fetch:', err);
     const errorResponse = NextResponse.json(
       { error: { code: 'FETCH_ERROR', message: 'Unable to load whitelisted domains', status: 500 } },
       { status: 500 }

@@ -15,13 +15,14 @@ import type {
 } from '@/types';
 import { getDefaultProvider } from '@/lib/providers';
 import { createClientFromProvider, GetProvenApiError, GetProvenClient } from './getproven-client';
+import { logger } from '@/lib/logger';
 
 /**
  * Log API errors (server-side only)
  */
 function logApiError(operation: string, error: unknown): void {
   if (typeof window === 'undefined') {
-    console.error(`[Whitelist Service] ${operation} failed:`, {
+    logger.error(`[Whitelist Service] ${operation} failed:`, {
       message: error instanceof Error ? error.message : 'Unknown error',
       code: error instanceof GetProvenApiError ? error.code : undefined,
     });
@@ -34,7 +35,7 @@ function logApiError(operation: string, error: unknown): void {
 async function getWhitelistClient(): Promise<GetProvenClient | null> {
   const provider = await getDefaultProvider();
   if (!provider) {
-    console.error('[Whitelist Service] Default provider not found');
+    logger.error('[Whitelist Service] Default provider not found');
     return null;
   }
   return createClientFromProvider(provider);

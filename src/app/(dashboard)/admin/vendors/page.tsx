@@ -10,13 +10,14 @@
  */
 
 import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
-import { AlertCircle, X, LayoutGrid, List, Building2, Gift, Users, Calendar, ChevronDown, Check, Filter, Shield } from 'lucide-react';
+import { AlertCircle, X, LayoutGrid, List, Building2, Gift, Users, Calendar, ChevronDown, Check, Filter } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button, Card, SearchInput } from '@/components/ui';
 import { VendorsGrid } from '@/components/vendors';
-import { AdminNav } from '@/components/admin/admin-nav';
+
 import type { GetProvenVendor } from '@/types';
+import { logger } from '@/lib/logger';
 
 /**
  * Filter Dropdown Component
@@ -370,7 +371,7 @@ function AdminVendorsPageContent() {
       const data = await res.json();
       setFilterOptions(data);
     } catch (err) {
-      console.error('Failed to fetch filter options:', err);
+      logger.error('Failed to fetch filter options:', err);
     }
   }, []);
 
@@ -391,7 +392,7 @@ function AdminVendorsPageContent() {
       }
       setPerksCountMap(countMap);
     } catch (err) {
-      console.error('Failed to fetch perks count:', err);
+      logger.error('Failed to fetch perks count:', err);
     }
   }, []);
 
@@ -422,7 +423,7 @@ function AdminVendorsPageContent() {
 
       // Sync is handled by a separate useEffect that waits for perksCountMap
     } catch (err) {
-      console.error('Vendors fetch error:', err);
+      logger.error('Vendors fetch error:', err);
       setError('Something went wrong loading vendors. Hit retry or refresh the page.');
       setVendors([]);
     } finally {
@@ -457,7 +458,7 @@ function AdminVendorsPageContent() {
           perks_count: perksCountMap[v.id] || 0,
         })),
       }),
-    }).catch((error) => { if (process.env.NODE_ENV === 'development') console.error('Vendor sync failed:', error); });
+    }).catch((error) => { if (process.env.NODE_ENV === 'development') logger.error('Vendor sync failed:', error); });
   }, [vendors, perksCountMap]);
 
   // Clear search (client-side only)
@@ -495,23 +496,7 @@ function AdminVendorsPageContent() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Admin Navigation */}
-      <AdminNav />
-
-      {/* Admin Header - Mercury OS style */}
-      <div className="flex items-center gap-4 rounded-xl bg-amber-50/80 border border-amber-200/60 p-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100">
-          <Shield className="h-4 w-4 text-amber-600" />
-        </div>
-        <div>
-          <h2 className="font-semibold text-amber-900 text-[14px]">Admin Only</h2>
-          <p className="text-[13px] text-amber-700">
-            Internal view — not visible to regular users.
-          </p>
-        </div>
-      </div>
-
-      {/* Page Header - MercuryOS style */}
+      {/* Page Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#0038FF] to-[#0030E0]">
@@ -616,20 +601,18 @@ function AdminVendorsPageContent() {
 
       {/* Results */}
       <div>
-        {/* Results count with active filters */}
+        {/* Active filters */}
         <div className="mb-4 flex flex-wrap items-center gap-2" aria-live="polite">
-          <span className="text-[13px] text-gray-400">
-            {isLoading
-              ? 'Loading vendors...'
-              : isSearchActive
-              ? `${finalVendors.length} of ${vendors.length} ${vendors.length === 1 ? 'vendor' : 'vendors'} matching "${searchInput}"`
-              : `${vendors.length} ${vendors.length === 1 ? 'vendor' : 'vendors'} found`}
-          </span>
+          {isSearchActive && !isLoading && (
+            <span className="text-[13px] text-gray-400">
+              {`${finalVendors.length} of ${vendors.length} matching "${searchInput}"`}
+            </span>
+          )}
 
           {/* Active filter pills */}
           {hasActiveFilters && !isLoading && (
             <>
-              <span className="text-[13px] text-gray-300">•</span>
+              {isSearchActive && <span className="text-[13px] text-gray-300">•</span>}
               <span className="text-[12px] text-gray-400">Filtered by:</span>
               {activeFilters.serviceName && (
                 <button

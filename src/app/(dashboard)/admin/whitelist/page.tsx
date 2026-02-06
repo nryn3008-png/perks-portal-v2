@@ -10,10 +10,10 @@
  */
 
 import { Suspense, useEffect, useState, useCallback } from 'react';
-import { AlertCircle, Loader2, Upload, Shield, CheckCircle, XCircle, Globe } from 'lucide-react';
+import { AlertCircle, Loader2, Upload, CheckCircle, XCircle, Globe } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
-import { AdminNav } from '@/components/admin/admin-nav';
 import type { WhitelistDomain } from '@/types';
+import { logger } from '@/lib/logger';
 
 const PAGE_SIZE = 50;
 
@@ -75,7 +75,7 @@ function WhitelistPageContent() {
       setCurrentPage(page);
       setHasMore(data.pagination.next !== null);
     } catch (err) {
-      console.error('Whitelist fetch error:', err);
+      logger.error('Whitelist fetch error:', err);
       setError(err instanceof Error ? err.message : 'Unable to load whitelisted domains');
       if (!loadMore) setDomains([]);
     } finally {
@@ -124,7 +124,7 @@ function WhitelistPageContent() {
         fetchDomains(1);
       }
     } catch (err) {
-      console.error('Upload error:', err);
+      logger.error('Upload error:', err);
       setUploadResult({
         success: false,
         message: err instanceof Error ? err.message : 'Upload failed',
@@ -138,23 +138,7 @@ function WhitelistPageContent() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Admin Navigation */}
-      <AdminNav />
-
-      {/* Admin Header - Mercury OS style */}
-      <div className="flex items-center gap-4 rounded-xl bg-amber-50/80 border border-amber-200/60 p-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100">
-          <Shield className="h-4 w-4 text-amber-600" />
-        </div>
-        <div>
-          <h2 className="font-semibold text-amber-900 text-[14px]">Admin Only</h2>
-          <p className="text-[13px] text-amber-700">
-            This page is restricted to administrators
-          </p>
-        </div>
-      </div>
-
-      {/* Page Header - MercuryOS style */}
+      {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -166,39 +150,37 @@ function WhitelistPageContent() {
             </h1>
           </div>
           <p className="text-[14px] text-gray-500 max-w-2xl">
-            Manage domains that are allowed to access perks
+            Users from these domains and their portfolio companies automatically get access to the perks portal
           </p>
         </div>
 
-        {/* CSV Upload - Mercury OS style button */}
-        <div>
-          <label
-            className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium px-4 py-2 text-[13px] transition-all duration-150 cursor-pointer ${
-              isUploading
-                ? 'bg-[#0038FF]/30 text-white cursor-not-allowed'
-                : 'bg-gradient-to-br from-[#0038FF] to-[#0030E0] text-white hover:shadow-lg hover:shadow-[#0038FF]/25'
-            }`}
-          >
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleFileUpload}
-              disabled={isUploading}
-              className="sr-only"
-            />
-            {isUploading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <Upload className="h-4 w-4" />
-                Upload CSV
-              </>
-            )}
-          </label>
-        </div>
+        {/* Upload CSV Button */}
+        <label
+          className={`inline-flex items-center justify-center gap-2 rounded-full font-medium px-4 py-2 text-[14px] min-h-[38px] transition-all duration-150 cursor-pointer ${
+            isUploading
+              ? 'bg-[#0038FF]/30 text-white cursor-not-allowed'
+              : 'bg-gradient-to-br from-[#0038FF] to-[#0030E0] text-white hover:shadow-lg hover:shadow-[#0038FF]/25'
+          }`}
+        >
+          <input
+            type="file"
+            accept=".csv"
+            onChange={handleFileUpload}
+            disabled={isUploading}
+            className="sr-only"
+          />
+          {isUploading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Uploading...
+            </>
+          ) : (
+            <>
+              <Upload className="h-4 w-4" />
+              Upload CSV
+            </>
+          )}
+        </label>
       </div>
 
       {/* Upload Result */}
@@ -243,15 +225,6 @@ function WhitelistPageContent() {
           </div>
         </Card>
       )}
-
-      {/* Results count */}
-      <div className="flex items-center gap-2" aria-live="polite">
-        <span className="text-[13px] text-gray-400">
-          {isLoading
-            ? 'Loading domains...'
-            : `${totalCount} ${totalCount === 1 ? 'domain' : 'domains'} found`}
-        </span>
-      </div>
 
       {/* Loading State */}
       {isLoading && (

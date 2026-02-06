@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 const BRIDGE_API_BASE_URL = process.env.BRIDGE_API_BASE_URL || 'https://api.brdg.app';
 const API_KEY_COOKIE = 'bridge_api_key';
@@ -73,12 +74,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Auth] API key login successful:', { userId: user.id, email: user.email });
+      logger.info('[Auth] API key login successful:', { userId: user.id, email: user.email });
     }
 
     return res;
   } catch (error) {
-    console.error('Login failed:', error);
+    logger.error('Login failed:', error);
     return NextResponse.json(
       { error: 'Failed to validate API key' },
       { status: 500 }

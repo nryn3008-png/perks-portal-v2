@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import {
   ArrowLeft,
   ExternalLink,
@@ -16,6 +16,8 @@ import { RedeemButton } from '@/components/perks/redeem-button';
 import { getDefaultProvider } from '@/lib/providers';
 import { createClientFromProvider, createPerksService, createVendorsService } from '@/lib/api';
 import { findSimilarPerks } from '@/lib/similarity';
+import { resolveAuthWithAccounts } from '@/lib/bridge/auth';
+import { accessService } from '@/lib/api/access-service';
 import type { GetProvenDeal, GetProvenVendor } from '@/types';
 
 /**
@@ -277,6 +279,16 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
   const provider = await getDefaultProvider();
   if (!provider) {
     notFound();
+  }
+
+  // Access check — redirect to /perks if not granted (shows restricted page there)
+  const { authenticated, user } = await resolveAuthWithAccounts();
+  if (!authenticated || !user) {
+    redirect('/perks');
+  }
+  const access = await accessService.resolveAccess(user, provider.id);
+  if (!access.granted) {
+    redirect('/perks');
   }
 
   const client = createClientFromProvider(provider);

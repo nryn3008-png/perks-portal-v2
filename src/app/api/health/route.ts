@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 // GetProven API config
 const GETPROVEN_API_BASE_URL =
@@ -56,7 +57,7 @@ async function checkGetProvenEndpoint(
       api: 'getproven',
     };
   } catch (error) {
-    console.error('GetProven health check failed:', error);
+    logger.error('GetProven health check failed:', error);
     return {
       endpoint,
       status: 'error',
@@ -98,7 +99,7 @@ async function checkBridgeApi(): Promise<ApiStatus> {
       latency,
     };
   } catch (error) {
-    console.error('Bridge API health check failed:', error);
+    logger.error('Bridge API health check failed:', error);
     return {
       name: 'Bridge API',
       status: 'error',
@@ -134,7 +135,7 @@ async function checkGetProvenApiStatus(): Promise<ApiStatus> {
       latency,
     };
   } catch (error) {
-    console.error('GetProven API health check failed:', error);
+    logger.error('GetProven API health check failed:', error);
     return {
       name: 'GetProven API',
       status: 'error',

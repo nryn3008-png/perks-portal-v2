@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { createClientFromProvider, createPerksService } from '@/lib/api';
 import { createSupabaseAdmin } from '@/lib/supabase-server';
+import { checkApiAccess } from '@/lib/api/check-api-access';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -15,7 +16,11 @@ export const revalidate = 0;
  * - totalSavings: string (formatted, e.g., "$8.1M", "$250K")
  * - totalSavingsRaw: number (raw sum for calculations)
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Domain-based access check
+  const denied = checkApiAccess(request);
+  if (denied) return denied;
+
   // Create fresh Supabase client to avoid any caching
   const supabase = createSupabaseAdmin();
 
@@ -42,10 +47,6 @@ export async function GET() {
   const response = NextResponse.json({
     totalOffers: stats.totalPerks,
     totalSavings: stats.totalValue,
-    _debug: {
-      provider: provider.slug,
-      timestamp: new Date().toISOString(),
-    },
   });
   response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   return response;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { resolveAuth } from '@/lib/bridge/auth';
 import { supabase } from '@/lib/supabase';
 import { getDefaultProvider } from '@/lib/providers';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      console.error('[Redemption Tracking] Supabase insert error:', error);
+      logger.error('[Redemption Tracking] Supabase insert error:', error);
       return NextResponse.json(
         { error: 'Failed to track redemption' },
         { status: 500 }
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('[Redemption Tracking] Unexpected error:', err);
+    logger.error('[Redemption Tracking] Unexpected error:', err);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

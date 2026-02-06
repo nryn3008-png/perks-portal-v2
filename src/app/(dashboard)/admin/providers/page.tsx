@@ -21,9 +21,7 @@ import {
   XCircle,
   Loader2,
   AlertCircle,
-  Shield,
 } from 'lucide-react';
-import { AdminNav } from '@/components/admin/admin-nav';
 import { Button, Card } from '@/components/ui';
 
 interface Provider {
@@ -187,23 +185,7 @@ export default function AdminProvidersPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Admin Navigation */}
-      <AdminNav />
-
-      {/* Admin Header - Mercury OS style */}
-      <div className="flex items-center gap-4 rounded-xl bg-amber-50/80 border border-amber-200/60 p-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100">
-          <Shield className="h-4 w-4 text-amber-600" />
-        </div>
-        <div>
-          <h2 className="font-semibold text-amber-900 text-[14px]">Admin Only</h2>
-          <p className="text-[13px] text-amber-700">
-            Manage API providers and credentials
-          </p>
-        </div>
-      </div>
-
-      {/* Page Header - MercuryOS style */}
+      {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -215,7 +197,7 @@ export default function AdminProvidersPage() {
             </h1>
           </div>
           <p className="text-[14px] text-gray-500 max-w-2xl">
-            Switch between providers to display perks from different GetProven accounts
+            Manage GetProven API connections. The default provider powers all data for the perks portal.
           </p>
         </div>
 
@@ -416,22 +398,6 @@ export default function AdminProvidersPage() {
           </div>
         </Card>
       )}
-
-      {/* Info Card */}
-      <Card className="bg-gray-50/50 border-gray-200/60 p-4">
-        <div className="flex items-start gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
-            <Database className="h-4 w-4 text-gray-500" />
-          </div>
-          <div>
-            <p className="text-[13px] font-medium text-gray-700">About Providers</p>
-            <p className="text-[13px] text-gray-500 mt-1">
-              The <strong>default provider</strong> is used for all portal API calls.
-              API tokens are securely stored and never exposed in responses.
-            </p>
-          </div>
-        </div>
-      </Card>
 
       {/* Provider Modal */}
       {isModalOpen && (

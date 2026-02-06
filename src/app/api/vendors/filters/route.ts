@@ -35,13 +35,7 @@ export async function GET() {
 
   const filters = await vendorsService.getFilterOptions();
 
-  const response = NextResponse.json({
-    ...filters,
-    _debug: {
-      provider: provider.slug,
-      timestamp: new Date().toISOString(),
-    },
-  });
+  const response = NextResponse.json(filters);
   response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   return response;
 }
