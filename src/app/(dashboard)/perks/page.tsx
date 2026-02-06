@@ -15,11 +15,13 @@ export default async function PerksPage() {
 
   const provider = await getDefaultProvider();
   let accessGranted = true;
+  let matchedDomain: string | undefined;
   let totalPartnerCount = 0;
 
   if (provider) {
     const access = await accessService.resolveAccess(user, provider.id);
     accessGranted = access.granted;
+    matchedDomain = access.matchedDomain;
 
     if (!accessGranted) {
       const whitelistDomains = await getCachedWhitelistDomains(provider.id);
@@ -30,6 +32,7 @@ export default async function PerksPage() {
   return (
     <AccessGate
       accessGranted={accessGranted}
+      matchedDomain={matchedDomain}
       connectedDomains={user.connectedDomains}
       userName={user.name}
       userEmail={user.email}

@@ -23,6 +23,8 @@ import { FEATURED_VCS } from '@/lib/constants/featured-vcs';
 
 interface AccessGateProps {
   accessGranted: boolean;
+  /** The user's email domain that actually matched the whitelist */
+  matchedDomain?: string;
   connectedDomains: string[];
   userName: string;
   userEmail: string;
@@ -195,11 +197,11 @@ function ScannerConveyor({ currentIndex }: { currentIndex: number }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function AccessGrantedScreen({
-  connectedDomains,
+  matchedDomain,
   userName,
   fadeOut,
 }: {
-  connectedDomains: string[];
+  matchedDomain?: string;
   userName: string;
   fadeOut: boolean;
 }) {
@@ -226,39 +228,36 @@ function AccessGrantedScreen({
           </p>
         </div>
 
-        {/* ── Matched Domains ───────────────────────────────────── */}
-        {connectedDomains.length > 0 && (
+        {/* ── Matched Domain ────────────────────────────────────── */}
+        {matchedDomain && (
           <div className="space-y-2">
             <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wider">
               Verified through
             </p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {connectedDomains.map((domain, i) => (
-                <div
-                  key={domain}
-                  className="inline-flex items-center gap-2 rounded-lg px-3 py-2 bg-emerald-50 border border-emerald-200 animate-fade-in-up"
-                  style={{ animationDelay: `${(i + 1) * 100}ms` }}
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
-                    alt=""
-                    className="h-4 w-4 rounded-sm"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      if (target.nextElementSibling) {
-                        (target.nextElementSibling as HTMLElement).classList.remove('hidden');
-                      }
-                    }}
-                  />
-                  <Building2 className="hidden h-4 w-4 text-emerald-400" />
-                  <span className="text-[13px] font-medium text-emerald-800">
-                    {domain}
-                  </span>
-                </div>
-              ))}
+            <div className="flex justify-center">
+              <div
+                className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 bg-emerald-50 border border-emerald-200 animate-fade-in-up"
+                style={{ animationDelay: '100ms' }}
+              >
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`https://www.google.com/s2/favicons?domain=${matchedDomain}&sz=64`}
+                  alt=""
+                  className="h-4 w-4 rounded-sm"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    if (target.nextElementSibling) {
+                      (target.nextElementSibling as HTMLElement).classList.remove('hidden');
+                    }
+                  }}
+                />
+                <Building2 className="hidden h-4 w-4 text-emerald-400" />
+                <span className="text-[14px] font-semibold text-emerald-800">
+                  {matchedDomain}
+                </span>
+              </div>
             </div>
           </div>
         )}
@@ -366,6 +365,7 @@ function ScanningScreen({
 
 export function AccessGate({
   accessGranted,
+  matchedDomain,
   connectedDomains,
   userName,
   userEmail,
@@ -473,7 +473,7 @@ export function AccessGate({
   if (phase === 'granted') {
     return (
       <AccessGrantedScreen
-        connectedDomains={connectedDomains}
+        matchedDomain={matchedDomain}
         userName={userName}
         fadeOut={fadeOut}
       />
