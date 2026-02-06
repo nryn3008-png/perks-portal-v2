@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Shield, Building2 } from 'lucide-react';
+import { Shield, ShieldCheck, Building2, CheckCircle2 } from 'lucide-react';
 import { AccessRestrictedPage } from '@/components/access-restricted';
 import { FEATURED_VCS } from '@/lib/constants/featured-vcs';
 
@@ -48,6 +48,8 @@ const SCAN_PHASES = [
 const PHASE_DURATION = 1000;
 const TOTAL_DURATION = 8000;
 const FADE_OUT_OFFSET = 800;
+const GRANTED_DURATION = 2500;
+const GRANTED_FADE_OFFSET = 500;
 const SESSION_KEY = 'access-gate-shown';
 
 // VCs for the scanning conveyor
@@ -190,6 +192,88 @@ function ScannerConveyor({ currentIndex }: { currentIndex: number }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ACCESS GRANTED SCREEN
+// ─────────────────────────────────────────────────────────────────────────────
+
+function AccessGrantedScreen({
+  connectedDomains,
+  userName,
+  fadeOut,
+}: {
+  connectedDomains: string[];
+  userName: string;
+  fadeOut: boolean;
+}) {
+  return (
+    <div
+      className={`
+        min-h-[60vh] flex items-center justify-center px-4
+        transition-opacity duration-500 ease-in-out
+        ${fadeOut ? 'opacity-0' : 'opacity-100'}
+      `}
+    >
+      <div className="w-full max-w-md text-center space-y-6 animate-fade-in-up">
+
+        {/* ── Success Icon ──────────────────────────────────────── */}
+        <div className="space-y-3">
+          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 mb-2 shadow-lg shadow-emerald-500/20">
+            <ShieldCheck className="h-7 w-7 text-white" />
+          </div>
+          <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
+            Access Granted
+          </h1>
+          <p className="text-[13px] text-gray-500">
+            {userName ? `Welcome, ${userName}!` : 'Welcome!'} Your identity has been verified
+          </p>
+        </div>
+
+        {/* ── Matched Domains ───────────────────────────────────── */}
+        {connectedDomains.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wider">
+              Verified through
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {connectedDomains.map((domain, i) => (
+                <div
+                  key={domain}
+                  className="inline-flex items-center gap-2 rounded-lg px-3 py-2 bg-emerald-50 border border-emerald-200 animate-fade-in-up"
+                  style={{ animationDelay: `${(i + 1) * 100}ms` }}
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+                    alt=""
+                    className="h-4 w-4 rounded-sm"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      if (target.nextElementSibling) {
+                        (target.nextElementSibling as HTMLElement).classList.remove('hidden');
+                      }
+                    }}
+                  />
+                  <Building2 className="hidden h-4 w-4 text-emerald-400" />
+                  <span className="text-[13px] font-medium text-emerald-800">
+                    {domain}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Loading indicator ─────────────────────────────────── */}
+        <p className="text-[12px] text-gray-400 animate-fade-in" style={{ animationDelay: '400ms' }}>
+          Loading your perks...
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SCANNING SCREEN
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -289,7 +373,7 @@ export function AccessGate({
   totalPartnerCount,
   children,
 }: AccessGateProps) {
-  const [phase, setPhase] = useState<'scanning' | 'result'>('scanning');
+  const [phase, setPhase] = useState<'scanning' | 'granted' | 'result'>('scanning');
   const [scanPhaseIndex, setScanPhaseIndex] = useState(0);
   const [vcScanIndex, setVcScanIndex] = useState(0);
   const [fadeOut, setFadeOut] = useState(false);
@@ -305,6 +389,7 @@ export function AccessGate({
     return false;
   }, [connectedDomains.length]);
 
+  // ── Scanning → granted/result timer ─────────────────────────────────────
   useEffect(() => {
     if (shouldSkip()) {
       setPhase('result');
@@ -329,21 +414,47 @@ export function AccessGate({
       setVcScanIndex((prev) => (prev + 1) % SCAN_VCS.length);
     }, SCAN_INTERVAL);
 
-    // Fade out
+    // Fade out scanning screen
     timers.push(
       setTimeout(() => setFadeOut(true), TOTAL_DURATION - FADE_OUT_OFFSET)
     );
 
-    // Switch to result
+    // After scanning: show granted screen or go directly to result
     timers.push(
-      setTimeout(() => setPhase('result'), TOTAL_DURATION)
+      setTimeout(() => {
+        if (accessGranted) {
+          setPhase('granted');
+          setFadeOut(false);
+        } else {
+          setPhase('result');
+        }
+      }, TOTAL_DURATION)
     );
 
     return () => {
       timers.forEach(clearTimeout);
       clearInterval(vcInterval);
     };
-  }, [shouldSkip]);
+  }, [shouldSkip, accessGranted]);
+
+  // ── Granted → result timer ──────────────────────────────────────────────
+  useEffect(() => {
+    if (phase !== 'granted') return;
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    // Fade out granted screen
+    timers.push(
+      setTimeout(() => setFadeOut(true), GRANTED_DURATION - GRANTED_FADE_OFFSET)
+    );
+
+    // Switch to result (show perks)
+    timers.push(
+      setTimeout(() => setPhase('result'), GRANTED_DURATION)
+    );
+
+    return () => timers.forEach(clearTimeout);
+  }, [phase]);
 
   // ── Result phase ──────────────────────────────────────────────────────────
   if (phase === 'result') {
@@ -360,6 +471,17 @@ export function AccessGate({
           totalPartnerCount={totalPartnerCount}
         />
       </div>
+    );
+  }
+
+  // ── Granted phase ───────────────────────────────────────────────────────
+  if (phase === 'granted') {
+    return (
+      <AccessGrantedScreen
+        connectedDomains={connectedDomains}
+        userName={userName}
+        fadeOut={fadeOut}
+      />
     );
   }
 
