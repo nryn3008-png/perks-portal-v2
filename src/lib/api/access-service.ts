@@ -303,7 +303,13 @@ export const accessService = {
         const checkedAt = new Date(cached.checkedAt).getTime();
         const age = Date.now() - checkedAt;
 
-        if (age < ACCESS_RECHECK_INTERVAL_MS) {
+        // Force re-check if a domain-match grant is missing matchedDomain
+        // (stale cookie from before matchedDomain was added to the response)
+        const needsMatchedDomain = cached.granted
+          && (cached.reason === 'vc_team' || cached.reason === 'portfolio_match')
+          && !cached.matchedDomain;
+
+        if (age < ACCESS_RECHECK_INTERVAL_MS && !needsMatchedDomain) {
           return cached;
         }
 
