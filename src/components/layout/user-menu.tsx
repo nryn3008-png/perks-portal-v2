@@ -18,6 +18,14 @@ function getFaviconUrl(domain: string): string {
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
 }
 
+/**
+ * Get favicon URL for personal email providers
+ */
+function getPersonalEmailFaviconUrl(email: string): string {
+  const domain = email.split('@')[1] || 'gmail.com';
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+}
+
 interface ConnectedAccount {
   email: string;
   domain: string;
@@ -82,8 +90,9 @@ export function UserMenu({ user }: UserMenuProps) {
     };
   }, [open]);
 
-  // Filter to show only non-personal email accounts
+  // Separate work and personal accounts
   const workAccounts = connectedAccounts.filter((acc) => !acc.isPersonalEmail && acc.domain);
+  const personalAccounts = connectedAccounts.filter((acc) => acc.isPersonalEmail);
 
   return (
     <div ref={menuRef} className="relative pl-3 border-l border-gray-200">
@@ -110,7 +119,7 @@ export function UserMenu({ user }: UserMenuProps) {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 rounded-xl bg-white shadow-lg ring-1 ring-gray-200/60 border border-gray-100 animate-fade-in z-50">
+        <div className="absolute right-0 top-full mt-2 w-80 rounded-xl bg-white shadow-lg ring-1 ring-gray-200/60 border border-gray-100 animate-fade-in z-50 max-h-[80vh] overflow-y-auto">
           <div className="p-4">
             {/* Header */}
             <p className="text-xs font-medium text-gray-400 mb-3">Signed in as</p>
@@ -139,7 +148,7 @@ export function UserMenu({ user }: UserMenuProps) {
           {/* Connected Accounts Section */}
           <div className="border-t border-gray-100">
             <div className="p-4">
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-medium text-gray-400">Connected Accounts</p>
                 <a
                   href={BRIDGE_CONNECTED_ACCOUNTS_URL}
@@ -155,47 +164,99 @@ export function UserMenu({ user }: UserMenuProps) {
                 <div className="flex items-center justify-center py-3">
                   <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
                 </div>
-              ) : workAccounts.length > 0 ? (
-                <div className="space-y-2">
-                  {workAccounts.map((account) => (
-                    <div
-                      key={account.email}
-                      className="flex items-center gap-2.5 rounded-lg bg-gray-50 px-3 py-2"
-                    >
-                      {/* Favicon */}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={getFaviconUrl(account.domain)}
-                        alt={account.domain}
-                        className="h-6 w-6 rounded-sm"
-                        onError={(e) => {
-                          // Fallback to Globe icon if favicon fails
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          target.nextElementSibling?.classList.remove('hidden');
-                        }}
-                      />
-                      <div className="hidden h-6 w-6 items-center justify-center rounded-full bg-white ring-1 ring-gray-200">
-                        <Building2 className="h-3.5 w-3.5 text-gray-500" />
+              ) : connectedAccounts.length > 0 ? (
+                <div className="space-y-4">
+                  {/* Work Accounts */}
+                  {workAccounts.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2">
+                        Work
+                      </p>
+                      <div className="space-y-1.5">
+                        {workAccounts.map((account) => (
+                          <div
+                            key={account.email}
+                            className="flex items-center gap-2.5 rounded-lg bg-gray-50 px-3 py-2"
+                          >
+                            {/* Favicon */}
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={getFaviconUrl(account.domain)}
+                              alt={account.domain}
+                              className="h-5 w-5 rounded-sm"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                target.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                            <div className="hidden h-5 w-5 items-center justify-center rounded-full bg-white ring-1 ring-gray-200">
+                              <Building2 className="h-3 w-3 text-gray-500" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[12px] font-medium text-gray-700 truncate">
+                                {account.domain}
+                              </p>
+                              <p className="text-[10px] text-gray-400 truncate">{account.email}</p>
+                            </div>
+                            {account.isPrimary && (
+                              <span className="text-[9px] font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                                Primary
+                              </span>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[13px] font-medium text-gray-700 truncate">
-                          {account.domain}
-                        </p>
-                        <p className="text-[11px] text-gray-400 truncate">{account.email}</p>
-                      </div>
-                      {account.isPrimary && (
-                        <span className="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
-                          Primary
-                        </span>
-                      )}
                     </div>
-                  ))}
+                  )}
+
+                  {/* Personal Accounts */}
+                  {personalAccounts.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2">
+                        Personal
+                      </p>
+                      <div className="space-y-1.5">
+                        {personalAccounts.map((account) => (
+                          <div
+                            key={account.email}
+                            className="flex items-center gap-2.5 rounded-lg bg-gray-50 px-3 py-2"
+                          >
+                            {/* Favicon for personal email provider */}
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={getPersonalEmailFaviconUrl(account.email)}
+                              alt="Email"
+                              className="h-5 w-5 rounded-sm"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                target.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                            <div className="hidden h-5 w-5 items-center justify-center rounded-full bg-white ring-1 ring-gray-200">
+                              <Mail className="h-3 w-3 text-gray-500" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[12px] font-medium text-gray-700 truncate">
+                                {account.email}
+                              </p>
+                            </div>
+                            {account.isPrimary && (
+                              <span className="text-[9px] font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                                Primary
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-[13px] text-gray-400 py-2">
                   <Mail className="h-4 w-4" />
-                  <span>No work accounts connected</span>
+                  <span>No accounts connected</span>
                 </div>
               )}
             </div>
