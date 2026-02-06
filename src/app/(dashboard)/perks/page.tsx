@@ -6,15 +6,6 @@ import { accessService } from '@/lib/api/access-service';
 import { getCachedWhitelistDomains } from '@/lib/api/access-cache';
 import { getDefaultProvider } from '@/lib/providers';
 
-/**
- * Perks Page — Server Component Wrapper
- *
- * Checks auth state + domain-based access:
- * - Not authenticated → shows the public landing page
- * - Authenticated → resolves access, wraps in AccessGate for scanning animation
- *   - Work domains present → 4s scanning animation → perks or restricted page
- *   - Personal email only → restricted page immediately (no scanning)
- */
 export default async function PerksPage() {
   const { authenticated, user } = await resolveAuthWithAccounts();
 
@@ -22,7 +13,6 @@ export default async function PerksPage() {
     return <LandingPage />;
   }
 
-  // Resolve domain-based access
   const provider = await getDefaultProvider();
   let accessGranted = true;
   let totalPartnerCount = 0;

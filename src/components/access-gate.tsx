@@ -3,14 +3,11 @@
 /**
  * Access Gate — Domain Scanning Animation
  *
- * Shows a modern "scanning" animation when verifying a user's domain
- * against the partner network. Runs for a minimum of 4 seconds before
- * revealing the result (granted → perks, denied → restricted page).
+ * Shows a conveyor-belt scanning animation: VC favicons slide into a
+ * pulsating scan circle (full color, bigger), then slide out as
+ * grayscale and smaller. 3 logos visible at a time.
  *
- * Skips animation for:
- * - Personal email only (no work domains to scan)
- * - Return visits within the same session (sessionStorage flag)
- * - Users with prefers-reduced-motion enabled
+ * Runs for 8 seconds minimum before revealing the result.
  *
  * Design: MercuryOS — Bridge Blue #0038FF, Mulish, rounded-xl
  */
@@ -18,6 +15,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Shield, Building2 } from 'lucide-react';
 import { AccessRestrictedPage } from '@/components/access-restricted';
+import { FEATURED_VCS } from '@/lib/constants/featured-vcs';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -39,17 +37,25 @@ interface AccessGateProps {
 const SCAN_PHASES = [
   'Initializing secure connection...',
   'Scanning domain...',
+  'Matching against partner network...',
   'Checking portfolio access...',
-  'Verifying credentials...',
+  'Cross-referencing credentials...',
+  'Verifying access level...',
+  'Finalizing verification...',
+  'Almost there...',
 ];
 
-const PHASE_DURATION = 1000; // 1s per phase
-const TOTAL_DURATION = 4000; // 4s total
-const FADE_OUT_OFFSET = 400; // start fade 400ms before end
+const PHASE_DURATION = 1000;
+const TOTAL_DURATION = 8000;
+const FADE_OUT_OFFSET = 800;
 const SESSION_KEY = 'access-gate-shown';
 
+// VCs for the scanning conveyor
+const SCAN_VCS = FEATURED_VCS.slice(0, 12);
+const SCAN_INTERVAL = 1200; // ms between each VC scan
+
 // ─────────────────────────────────────────────────────────────────────────────
-// DOMAIN CHIP (scanning variant)
+// DOMAIN CHIP
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ScanDomainChip({
@@ -65,14 +71,14 @@ function ScanDomainChip({
     <div
       className={`
         inline-flex items-center gap-2 rounded-lg px-3 py-2
-        border transition-all duration-300
-        animate-fade-in-up anim-delay-${Math.min(index + 1, 6)}
+        border transition-all duration-300 animate-fade-in-up
         ${
           isActive
             ? 'bg-[#0038FF]/5 border-[#0038FF]/30 shadow-sm shadow-[#0038FF]/10'
             : 'bg-white border-gray-200'
         }
       `}
+      style={{ animationDelay: `${(index + 1) * 100}ms` }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -95,8 +101,6 @@ function ScanDomainChip({
       >
         {domain}
       </span>
-
-      {/* Active indicator dot */}
       {isActive && (
         <span className="h-1.5 w-1.5 rounded-full bg-[#0038FF] animate-pulse" />
       )}
@@ -105,85 +109,156 @@ function ScanDomainChip({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SCANNING ANIMATION
+// SCANNER CONVEYOR
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ScannerConveyor({ currentIndex }: { currentIndex: number }) {
+  // 3 slots: entering (left), scanning (center), exiting (right)
+  const prevIndex = (currentIndex - 1 + SCAN_VCS.length) % SCAN_VCS.length;
+  const nextIndex = (currentIndex + 1) % SCAN_VCS.length;
+
+  const enteringVC = SCAN_VCS[nextIndex];
+  const scanningVC = SCAN_VCS[currentIndex];
+  const exitingVC = SCAN_VCS[prevIndex];
+
+  return (
+    <div className="relative flex items-center justify-center mx-auto" style={{ height: 100 }}>
+      <div className="flex items-center gap-16">
+
+        {/* LEFT — entering: sliding in, semi-transparent */}
+        <div
+          key={`entering-${enteringVC.domain}`}
+          className="flex flex-col items-center gap-1.5 animate-slide-in-left"
+          style={{ width: 56 }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`https://www.google.com/s2/favicons?domain=${enteringVC.domain}&sz=64`}
+            alt={enteringVC.name}
+            className="h-8 w-8 object-contain"
+          />
+          <span className="text-[10px] text-gray-400 font-medium max-w-[56px] truncate text-center">
+            {enteringVC.name}
+          </span>
+        </div>
+
+        {/* CENTER — scanning: inside the tight pulsating circle */}
+        <div className="flex flex-col items-center gap-2" style={{ width: 64 }}>
+          {/* Favicon wrapper — rings are relative to this */}
+          <div
+            key={`scanning-${scanningVC.domain}`}
+            className="relative flex items-center justify-center h-9 w-9 animate-slide-into-scan"
+          >
+            {/* Pulsating rings — centered on the favicon */}
+            <div className="absolute inset-0 m-auto h-12 w-12 rounded-full border-[1.5px] border-[#0038FF]/40 animate-scan-pulse-ring" style={{ top: '-6px', left: '-6px', right: '-6px', bottom: '-6px' }} />
+            <div className="absolute inset-0 m-auto h-12 w-12 rounded-full border-[1.5px] border-[#0038FF]/20 animate-scan-pulse-ring" style={{ top: '-6px', left: '-6px', right: '-6px', bottom: '-6px', animationDelay: '0.6s' }} />
+
+            {/* Soft glow disc */}
+            <div className="absolute inset-[-4px] rounded-full bg-[#0038FF]/[0.04] animate-scan-glow" />
+
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`https://www.google.com/s2/favicons?domain=${scanningVC.domain}&sz=64`}
+              alt={scanningVC.name}
+              className="relative z-10 h-9 w-9 object-contain"
+            />
+          </div>
+          <span className="text-[10px] text-[#0038FF] font-semibold max-w-[64px] truncate text-center">
+            {scanningVC.name}
+          </span>
+        </div>
+
+        {/* RIGHT — exiting: grayscale, slightly smaller */}
+        <div
+          key={`exiting-${exitingVC.domain}`}
+          className="flex flex-col items-center gap-1.5"
+          style={{ width: 56 }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`https://www.google.com/s2/favicons?domain=${exitingVC.domain}&sz=64`}
+            alt={exitingVC.name}
+            className="h-6 w-6 object-contain opacity-30 grayscale"
+          />
+          <span className="text-[10px] text-gray-300 font-medium max-w-[56px] truncate text-center">
+            {exitingVC.name}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCANNING SCREEN
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ScanningScreen({
   connectedDomains,
   scanPhaseIndex,
   fadeOut,
+  vcScanIndex,
 }: {
   connectedDomains: string[];
   scanPhaseIndex: number;
   fadeOut: boolean;
+  vcScanIndex: number;
 }) {
-  // Highlight domains sequentially during phase 2 (index 2 = "Checking portfolio access...")
-  const activeDomainIndex = scanPhaseIndex >= 2 ? (scanPhaseIndex - 2) : -1;
+  const activeDomainIndex = scanPhaseIndex >= 2 && scanPhaseIndex <= 5
+    ? (scanPhaseIndex - 2) % connectedDomains.length
+    : -1;
 
   return (
     <div
       className={`
         min-h-[60vh] flex items-center justify-center px-4
-        transition-opacity duration-500
+        transition-opacity duration-700 ease-in-out
         ${fadeOut ? 'opacity-0' : 'opacity-100'}
       `}
     >
-      <div className="w-full max-w-md text-center space-y-8">
-
-        {/* ── Scanner Icon with Pulse Rings ──────────────────────── */}
-        <div className="relative flex items-center justify-center h-32">
-          {/* Pulse ring 1 */}
-          <div
-            className="absolute h-20 w-20 rounded-full border-2 border-[#0038FF]/20 animate-scan-pulse-ring"
-          />
-          {/* Pulse ring 2 (delayed) */}
-          <div
-            className="absolute h-20 w-20 rounded-full border-2 border-[#0038FF]/15 animate-scan-pulse-ring"
-            style={{ animationDelay: '0.6s' }}
-          />
-          {/* Pulse ring 3 (more delayed) */}
-          <div
-            className="absolute h-20 w-20 rounded-full border-2 border-[#0038FF]/10 animate-scan-pulse-ring"
-            style={{ animationDelay: '1.2s' }}
-          />
-
-          {/* Center shield icon */}
-          <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0038FF] to-[#0030E0] animate-scan-glow z-10">
-            <Shield className="h-7 w-7 text-white" />
-          </div>
-        </div>
+      <div className="w-full max-w-md text-center space-y-6">
 
         {/* ── Title ──────────────────────────────────────────────── */}
         <div className="space-y-2 animate-fade-in">
+          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0038FF] to-[#0030E0] mb-3 animate-scan-glow">
+            <Shield className="h-6 w-6 text-white" />
+          </div>
           <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
             Verifying Access
           </h1>
           <p className="text-[13px] text-gray-500">
-            Checking your domain against our partner network
+            Scanning your domain against our partner network
           </p>
         </div>
 
-        {/* ── Domain Targets with Scan Line ──────────────────────── */}
-        <div className="relative rounded-xl border border-gray-200 bg-gray-50/50 p-6 overflow-hidden">
-          {/* Scanning line overlay */}
-          <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-10">
-            <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#0038FF]/60 to-transparent animate-scan-line" />
-          </div>
+        {/* ── Scanner Conveyor ────────────────────────────────────── */}
+        <ScannerConveyor currentIndex={vcScanIndex} />
 
-          {/* Domain chips */}
-          <div className="relative flex flex-wrap justify-center gap-2">
-            {connectedDomains.map((domain, i) => (
-              <ScanDomainChip
-                key={domain}
-                domain={domain}
-                index={i}
-                isActive={i === activeDomainIndex}
-              />
-            ))}
+        {/* ── Your Domains Being Checked ─────────────────────────── */}
+        {connectedDomains.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wider animate-fade-in">
+              Work emails connected to your account
+            </p>
+            <div className="relative rounded-xl border border-gray-200 bg-gray-50/50 p-4 overflow-hidden">
+              <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-10">
+                <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#0038FF]/40 to-transparent animate-scan-line" />
+              </div>
+              <div className="relative flex flex-wrap justify-center gap-2">
+                {connectedDomains.map((domain, i) => (
+                  <ScanDomainChip
+                    key={domain}
+                    domain={domain}
+                    index={i}
+                    isActive={i === activeDomainIndex}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* ── Status Text (fades between phases) ─────────────────── */}
+        {/* ── Status Text ────────────────────────────────────────── */}
         <div className="h-6 flex items-center justify-center">
           <p
             key={scanPhaseIndex}
@@ -216,53 +291,45 @@ export function AccessGate({
 }: AccessGateProps) {
   const [phase, setPhase] = useState<'scanning' | 'result'>('scanning');
   const [scanPhaseIndex, setScanPhaseIndex] = useState(0);
+  const [vcScanIndex, setVcScanIndex] = useState(0);
   const [fadeOut, setFadeOut] = useState(false);
 
-  // Check if we should skip the animation
   const shouldSkip = useCallback(() => {
-    // No work domains → personal email flow, nothing to scan
     if (connectedDomains.length === 0) return true;
-
-    // Return visit within same session
     try {
       if (sessionStorage.getItem(SESSION_KEY)) return true;
-    } catch {
-      // sessionStorage not available — don't skip
-    }
-
-    // Reduced motion preference
+    } catch {}
     if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       return true;
     }
-
     return false;
   }, [connectedDomains.length]);
 
   useEffect(() => {
-    // Skip animation if conditions met
     if (shouldSkip()) {
       setPhase('result');
       return;
     }
 
-    // Mark as shown for this session
     try {
       sessionStorage.setItem(SESSION_KEY, 'true');
-    } catch {
-      // Ignore
-    }
+    } catch {}
 
-    // Progress through scan phases
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    // Phase transitions at 1s, 2s, 3s
+    // Phase text transitions
     for (let i = 1; i < SCAN_PHASES.length; i++) {
       timers.push(
         setTimeout(() => setScanPhaseIndex(i), i * PHASE_DURATION)
       );
     }
 
-    // Start fade-out before end
+    // VC conveyor — cycle through logos
+    const vcInterval = setInterval(() => {
+      setVcScanIndex((prev) => (prev + 1) % SCAN_VCS.length);
+    }, SCAN_INTERVAL);
+
+    // Fade out
     timers.push(
       setTimeout(() => setFadeOut(true), TOTAL_DURATION - FADE_OUT_OFFSET)
     );
@@ -272,17 +339,20 @@ export function AccessGate({
       setTimeout(() => setPhase('result'), TOTAL_DURATION)
     );
 
-    return () => timers.forEach(clearTimeout);
+    return () => {
+      timers.forEach(clearTimeout);
+      clearInterval(vcInterval);
+    };
   }, [shouldSkip]);
 
   // ── Result phase ──────────────────────────────────────────────────────────
   if (phase === 'result') {
     if (accessGranted) {
-      return <div className="animate-fade-in">{children}</div>;
+      return <div className="animate-fade-in-up">{children}</div>;
     }
 
     return (
-      <div className="animate-fade-in">
+      <div className="animate-fade-in-up">
         <AccessRestrictedPage
           connectedDomains={connectedDomains}
           userName={userName}
@@ -299,6 +369,7 @@ export function AccessGate({
       connectedDomains={connectedDomains}
       scanPhaseIndex={scanPhaseIndex}
       fadeOut={fadeOut}
+      vcScanIndex={vcScanIndex}
     />
   );
 }

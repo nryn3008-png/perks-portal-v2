@@ -603,12 +603,15 @@ export function AccessRestrictedPage({
       <div className="w-full max-w-2xl space-y-6">
         {/* Checked Domains */}
         <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-1">
             <Building2 className="h-4 w-4 text-gray-400" />
             <h2 className="text-[13px] font-semibold text-gray-500 uppercase tracking-wider">
-              Domains We Checked
+              Work Emails Checked
             </h2>
           </div>
+          <p className="text-[12px] text-gray-400 mb-4">
+            We checked all work email domains connected to your account against our partner network
+          </p>
 
           <div className="flex flex-wrap gap-2">
             {connectedDomains.map((domain) => (
