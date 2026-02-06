@@ -305,20 +305,12 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
   const hasIntropathData = intropathData.intropathCount !== null && intropathData.intropathCount > 0;
 
   return (
-    <div className="min-h-screen">
-      {/* Ambient Background - Mercury OS gradient mesh */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-50" />
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-bl from-indigo-50/40 via-transparent to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-amber-50/30 via-transparent to-transparent rounded-full blur-3xl" />
-      </div>
-
-      <div className="mx-auto max-w-6xl px-6 py-8">
+    <div className="space-y-6 animate-fade-in max-w-6xl">
         {/* Back Navigation - Minimal */}
         <Link
           href="/admin/vendors"
           className="
-            inline-flex items-center gap-2 mb-8
+            inline-flex items-center gap-2
             text-sm font-medium text-gray-500
             hover:text-gray-900
             transition-colors duration-200
@@ -330,12 +322,12 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
           <span>Back to Vendors</span>
         </Link>
 
-        <div className="grid lg:grid-cols-[1fr,380px] gap-8">
+        <div className="grid lg:grid-cols-[1fr,380px] gap-6">
           {/* Main Content */}
-          <div className="space-y-8">
+          <div className="space-y-6">
 
             {/* Hero Section - Mercury OS Module */}
-            <GlassCard className="p-8">
+            <GlassCard className="p-6">
               {/* Vendor Identity */}
               <div className="flex items-start gap-4 mb-6">
                 {vendor.logo ? (
@@ -385,7 +377,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
               </div>
 
               {/* Perks Badge & Intropath Badge */}
-              <div className="pt-6 border-t border-gray-200/50 flex flex-wrap gap-3">
+              <div className="pt-6 border-t border-gray-200/50 flex flex-wrap gap-2">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0038FF]/5 border border-[#0038FF]/10">
                   <Gift className="h-4 w-4 text-[#0038FF]" />
                   <span className="text-sm font-medium text-[#0038FF]">
@@ -517,8 +509,8 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
             )}
 
             {/* Available Perks Section */}
-            <section className="pt-8 border-t border-gray-200/50">
-              <div className="mb-6">
+            <section className="pt-6 border-t border-gray-200/50">
+              <div className="mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">Available Perks</h2>
                 <p className="text-sm text-gray-500 mt-2">Offers from {vendor.name}</p>
               </div>
@@ -546,8 +538,8 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
 
             {/* Similar Vendors Section - Only show if there are similar vendors */}
             {similarVendors.length > 0 && (
-              <section className="pt-8 border-t border-gray-200/50">
-                <div className="mb-6">
+              <section className="pt-6 border-t border-gray-200/50">
+                <div className="mb-4">
                   <h2 className="text-xl font-semibold text-gray-900">Similar Vendors</h2>
                   <p className="text-sm text-gray-500 mt-2">Vendors offering similar services</p>
                 </div>
@@ -565,7 +557,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
             )}
 
             {/* Raw API Data - Collapsible */}
-            <section className="pt-8 border-t border-gray-200/50">
+            <section className="pt-6 border-t border-gray-200/50">
               <details className="group">
                 <summary className="
                   flex items-center justify-between cursor-pointer
@@ -582,7 +574,7 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
                   <ChevronRight className="w-5 h-5 text-gray-400 transition-transform duration-200 group-open:rotate-90" />
                 </summary>
 
-                <div className="mt-6 space-y-8">
+                <div className="mt-6 space-y-6">
                   {/* Visibility Flags */}
                   <GlassCard className="!rounded-xl">
                     <div className="p-6">
@@ -1157,7 +1149,6 @@ export default async function AdminVendorDetailPage({ params }: AdminVendorDetai
             </FloatingPanel>
           </aside>
         </div>
-      </div>
     </div>
   );
 }
