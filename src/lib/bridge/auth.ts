@@ -21,6 +21,31 @@ import { cookies } from 'next/headers';
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
+ * Connected email account token from Bridge API
+ */
+export interface BridgeEmailToken {
+  id: string;
+  email: string;
+  is_primary: boolean;
+  provider: string;
+  full_domain: string;
+  is_personal_email: boolean;
+  user_pic?: string;
+  imported_at?: string;
+  synced_at?: string;
+  show_deactivated_warning?: boolean;
+}
+
+/**
+ * Network domain affiliation from Bridge API
+ */
+export interface BridgeNetworkDomain {
+  domain: string;
+  role: 'member' | 'guest' | string;
+  has_portfolios: boolean;
+}
+
+/**
  * Bridge user profile from API
  */
 export interface BridgeUserProfile {
@@ -36,6 +61,8 @@ export interface BridgeUserProfile {
     name: string;
     domain?: string;
   };
+  tokens?: BridgeEmailToken[];
+  network_domains?: BridgeNetworkDomain[];
 }
 
 /**
@@ -50,11 +77,55 @@ export interface AuthUser {
 }
 
 /**
+ * Connected account info (normalized)
+ */
+export interface ConnectedAccount {
+  email: string;
+  domain: string;
+  isPrimary: boolean;
+  isPersonalEmail: boolean;
+  provider: string;
+}
+
+/**
+ * Network domain info (normalized)
+ */
+export interface NetworkDomain {
+  domain: string;
+  role: string;
+  hasPortfolios: boolean;
+}
+
+/**
+ * Full user data including connected accounts
+ */
+export interface UserWithConnectedAccounts {
+  id: string;
+  email: string;
+  name: string;
+  isAdmin: boolean;
+  avatarUrl?: string;
+  connectedAccounts: ConnectedAccount[];
+  networkDomains: NetworkDomain[];
+  /** All unique non-personal email domains the user has connected */
+  connectedDomains: string[];
+}
+
+/**
  * Auth result from resolver
  */
 export interface AuthResult {
   authenticated: boolean;
   user: AuthUser | null;
+  error?: string;
+}
+
+/**
+ * Auth result with connected accounts
+ */
+export interface AuthResultWithAccounts {
+  authenticated: boolean;
+  user: UserWithConnectedAccounts | null;
   error?: string;
 }
 
@@ -290,6 +361,121 @@ export async function requireAuth(): Promise<AuthUser | null> {
   }
 
   return user;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONNECTED ACCOUNTS RESOLVER
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Normalize Bridge email tokens to connected accounts
+ */
+function normalizeConnectedAccounts(tokens: BridgeEmailToken[] = []): ConnectedAccount[] {
+  return tokens.map((token) => ({
+    email: token.email,
+    domain: token.full_domain || '',
+    isPrimary: token.is_primary,
+    isPersonalEmail: token.is_personal_email,
+    provider: token.provider,
+  }));
+}
+
+/**
+ * Normalize Bridge network domains
+ */
+function normalizeNetworkDomains(domains: BridgeNetworkDomain[] = []): NetworkDomain[] {
+  return domains.map((domain) => ({
+    domain: domain.domain,
+    role: domain.role,
+    hasPortfolios: domain.has_portfolios,
+  }));
+}
+
+/**
+ * Extract unique non-personal email domains from connected accounts
+ */
+function extractConnectedDomains(accounts: ConnectedAccount[]): string[] {
+  const domains = new Set<string>();
+
+  for (const account of accounts) {
+    // Skip personal emails (gmail, yahoo, etc.) and empty domains
+    if (!account.isPersonalEmail && account.domain) {
+      domains.add(account.domain.toLowerCase());
+    }
+  }
+
+  return Array.from(domains);
+}
+
+/**
+ * Resolve Bridge user with full connected accounts data
+ *
+ * Use this when you need to check user's connected email domains
+ * for access control decisions.
+ *
+ * @returns AuthResultWithAccounts with full user data including connected accounts
+ */
+export async function resolveAuthWithAccounts(): Promise<AuthResultWithAccounts> {
+  try {
+    // Get cookies from the request
+    const cookieStore = await cookies();
+
+    // Try authToken cookie first (Bridge session), then API key cookie
+    const token =
+      cookieStore.get(BRIDGE_AUTH_COOKIE)?.value ||
+      cookieStore.get(BRIDGE_API_KEY_COOKIE)?.value;
+
+    if (!token) {
+      logAuth('failure', { reason: 'No auth token found' });
+      return {
+        authenticated: false,
+        user: null,
+        error: 'No session',
+      };
+    }
+
+    // Fetch user profile from Bridge API using the Bearer token
+    const profile = await fetchBridgeUserProfile(token);
+
+    if (!profile) {
+      return {
+        authenticated: false,
+        user: null,
+        error: 'Invalid session',
+      };
+    }
+
+    // Normalize connected accounts and network domains
+    const connectedAccounts = normalizeConnectedAccounts(profile.tokens);
+    const networkDomains = normalizeNetworkDomains(profile.network_domains);
+    const connectedDomains = extractConnectedDomains(connectedAccounts);
+
+    // Build full user object with connected accounts
+    const user: UserWithConnectedAccounts = {
+      id: profile.id,
+      email: profile.email,
+      name: profile.name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email,
+      isAdmin: isUserAdmin(profile.email),
+      avatarUrl: profile.profile_pic_url || profile.avatar_url,
+      connectedAccounts,
+      networkDomains,
+      connectedDomains,
+    };
+
+    logAuth('success', { userId: user.id });
+
+    return {
+      authenticated: true,
+      user,
+    };
+  } catch (error) {
+    logAuth('failure', { reason: error instanceof Error ? error.message : 'Unknown error' });
+    return {
+      authenticated: false,
+      user: null,
+      error: 'Auth error',
+    };
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
