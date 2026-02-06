@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { ExternalLink, Mail, Loader2, Globe } from 'lucide-react';
+import { ExternalLink, Mail, Loader2, Building2 } from 'lucide-react';
 
 const BRIDGE_ACCOUNT_URL = 'https://brdg.app/account/';
 const BRIDGE_CONNECTED_ACCOUNTS_URL = 'https://brdg.app/connected-accounts/';
@@ -175,8 +175,8 @@ export function UserMenu({ user }: UserMenuProps) {
                           target.nextElementSibling?.classList.remove('hidden');
                         }}
                       />
-                      <div className="hidden h-6 w-6 items-center justify-center rounded-sm bg-gray-200">
-                        <Globe className="h-3.5 w-3.5 text-gray-500" />
+                      <div className="hidden h-6 w-6 items-center justify-center rounded-full bg-white ring-1 ring-gray-200">
+                        <Building2 className="h-3.5 w-3.5 text-gray-500" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-[13px] font-medium text-gray-700 truncate">
