@@ -259,7 +259,7 @@ export function createClient(config: ProviderConfig): GetProvenClient {
         );
       }
 
-      const url = `${config.apiUrl}/whitelist/domain/upload/`;
+      const url = `${config.apiUrl}/whitelist/domains/upload/`;
 
       const response = await fetch(url, {
         method: 'POST',

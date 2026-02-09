@@ -71,7 +71,8 @@ src/
 │   │       ├── vendors/[id]/page.tsx       # Vendor detail
 │   │       ├── providers/page.tsx          # Manage API providers
 │   │       ├── individual-access/page.tsx  # Manual user access grants
-│   │       └── analytics/page.tsx          # Redemption analytics + charts
+│   │       ├── analytics/page.tsx          # Redemption analytics + charts
+│   │       └── changelog/page.tsx          # Admin audit logs + filtering
 │   ├── api/                                # API routes (see API section)
 │   └── login/page.tsx                      # API key login (non-Bridge domains)
 ├── components/
@@ -84,7 +85,7 @@ src/
 │   ├── access-restricted.tsx               # Access denied + request form
 │   └── landing-page.tsx                    # Unauthenticated landing
 ├── lib/
-│   ├── api/                                # Service layer (see Services section)
+│   ├── api/                                # Service layer (see Services section, incl. changelog-service)
 │   ├── bridge/                             # Auth utilities (resolveAuth, requireAdmin)
 │   ├── providers.ts                        # Provider management (Supabase)
 │   ├── supabase-server.ts                  # Server-side Supabase admin client
@@ -100,7 +101,8 @@ src/
 │   ├── perk.ts                             # Perk, PerkValue, PerkRedemption, etc.
 │   ├── api.ts                              # GetProven & Bridge API types
 │   ├── user.ts                             # User, AuthUser, VCFirm
-│   └── access.ts                           # AccessStatus, AccessReason, AccessRequest
+│   ├── access.ts                           # AccessStatus, AccessReason, AccessRequest
+│   └── changelog.ts                        # ChangelogEntry, ChangelogAction, ChangelogEntityType
 ├── middleware.ts                            # Edge auth (see Auth section)
 └── styles/globals.css                       # MercuryOS CSS design system
 ```
@@ -225,6 +227,7 @@ Denied users can submit a manual access request form (stored in Supabase `access
 | GET | `/api/access-request` | User's most recent access request |
 | POST | `/api/access-request` | Submit manual access request |
 | POST | `/api/access-request/refresh` | Re-check access, update cookie |
+| POST | `/api/access/resolve` | Full access check + persist cookie (Route Handler for cookie writes) |
 | GET | `/api/access/status` | Current access status from cookie (for client components) |
 | POST | `/api/access/animation-shown` | Mark scanning animation as shown in cookie |
 
@@ -235,9 +238,11 @@ Denied users can submit a manual access request form (stored in Supabase `access
 | POST | `/api/admin/whitelist/domains` | Create/update whitelist |
 | GET | `/api/admin/whitelist/individual-access` | List manual access grants |
 | POST | `/api/admin/whitelist/individual-access` | Grant individual access |
-| POST | `/api/admin/whitelist/upload` | Bulk upload whitelist (CSV) |
+| POST | `/api/admin/whitelist/upload` | Bulk upload whitelist (CSV with validation) |
 | GET | `/api/admin/access-requests` | List all access requests |
+| PATCH | `/api/admin/access-requests` | Approve/reject access request |
 | GET | `/api/admin/analytics` | Redemption analytics data |
+| GET | `/api/admin/changelog` | Paginated audit log entries (filterable) |
 
 ### Other
 | Method | Route | Purpose |
@@ -260,6 +265,7 @@ Denied users can submit a manual access request form (stored in Supabase `access
 | `access-cache.ts` | Cached whitelist & portfolio domain lookups |
 | `bridge-client.ts` | Bridge API client for intropath/warm connection counts |
 | `portfolio-client.ts` | Bridge portfolio fetching (`/api/v4/search/network_portfolios`) |
+| `changelog-service.ts` | `changelogService.log()` (fire-and-forget audit logging), `changelogService.list()` (paginated query) |
 | `check-api-access.ts` | Middleware for API route access verification |
 | `index.ts` | Central re-export for all services |
 
@@ -282,9 +288,9 @@ Denied users can submit a manual access request form (stored in Supabase `access
 - **Purpose:** Authentication, identity, portfolio domain matching, intropath enrichment
 
 ### Supabase
-- **Tables:** `providers`, `access_requests`, `redemptions`
-- **Purpose:** Provider config, access request tracking, redemption analytics
-- **Client:** Server-side admin client (bypasses RLS) via `createSupabaseAdmin()`
+- **Tables:** `providers`, `access_requests`, `redemptions`, `admin_changelog`
+- **Purpose:** Provider config, access request tracking, redemption analytics, admin audit logs
+- **Client:** Server-side admin client (bypasses RLS) via `createSupabaseAdmin()` using `SUPABASE_SERVICE_ROLE_KEY`
 
 ---
 
@@ -325,6 +331,22 @@ Tracks perk redemption clicks for analytics.
 | `user_id` | text | Bridge user ID |
 | `timestamp` | timestamp | Click timestamp |
 
+### `admin_changelog`
+Audit log tracking all admin actions for compliance.
+
+| Column | Type | Purpose |
+|--------|------|---------|
+| `id` | UUID | Primary key |
+| `admin_id` | text | Bridge user ID |
+| `admin_email` | text | Admin's email |
+| `admin_name` | text (nullable) | Admin's display name |
+| `action` | text | Action type (e.g., `access_request.approve`, `offers.sync`) |
+| `entity_type` | text | Entity category (`access_request`, `whitelist`, `offers`, `vendors`, `provider`) |
+| `entity_id` | text (nullable) | ID of affected entity |
+| `summary` | text | Human-readable description |
+| `details` | jsonb (nullable) | Action-specific metadata |
+| `created_at` | timestamp | Auto-generated timestamp |
+
 ---
 
 ## Key TypeScript Types (`src/types/`)
@@ -355,6 +377,14 @@ Tracks perk redemption clicks for analytics.
 - `AccessStatus` — Cookie payload (granted, reason, matchedDomain, matchedVcDomain, checkedAt, providerId, animationShown)
 - `AccessReason` — `admin` | `vc_team` | `portfolio_match` | `manual_grant` | `denied`
 - `AccessRequest` — Manual request model
+
+### Changelog Types (`changelog.ts`)
+- `ChangelogAction` — Union of admin action types (`access_request.approve`, `access_request.reject`, `whitelist.upload_csv`, `offers.sync`, `vendors.sync`, `provider.create`, `provider.update`, `provider.delete`)
+- `ChangelogEntityType` — `access_request` | `whitelist` | `offers` | `vendors` | `provider`
+- `ChangelogEntry` — Full audit log entry (matches `admin_changelog` table schema)
+- `ChangelogLogParams` — Parameters for `changelogService.log()` (adminId, adminEmail, action, entityType, summary, details)
+- `ChangelogFilters` — Query filters for `changelogService.list()`
+- `ChangelogListResponse` — Paginated response with entries + pagination metadata
 
 ---
 
@@ -409,8 +439,9 @@ Tracks perk redemption clicks for analytics.
 | Component | Purpose |
 |-----------|---------|
 | `app-shell.tsx` | Main layout wrapper (top nav + content + footer) |
-| `top-nav.tsx` | Navigation bar with logo, links, user menu |
-| `user-menu.tsx` | User dropdown (avatar, access status badge, connected accounts, Bridge link) |
+| `top-nav.tsx` | Navigation bar with logo, links, user menu, access badge |
+| `user-menu.tsx` | User dropdown (avatar, access status badge, connected accounts, admin link, Bridge link) |
+| `access-badge.tsx` | Compact access status pill in top nav (color-coded by reason, admin badge links to /admin) |
 | `user-context.tsx` | React Context provider for user data |
 | `layout-context.tsx` | Context for full-width mode (admin pages) |
 | `header.tsx` | Page header section |
@@ -433,6 +464,7 @@ Tracks perk redemption clicks for analytics.
 ### Admin (`src/components/admin/`)
 | Component | Purpose |
 |-----------|---------|
+| `admin-sidebar.tsx` | Admin sidebar with collapsible Access Control group, count badges, and Audit Logs link |
 | `redemptions-table.tsx` | Redemption click history table |
 | `redemption-chart.tsx` | Recharts visualization |
 | `date-range-filter.tsx` | Date range picker |
@@ -471,9 +503,10 @@ BRIDGE_API_BASE_URL=             # Bridge API (default: https://api.brdg.app)
 ADMIN_EMAIL_ALLOWLIST=           # Comma-separated admin emails
 ADMIN_DOMAIN_ALLOWLIST=          # Comma-separated admin domains
 
-# Supabase (required for access requests + analytics)
+# Supabase (required for access requests + analytics + audit logs)
 NEXT_PUBLIC_SUPABASE_URL=        # Supabase project URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY=   # Supabase anon key
+SUPABASE_SERVICE_ROLE_KEY=       # Service role key (server-only, bypasses RLS)
 
 # Application
 NEXT_PUBLIC_APP_URL=             # Public app URL
@@ -551,21 +584,24 @@ Set `USE_MOCK_DATA=true` to use `data/perks.json` instead of GetProven API. When
 
 | Feature | Description |
 |---------|-------------|
-| Reason-Specific Access Granted | Granted screen shows color-coded badge per access reason (admin/vc_team/portfolio_match/manual_grant) with contextual description and domain chip |
-| User Menu Access Status | User dropdown shows access status section (badge + reason description) between user info and connected accounts; server-side prop threading from layout |
+| Admin Audit Logs | `admin_changelog` table + `/admin/changelog` page with filterable audit log (entity type tabs, date range, pagination). All admin actions (approvals, rejections, syncs, uploads, provider CRUD) are logged via `changelogService.log()` |
+| CSV Upload Improvements | Server-side file validation (5MB, MIME type), format help card with column descriptions, template download, two-step upload flow with preview, human-friendly result summary |
+| Supabase RLS Preparation | All API routes use `createSupabaseAdmin()` with `SUPABASE_SERVICE_ROLE_KEY` (service role) to bypass RLS policies |
+| Royal Blue Design Fix | Replaced all indigo colors with Royal Blue (#0038FF) per Bridge Design System |
+| Access Badge in Top Nav | `<AccessBadge />` component shows color-coded access status pill (admin=amber, vc_team=blue, portfolio=emerald, manual_grant=purple) with admin link |
+| Admin Controls Link | Access badge and user menu link to `/admin` for admin users |
+| Access Cookie Route Handler | `POST /api/access/resolve` persists access cookie via Route Handler (required since `cookies().set()` doesn't work in Server Components) |
+| Reason-Specific Access Granted | Granted screen shows color-coded badge per access reason with contextual description and domain chip |
+| User Menu Access Status | User dropdown fetches access status client-side via `GET /api/access/status` and shows badge + reason description |
 | Animation-Controlled Access Gate | 8s scanning animation with VC favicon conveyor + 2.5s granted screen; plays only on fresh login via `animationShown` cookie flag; skipped on reload/reduced-motion/personal-email |
-| Matched Domain Display | Access Granted screen shows only the actually matched domain (not all connected domains); stale cookies self-heal via forced re-check |
-| Work Email Clarification | Both scanning and restricted screens explain that connected work emails are being checked |
-| Primary Service Fallback | Vendor/perk cards fall back to `services[0].name` when `primary_service` is null |
+| Matched Domain Display | Access Granted screen shows only the actually matched domain; stale cookies self-heal via forced re-check |
 | Claude Skills | 9 skills in `.claude/skills/` for AI-assisted development |
 | Multi-Provider Support | Support multiple GetProven instances via `providers` table |
 | Redemption Analytics | Charts, tables, date range filters, CSV export |
 | Bridge API Integration | Intropath counts, portfolio domain matching |
 | MercuryOS Design System | Consistent visual language across all components |
-| Landing Page | Unauthenticated user experience with CTA |
 | Vendor Tracker | Admin vendor browsing, detail pages, client/contact info |
 | Individual Access | Manual user access grants by admin |
-| Cache Busting | Force dynamic API responses, no CDN/browser caching |
 | Security Headers | HSTS, CSP, X-Frame-Options, etc. |
 
 ---
