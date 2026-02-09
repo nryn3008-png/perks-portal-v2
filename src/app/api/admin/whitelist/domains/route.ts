@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/bridge/auth';
 import { createClientFromProvider } from '@/lib/api';
 import { createSupabaseAdmin } from '@/lib/supabase-server';
 import { logger } from '@/lib/logger';
@@ -17,6 +18,11 @@ export const revalidate = 0;
  * - page_size: Items per page (default 50, max 1000)
  */
 export async function GET(request: NextRequest) {
+  const admin = await requireAdmin();
+  if (!admin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   // Create fresh Supabase client to avoid any caching
   const supabase = createSupabaseAdmin();
 

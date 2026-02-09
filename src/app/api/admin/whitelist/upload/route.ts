@@ -31,6 +31,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // File size limit: 5MB
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: { code: 'FILE_TOO_LARGE', message: `File size (${(file.size / 1024 / 1024).toFixed(1)}MB) exceeds the 5MB limit`, status: 400 } },
+        { status: 400 }
+      );
+    }
+
+    // Basic MIME type check (skip if browser didn't set type)
+    const allowedTypes = ['text/csv', 'application/vnd.ms-excel', 'text/plain'];
+    if (file.type && !allowedTypes.includes(file.type)) {
+      return NextResponse.json(
+        { error: { code: 'INVALID_FILE_TYPE', message: `Invalid file type: ${file.type}. Please upload a CSV file.`, status: 400 } },
+        { status: 400 }
+      );
+    }
+
     // Create new FormData for the API request
     const apiFormData = new FormData();
     apiFormData.append('file', file);
