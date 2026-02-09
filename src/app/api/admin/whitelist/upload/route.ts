@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/bridge/auth';
 import { whitelistService } from '@/lib/api';
+import { changelogService } from '@/lib/api/changelog-service';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -13,6 +15,11 @@ export const dynamic = 'force-dynamic';
  * Returns: Raw API response verbatim
  */
 export async function POST(request: NextRequest) {
+  const admin = await requireAdmin();
+  if (!admin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get('file');
@@ -36,6 +43,21 @@ export async function POST(request: NextRequest) {
         { status: result.error.status }
       );
     }
+
+    // Log to admin changelog
+    await changelogService.log({
+      adminId: admin.id,
+      adminEmail: admin.email,
+      adminName: admin.name,
+      action: 'whitelist.upload_csv',
+      entityType: 'whitelist',
+      summary: `Uploaded whitelist CSV (${file.name})`,
+      details: {
+        fileName: file.name,
+        fileSize: file.size,
+        apiResponse: result.data,
+      },
+    });
 
     // Return raw API response verbatim
     return NextResponse.json(result.data);

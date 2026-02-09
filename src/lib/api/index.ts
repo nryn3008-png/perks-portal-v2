@@ -39,6 +39,10 @@ export {
 } from './access-cache';
 export { checkApiAccess } from './check-api-access';
 
+// Admin changelog (server-only) - audit log for admin actions
+export { changelogService } from './changelog-service';
+export type { ChangelogFilters, ChangelogListResponse } from './changelog-service';
+
 // Re-export normalizers for advanced use cases
 export {
   normalizeDeal,

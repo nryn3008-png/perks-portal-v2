@@ -21,6 +21,7 @@ import {
   BarChart3,
   Database,
   ChevronDown,
+  ClipboardList,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -72,6 +73,7 @@ const bottomLinks: {
   countKey?: CountKey;
 }[] = [
   { href: '/admin/providers', label: 'Providers', icon: Database },
+  { href: '/admin/changelog', label: 'Audit Logs', icon: ClipboardList },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { getDefaultProvider } from '@/lib/providers';
+import { requireAdmin } from '@/lib/bridge/auth';
+import { changelogService } from '@/lib/api/changelog-service';
 import { logger } from '@/lib/logger';
 
 interface OfferInput {
@@ -23,6 +25,11 @@ interface OfferInput {
  *   - "removed" → previously tracked but no longer returned by API
  */
 export async function POST(request: NextRequest) {
+  const admin = await requireAdmin();
+  if (!admin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
 
@@ -132,6 +139,22 @@ export async function POST(request: NextRequest) {
     const newOfferIds: number[] = upsertRows
       .filter((r) => r.status === 'new')
       .map((r) => r.offer_id);
+
+    // Log to admin changelog
+    await changelogService.log({
+      adminId: admin.id,
+      adminEmail: admin.email,
+      adminName: admin.name,
+      action: 'offers.sync',
+      entityType: 'offers',
+      summary: `Synced offers: ${newOfferIds.length} new, ${removedIds.length} removed, ${offers.length} total`,
+      details: {
+        totalOffers: offers.length,
+        newCount: newOfferIds.length,
+        removedCount: removedIds.length,
+        providerId,
+      },
+    });
 
     return NextResponse.json({ new_offer_ids: newOfferIds });
   } catch (err) {

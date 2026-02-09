@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import { requireAdmin } from '@/lib/bridge/auth';
 import { createSupabaseAdmin } from '@/lib/supabase-server';
 import { clearAccessCache } from '@/lib/api/access-cache';
+import { changelogService } from '@/lib/api/changelog-service';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -16,6 +18,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const admin = await requireAdmin();
+  if (!admin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { id } = await params;
   const supabase = createSupabaseAdmin();
 
@@ -82,6 +89,26 @@ export async function PATCH(
       clearAccessCache();
     }
 
+    // Log to admin changelog
+    const changedFields = Object.keys(updateData);
+    await changelogService.log({
+      adminId: admin.id,
+      adminEmail: admin.email,
+      adminName: admin.name,
+      action: 'provider.update',
+      entityType: 'provider',
+      entityId: id,
+      summary: `Updated provider "${data.name}" (${changedFields.join(', ')})`,
+      details: {
+        providerId: id,
+        changedFields,
+        newValues: {
+          ...updateData,
+          api_token: updateData.api_token ? '***' : undefined,
+        },
+      },
+    });
+
     return NextResponse.json({ provider: data });
   } catch (err) {
     logger.error('Invalid request body:', err);
@@ -100,6 +127,11 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const admin = await requireAdmin();
+  if (!admin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { id } = await params;
   const supabase = createSupabaseAdmin();
 
@@ -129,6 +161,18 @@ export async function DELETE(
       { status: 500 }
     );
   }
+
+  // Log to admin changelog
+  await changelogService.log({
+    adminId: admin.id,
+    adminEmail: admin.email,
+    adminName: admin.name,
+    action: 'provider.delete',
+    entityType: 'provider',
+    entityId: id,
+    summary: `Deleted provider (ID: ${id})`,
+    details: { providerId: id },
+  });
 
   return NextResponse.json({ success: true });
 }

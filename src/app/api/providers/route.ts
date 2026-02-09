@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/bridge/auth';
 import { createSupabaseAdmin } from '@/lib/supabase-server';
+import { changelogService } from '@/lib/api/changelog-service';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -35,6 +37,11 @@ export async function GET() {
  * Create a new provider
  */
 export async function POST(request: NextRequest) {
+  const admin = await requireAdmin();
+  if (!admin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const supabase = createSupabaseAdmin();
 
   try {
@@ -84,6 +91,18 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Log to admin changelog
+    await changelogService.log({
+      adminId: admin.id,
+      adminEmail: admin.email,
+      adminName: admin.name,
+      action: 'provider.create',
+      entityType: 'provider',
+      entityId: data.id,
+      summary: `Created provider "${name}" (${slug})`,
+      details: { name, slug, apiUrl: api_url },
+    });
 
     return NextResponse.json({ provider: data }, { status: 201 });
   } catch (err) {

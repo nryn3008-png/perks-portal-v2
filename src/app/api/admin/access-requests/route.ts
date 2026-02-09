@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/bridge/auth';
 import { createSupabaseAdmin } from '@/lib/supabase-server';
+import { changelogService } from '@/lib/api/changelog-service';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -145,6 +146,26 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  // Log to admin changelog
+  await changelogService.log({
+    adminId: admin.id,
+    adminEmail: admin.email,
+    adminName: admin.name,
+    action: action === 'approve' ? 'access_request.approve' : 'access_request.reject',
+    entityType: 'access_request',
+    entityId: id,
+    summary: `${action === 'approve' ? 'Approved' : 'Rejected'} access request from ${data.user_email}`,
+    details: {
+      requestId: id,
+      userEmail: data.user_email,
+      userName: data.user_name,
+      companyName: data.company_name,
+      vcName: data.vc_name,
+      previousStatus: 'pending',
+      newStatus,
+    },
+  });
 
   return NextResponse.json({
     success: true,
