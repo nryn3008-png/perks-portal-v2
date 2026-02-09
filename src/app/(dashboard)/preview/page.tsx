@@ -8,7 +8,7 @@
  */
 
 import Link from 'next/link';
-import { Eye, ShieldX, Mail, Scan } from 'lucide-react';
+import { Eye, ShieldX, Mail, Scan, Clock, XCircle } from 'lucide-react';
 
 const PREVIEWS = [
   {
@@ -22,6 +22,18 @@ const PREVIEWS = [
     description: 'Page shown when a user only has a personal email — prompts them to connect a work email.',
     href: '/preview/access-restricted-personal',
     icon: Mail,
+  },
+  {
+    title: 'Access Request Pending',
+    description: 'User has submitted an access request and is waiting for review. Shows "Under Review" status card.',
+    href: '/preview/access-request-pending',
+    icon: Clock,
+  },
+  {
+    title: 'Access Request Rejected',
+    description: 'User\'s previous request was denied. Shows rejection notice with option to submit a new request.',
+    href: '/preview/access-request-rejected',
+    icon: XCircle,
   },
   {
     title: 'Access Gate Animation',
