@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { ShieldCheck, Crown, Briefcase, Network, UserCheck } from 'lucide-react';
+import { Crown, Briefcase, Network, UserCheck } from 'lucide-react';
 
 interface AccessData {
   granted: boolean;
@@ -65,7 +65,6 @@ export function AccessBadge() {
       className={`hidden sm:inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold border ${config.classes}`}
       title={access.matchedDomain ? `Access via ${access.matchedDomain}` : config.label}
     >
-      <ShieldCheck className="h-3 w-3" />
       <Icon className="h-3 w-3" />
       <span>{config.label}</span>
     </div>

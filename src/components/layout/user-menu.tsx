@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { ExternalLink, Mail, Loader2, Building2, Crown, Briefcase, Network, UserCheck, ShieldCheck } from 'lucide-react';
+import { ExternalLink, Mail, Loader2, Building2, Crown, Briefcase, Network, UserCheck } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
 const BRIDGE_ACCOUNT_URL = 'https://brdg.app/account/';
@@ -40,27 +40,27 @@ const ACCESS_REASON_DISPLAY: Record<string, {
   admin: {
     label: 'Admin',
     description: (domain) =>
-      domain ? `Admin access via ${domain}` : 'Admin access to portal',
+      domain ? `You have admin access through ${domain}` : 'You have admin access to the portal',
     icon: Crown,
     color: 'text-amber-600 bg-amber-50 border-amber-200',
   },
   vc_team: {
     label: 'VC Team',
     description: (domain) =>
-      domain ? `Access via ${domain} team` : 'Access as VC team member',
+      domain ? `You have access as part of the ${domain} team` : 'You have access as a VC team member',
     icon: Briefcase,
     color: 'text-blue-600 bg-blue-50 border-blue-200',
   },
   portfolio_match: {
-    label: 'Portfolio',
+    label: 'Portfolio Company',
     description: (domain) =>
-      domain ? `Access via ${domain} portfolio` : 'Access via VC portfolio',
+      domain ? `Your company (${domain}) is in a partner VC's portfolio` : `Your company is in a partner VC's portfolio`,
     icon: Network,
     color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
   },
   manual_grant: {
-    label: 'Approved',
-    description: () => 'Manually approved access',
+    label: 'Approved Access',
+    description: () => 'Your access request was approved',
     icon: UserCheck,
     color: 'text-purple-600 bg-purple-50 border-purple-200',
   },
@@ -230,10 +230,7 @@ export function UserMenu({ user }: UserMenuProps) {
                         <Icon className="h-3.5 w-3.5" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <ShieldCheck className="h-3 w-3 text-emerald-500" />
-                          <span className="text-[11px] font-semibold">{config.label}</span>
-                        </div>
+                        <span className="text-[11px] font-semibold">{config.label}</span>
                         <p className="text-[11px] opacity-80 mt-0.5">
                           {config.description(accessInfo.matchedDomain)}
                         </p>
