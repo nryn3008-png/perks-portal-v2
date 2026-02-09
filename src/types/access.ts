@@ -33,6 +33,8 @@ export interface AccessStatus {
   checkedAt: string;
   /** Provider ID at time of check — used to invalidate on provider switch */
   providerId: string;
+  /** Whether the scanning animation has been shown for this access check */
+  animationShown?: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

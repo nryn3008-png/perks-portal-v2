@@ -277,6 +277,19 @@ export const accessService = {
   },
 
   /**
+   * Mark the scanning animation as shown in the current access cookie.
+   * Reads the cookie, sets animationShown: true, and re-writes it.
+   */
+  async markAnimationShown(): Promise<boolean> {
+    const cached = await this.getAccessFromCookie();
+    if (!cached) return false;
+
+    cached.animationShown = true;
+    await this.setAccessCookie(cached);
+    return true;
+  },
+
+  /**
    * Full resolve: check cookie first, fall back to fresh check.
    *
    * This is the primary function called from server components.

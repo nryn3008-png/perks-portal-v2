@@ -25,6 +25,8 @@ interface AccessGateProps {
   accessGranted: boolean;
   /** The user's email domain that actually matched the whitelist */
   matchedDomain?: string;
+  /** Whether the scanning animation has already been shown for this access check */
+  animationShown?: boolean;
   connectedDomains: string[];
   userName: string;
   userEmail: string;
@@ -366,6 +368,7 @@ function ScanningScreen({
 export function AccessGate({
   accessGranted,
   matchedDomain,
+  animationShown,
   connectedDomains,
   userName,
   userEmail,
@@ -377,16 +380,18 @@ export function AccessGate({
   const [vcScanIndex, setVcScanIndex] = useState(0);
   const [fadeOut, setFadeOut] = useState(false);
 
-  // Skip animation only when there's nothing to scan (personal email)
-  // or user prefers reduced motion. No session caching — every login
-  // re-verifies because connected domains may have changed.
+  // Skip animation if:
+  // 1. No work domains to scan (personal email only)
+  // 2. Animation already shown for this access check (page reload)
+  // 3. User prefers reduced motion
   const shouldSkip = useCallback(() => {
     if (connectedDomains.length === 0) return true;
+    if (animationShown) return true;
     if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       return true;
     }
     return false;
-  }, [connectedDomains.length]);
+  }, [connectedDomains.length, animationShown]);
 
   // ── Scanning → granted/result timer ─────────────────────────────────────
   useEffect(() => {
@@ -394,6 +399,9 @@ export function AccessGate({
       setPhase('result');
       return;
     }
+
+    // Mark animation as shown in the access cookie so page reloads skip it
+    fetch('/api/access/animation-shown', { method: 'POST' }).catch(() => {});
 
     const timers: ReturnType<typeof setTimeout>[] = [];
 
