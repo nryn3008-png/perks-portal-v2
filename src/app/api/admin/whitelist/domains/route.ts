@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/bridge/auth';
+import { resolveAuthWithAccounts, isProviderOwner } from '@/lib/bridge/auth';
 import { createClientFromProvider } from '@/lib/api';
 import { createSupabaseAdmin } from '@/lib/supabase-server';
 import { logger } from '@/lib/logger';
@@ -11,15 +11,18 @@ export const revalidate = 0;
 /**
  * GET /api/admin/whitelist/domains
  * Fetch paginated list of whitelisted domains from GetProven API
- * ADMIN ONLY
+ * ADMIN or PROVIDER OWNER only
  *
  * Query params:
  * - page: Page number (default 1)
  * - page_size: Items per page (default 50, max 1000)
+ *
+ * Response includes `isOwner` flag for provider-level access control on frontend.
  */
 export async function GET(request: NextRequest) {
-  const admin = await requireAdmin();
-  if (!admin) {
+  // Resolve user with connected accounts for provider owner check
+  const { authenticated, user } = await resolveAuthWithAccounts();
+  if (!authenticated || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -41,6 +44,14 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Check access: must be admin OR provider community owner
+  const connectedEmails = user.connectedAccounts.map((a) => a.email);
+  const isOwner = isProviderOwner(user.email, connectedEmails, provider.owner_email);
+
+  if (!user.isAdmin && !isOwner) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const client = createClientFromProvider(provider);
 
   const searchParams = request.nextUrl.searchParams;
@@ -50,6 +61,13 @@ export async function GET(request: NextRequest) {
   try {
     const data = await client.getWhitelistDomains(page, pageSize);
 
+    // Debug: log full response shape to discover available fields
+    // TODO: Remove after confirming response fields
+    if (data.results?.length > 0) {
+      logger.info('[Whitelist] Response fields:', Object.keys(data.results[0]));
+      logger.info('[Whitelist] Sample row:', JSON.stringify(data.results[0], null, 2));
+    }
+
     const response = NextResponse.json({
       data: data.results,
       pagination: {
@@ -57,6 +75,7 @@ export async function GET(request: NextRequest) {
         next: data.next,
         previous: data.previous,
       },
+      isOwner,
     });
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     return response;

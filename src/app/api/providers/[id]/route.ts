@@ -28,7 +28,7 @@ export async function PATCH(
 
   try {
     const body = await request.json();
-    const { name, slug, api_url, api_token, is_active, is_default } = body;
+    const { name, slug, api_url, api_token, is_active, is_default, owner_email } = body;
 
     // If setting as default, first unset all others
     if (is_default === true) {
@@ -54,13 +54,14 @@ export async function PATCH(
     if (api_token !== undefined) updateData.api_token = api_token;
     if (is_active !== undefined) updateData.is_active = is_active;
     if (is_default !== undefined) updateData.is_default = is_default;
+    if (owner_email !== undefined) updateData.owner_email = owner_email || null;
 
     // Update the provider
     const { data, error } = await supabase
       .from('providers')
       .update(updateData)
       .eq('id', id)
-      .select('id, name, slug, api_url, is_active, is_default, created_at')
+      .select('id, name, slug, api_url, is_active, is_default, owner_email, created_at')
       .single();
 
     if (error) {
@@ -190,7 +191,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from('providers')
-    .select('id, name, slug, api_url, is_active, is_default, created_at')
+    .select('id, name, slug, api_url, is_active, is_default, owner_email, created_at')
     .eq('id', id)
     .single();
 

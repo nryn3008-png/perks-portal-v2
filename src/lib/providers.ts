@@ -9,6 +9,7 @@ interface Provider {
   api_token: string
   is_active: boolean
   is_default: boolean
+  owner_email?: string
 }
 
 export async function getDefaultProvider(): Promise<Provider | null> {

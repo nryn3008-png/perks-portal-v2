@@ -503,6 +503,41 @@ export async function resolveAuthWithAccounts(): Promise<AuthResultWithAccounts>
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// PROVIDER OWNER CHECK
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Check if a user is the community owner of a specific provider.
+ *
+ * Compares the provider's `owner_email` against the user's primary email
+ * and all connected account emails.
+ *
+ * @param userEmail - User's primary email
+ * @param connectedEmails - All connected account emails (from Bridge tokens)
+ * @param providerOwnerEmail - The provider's owner_email field from DB
+ * @returns true if the user matches the provider owner
+ */
+export function isProviderOwner(
+  userEmail: string,
+  connectedEmails: string[],
+  providerOwnerEmail: string | null | undefined
+): boolean {
+  if (!providerOwnerEmail) return false;
+
+  const ownerEmail = providerOwnerEmail.toLowerCase();
+
+  // Direct email match
+  if (userEmail.toLowerCase() === ownerEmail) return true;
+
+  // Check connected account emails
+  for (const email of connectedEmails) {
+    if (email.toLowerCase() === ownerEmail) return true;
+  }
+
+  return false;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // EXPORTS FOR MIDDLEWARE
 // ─────────────────────────────────────────────────────────────────────────────
 

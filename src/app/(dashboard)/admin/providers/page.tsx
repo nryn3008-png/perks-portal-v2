@@ -31,6 +31,7 @@ interface Provider {
   api_url: string;
   is_active: boolean;
   is_default: boolean;
+  owner_email: string | null;
   created_at: string;
 }
 
@@ -39,6 +40,7 @@ interface ProviderFormData {
   slug: string;
   api_url: string;
   api_token: string;
+  owner_email: string;
 }
 
 /**
@@ -160,6 +162,7 @@ export default function AdminProvidersPage() {
         name: formData.name,
         slug: formData.slug,
         api_url: formData.api_url,
+        owner_email: formData.owner_email,
       };
       if (formData.api_token) {
         body.api_token = formData.api_token;
@@ -301,6 +304,11 @@ export default function AdminProvidersPage() {
                           </span>
                         )}
                       </div>
+                      {provider.owner_email && (
+                        <p className="text-[12px] text-gray-400 mt-0.5">
+                          Owner: {provider.owner_email}
+                        </p>
+                      )}
                     </td>
 
                     {/* Slug */}
@@ -432,6 +440,7 @@ function ProviderModal({
     slug: provider?.slug || '',
     api_url: provider?.api_url || 'https://bridge.getproven.com/api/ext/v1',
     api_token: '',
+    owner_email: provider?.owner_email || '',
   });
   const [error, setError] = useState<string | null>(null);
   const [slugEdited, setSlugEdited] = useState(!!provider);
@@ -578,6 +587,23 @@ function ProviderModal({
                 Leave blank to keep the existing token.
               </p>
             )}
+          </div>
+
+          {/* Owner Email */}
+          <div>
+            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              Community Owner Email
+            </label>
+            <input
+              type="email"
+              value={formData.owner_email}
+              onChange={(e) => setFormData((prev) => ({ ...prev, owner_email: e.target.value }))}
+              placeholder="e.g., owner@company.com"
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-[14px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0038FF]/20 focus:border-[#0038FF] transition-all"
+            />
+            <p className="mt-1 text-[12px] text-gray-500">
+              The email of the community owner who can manage whitelisted domains.
+            </p>
           </div>
 
           {/* Actions */}

@@ -17,7 +17,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('providers')
-    .select('id, name, slug, api_url, is_active, is_default, created_at')
+    .select('id, name, slug, api_url, is_active, is_default, owner_email, created_at')
     .order('is_default', { ascending: false })
     .order('name');
 
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, slug, api_url, api_token } = body;
+    const { name, slug, api_url, api_token, owner_email } = body;
 
     // Validate required fields
     if (!name || !slug || !api_url || !api_token) {
@@ -80,8 +80,9 @@ export async function POST(request: NextRequest) {
         api_token,
         is_active: true,
         is_default: false,
+        ...(owner_email && { owner_email }),
       })
-      .select('id, name, slug, api_url, is_active, is_default, created_at')
+      .select('id, name, slug, api_url, is_active, is_default, owner_email, created_at')
       .single();
 
     if (error) {
