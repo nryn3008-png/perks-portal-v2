@@ -162,12 +162,21 @@ The portal gates access to perks based on the user's email domain. The access ch
 
 ### Access Gate Animation
 
-When a user first visits `/perks`:
-1. **Scanning phase** (8 seconds) — animated VC favicon conveyor, domain lookup animation
-2. **Granted phase** — success animation showing matched domain
+When a user logs in and visits `/perks` for the first time:
+1. **Scanning phase** (8 seconds) — animated VC favicon conveyor belt cycling through partner logos, domain chips with scan line, 8 status text phases, progress bar
+2. **Granted phase** (2.5 seconds) — success screen showing only the actually matched domain with green checkmark
 3. **Result** — perks list or access-restricted page
 
-Access status is cached in `perks_access` cookie (re-checked every hour if `matchedDomain` is missing).
+**Animation control via `animationShown` cookie flag:**
+- Fresh login → `animationShown` absent in cookie → animation plays → `POST /api/access/animation-shown` marks cookie
+- Page reload → `animationShown: true` in cookie → animation skipped
+- Logout → cookie cleared → next login plays animation again
+- Personal email only (no work domains) → animation skipped entirely
+- `prefers-reduced-motion` → animation skipped (accessibility)
+
+**Stale cookie self-healing:** If a cached cookie has a domain-match grant (`vc_team`/`portfolio_match`) but is missing `matchedDomain`, `resolveAccess()` forces a fresh check instead of returning the incomplete cache.
+
+Access status is cached in `perks_access` cookie (base64 JSON, re-checked every hour).
 
 ### Manual Access Requests
 
@@ -214,6 +223,7 @@ Denied users can submit a manual access request form (stored in Supabase `access
 | GET | `/api/access-request` | User's most recent access request |
 | POST | `/api/access-request` | Submit manual access request |
 | POST | `/api/access-request/refresh` | Re-check access, update cookie |
+| POST | `/api/access/animation-shown` | Mark scanning animation as shown in cookie |
 
 ### Admin
 | Method | Route | Purpose |
@@ -243,7 +253,7 @@ Denied users can submit a manual access request form (stored in Supabase `access
 | `perks-service.ts` | `getOffers()`, `getOfferById()`, `getCategories()` |
 | `vendors-service.ts` | `getVendors()`, `getVendorById()`, `getVendorClients()`, `getVendorContacts()` |
 | `whitelist-service.ts` | `getWhitelistDomains()`, `getIndividualAccess()` |
-| `access-service.ts` | `checkAccess()`, `resolveAccess()`, cookie read/write |
+| `access-service.ts` | `checkAccess()`, `resolveAccess()`, `markAnimationShown()`, cookie read/write |
 | `access-cache.ts` | Cached whitelist & portfolio domain lookups |
 | `bridge-client.ts` | Bridge API client for intropath/warm connection counts |
 | `portfolio-client.ts` | Bridge portfolio fetching (`/api/v4/search/network_portfolios`) |
@@ -339,7 +349,7 @@ Tracks perk redemption clicks for analytics.
 - `PortfolioCompany` — Startup (id, name, fundingStage, employeeCount)
 
 ### Access Types (`access.ts`)
-- `AccessStatus` — Cookie payload (granted, reason, matchedDomain, checkedAt, providerId)
+- `AccessStatus` — Cookie payload (granted, reason, matchedDomain, matchedVcDomain, checkedAt, providerId, animationShown)
 - `AccessReason` — `admin` | `vc_team` | `portfolio_match` | `manual_grant` | `denied`
 - `AccessRequest` — Manual request model
 
@@ -375,6 +385,13 @@ Tracks perk redemption clicks for analytics.
 | `slide-in-left` | 0.3s | Reverse panel entrance |
 | `scale-in` | 0.2s | Modal/popover entrance |
 | `glow-pulse` | 2s infinite | Accent glow effect |
+| `scan-pulse-ring` | 2s infinite | Pulsating ring around scanning favicon |
+| `scan-line` | 2s infinite | Horizontal scan line over domain chips |
+| `scan-glow` | 1.5s infinite | Soft glow behind scanning favicon |
+| `progress-fill` | 8s linear | Progress bar fill during scanning |
+| `slide-in-left` | 0.5s | Favicon entering conveyor from left |
+| `slide-into-scan` | 0.4s | Favicon scaling into scan circle |
+| `slide-out-right` | 0.5s | Favicon exiting conveyor to right |
 
 ### Shadows
 - Standard: `sm`, `DEFAULT`, `md`, `lg`, `xl`, `2xl`
@@ -433,8 +450,8 @@ Tracks perk redemption clicks for analytics.
 ### Feature Components
 | Component | Purpose |
 |-----------|---------|
-| `access-gate.tsx` | Domain scanning animation (8s, 3 phases) |
-| `access-restricted.tsx` | Access denied page with request form |
+| `access-gate.tsx` | Domain scanning animation (8s conveyor + 2.5s granted screen), cookie-controlled skip |
+| `access-restricted.tsx` | Access denied page with domain check explanation + request form |
 | `landing-page.tsx` | Unauthenticated user landing page |
 
 ---
@@ -487,7 +504,7 @@ All `/api/*` routes set `Cache-Control: no-store, no-cache, must-revalidate, pro
 ### Cookie Security
 - `authToken` — set by Bridge on `*.brdg.app` (HttpOnly, Secure in production)
 - `bridge_api_key` — set by `/api/auth/login` (HttpOnly, 30-day expiry)
-- `perks_access` — access status cache (JSON payload, re-checked hourly)
+- `perks_access` — access status cache (base64 JSON with granted, reason, matchedDomain, matchedVcDomain, checkedAt, providerId, animationShown; re-checked hourly; cleared on logout)
 
 ---
 
@@ -531,9 +548,11 @@ Set `USE_MOCK_DATA=true` to use `data/perks.json` instead of GetProven API. When
 
 | Feature | Description |
 |---------|-------------|
+| Animation-Controlled Access Gate | 8s scanning animation with VC favicon conveyor + 2.5s granted screen; plays only on fresh login via `animationShown` cookie flag; skipped on reload/reduced-motion/personal-email |
+| Matched Domain Display | Access Granted screen shows only the actually matched domain (not all connected domains); stale cookies self-heal via forced re-check |
+| Work Email Clarification | Both scanning and restricted screens explain that connected work emails are being checked |
+| Primary Service Fallback | Vendor/perk cards fall back to `services[0].name` when `primary_service` is null |
 | Claude Skills | 9 skills in `.claude/skills/` for AI-assisted development |
-| Access Gate | Animated domain scanning with VC favicon conveyor (8s animation) |
-| Access Granted Screen | Success confirmation showing matched domain |
 | Multi-Provider Support | Support multiple GetProven instances via `providers` table |
 | Redemption Analytics | Charts, tables, date range filters, CSV export |
 | Bridge API Integration | Intropath counts, portfolio domain matching |
