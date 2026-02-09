@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Crown, Briefcase, Network, UserCheck } from 'lucide-react';
 
 interface AccessData {
@@ -59,14 +60,21 @@ export function AccessBadge() {
 
   const config = BADGE_CONFIG[access.reason];
   const Icon = config.icon;
+  const isAdmin = access.reason === 'admin';
 
-  return (
+  const badge = (
     <div
-      className={`hidden sm:inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold border ${config.classes}`}
+      className={`hidden sm:inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold border transition-colors ${config.classes} ${isAdmin ? 'hover:bg-amber-100 cursor-pointer' : ''}`}
       title={access.matchedDomain ? `Access via ${access.matchedDomain}` : config.label}
     >
       <Icon className="h-3 w-3" />
       <span>{config.label}</span>
     </div>
   );
+
+  if (isAdmin) {
+    return <Link href="/admin">{badge}</Link>;
+  }
+
+  return badge;
 }

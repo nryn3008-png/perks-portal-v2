@@ -6,7 +6,8 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { ExternalLink, Mail, Loader2, Building2, Crown, Briefcase, Network, UserCheck } from 'lucide-react';
+import Link from 'next/link';
+import { ExternalLink, Mail, Loader2, Building2, Crown, Briefcase, Network, UserCheck, Settings } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
 const BRIDGE_ACCOUNT_URL = 'https://brdg.app/account/';
@@ -225,17 +226,30 @@ export function UserMenu({ user }: UserMenuProps) {
                   const config = ACCESS_REASON_DISPLAY[accessInfo.reason];
                   const Icon = config.icon;
                   return (
-                    <div className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 border ${config.color}`}>
-                      <div className="flex items-center justify-center h-6 w-6 rounded-full bg-white/80">
-                        <Icon className="h-3.5 w-3.5" />
+                    <>
+                      <div className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 border ${config.color}`}>
+                        <div className="flex items-center justify-center h-6 w-6 rounded-full bg-white/80">
+                          <Icon className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[11px] font-semibold">{config.label}</span>
+                          <p className="text-[11px] opacity-80 mt-0.5">
+                            {config.description(accessInfo.matchedDomain)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="text-[11px] font-semibold">{config.label}</span>
-                        <p className="text-[11px] opacity-80 mt-0.5">
-                          {config.description(accessInfo.matchedDomain)}
-                        </p>
-                      </div>
-                    </div>
+                      {accessInfo.reason === 'admin' && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setOpen(false)}
+                          className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-amber-700 hover:text-amber-800 transition-colors"
+                        >
+                          <Settings className="h-3 w-3" />
+                          Admin Controls
+                          <span aria-hidden="true">&rarr;</span>
+                        </Link>
+                      )}
+                    </>
                   );
                 })()}
               </div>
