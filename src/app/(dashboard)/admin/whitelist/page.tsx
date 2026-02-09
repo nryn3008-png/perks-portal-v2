@@ -24,6 +24,7 @@ import {
   X,
   FileText,
   UploadCloud,
+  AlertTriangle,
 } from 'lucide-react';
 import { Button, Card, Disclosure } from '@/components/ui';
 import type { WhitelistDomain } from '@/types';
@@ -107,6 +108,142 @@ const CSV_COLUMNS = [
   },
 ];
 
+// ─── CSV Parsing & Validation ─────────────────────────────────────────────────
+
+/** Domain regex: must be a valid-looking domain (e.g. example.com, sub.example.co.uk) */
+const DOMAIN_REGEX = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+
+/** Email regex: basic check for valid email format */
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+interface CsvRow {
+  row: number;
+  domain: string;
+  categories: string;
+  emails: string;
+}
+
+interface CsvRowError {
+  row: number;
+  domain: string;
+  issues: string[];
+}
+
+interface CsvValidationResult {
+  valid: boolean;
+  totalRows: number;
+  validRows: CsvRow[];
+  errors: CsvRowError[];
+  headerError?: string;
+}
+
+/**
+ * Parse CSV text content into rows.
+ * Handles quoted fields and trims whitespace.
+ */
+function parseCsvText(text: string): string[][] {
+  const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
+  return lines.map((line) => {
+    const fields: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        fields.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    fields.push(current.trim());
+    return fields;
+  });
+}
+
+/**
+ * Validate parsed CSV rows against expected format.
+ * Checks: header present, domain is valid, emails are valid (not "TRUE"/"FALSE").
+ */
+function validateCsv(rows: string[][]): CsvValidationResult {
+  if (rows.length === 0) {
+    return { valid: false, totalRows: 0, validRows: [], errors: [], headerError: 'File is empty' };
+  }
+
+  const header = rows[0].map((h) => h.toLowerCase().replace(/[^a-z_]/g, ''));
+
+  // Check if first row is a header
+  const hasHeader = header.includes('domain');
+  const dataRows = hasHeader ? rows.slice(1) : rows;
+
+  if (dataRows.length === 0) {
+    return { valid: false, totalRows: 0, validRows: [], errors: [], headerError: 'No data rows found — only header present' };
+  }
+
+  if (dataRows.length > 1000) {
+    return { valid: false, totalRows: dataRows.length, validRows: [], errors: [], headerError: `CSV has ${dataRows.length} rows. Maximum is 1,000.` };
+  }
+
+  const validRows: CsvRow[] = [];
+  const errors: CsvRowError[] = [];
+
+  dataRows.forEach((fields, index) => {
+    const rowNum = hasHeader ? index + 2 : index + 1; // 1-indexed, accounting for header
+    const domain = (fields[0] || '').trim();
+    const categories = (fields[1] || '').trim();
+    const emailsField = (fields[2] || '').trim();
+    const issues: string[] = [];
+
+    // Check domain
+    if (!domain) {
+      issues.push('Domain is empty');
+    } else if (!DOMAIN_REGEX.test(domain)) {
+      issues.push(`"${domain}" is not a valid domain`);
+    }
+
+    // Check emails column — catch common mistake of putting TRUE/FALSE here
+    if (emailsField) {
+      const emailValues = emailsField.split(/[,;]/).map((e) => e.trim()).filter(Boolean);
+      for (const emailVal of emailValues) {
+        if (/^(true|false|yes|no|1|0)$/i.test(emailVal)) {
+          issues.push(`"${emailVal}" in emails column — expected an email address, not a boolean`);
+        } else if (!EMAIL_REGEX.test(emailVal)) {
+          issues.push(`"${emailVal}" is not a valid email`);
+        }
+      }
+    }
+
+    // Check for extra columns that might indicate wrong format
+    if (fields.length > 3) {
+      const extraValues = fields.slice(3).filter((f) => f.trim().length > 0);
+      if (extraValues.length > 0) {
+        issues.push(`Extra columns detected — expected 3 columns (domain, offer_categories, emails)`);
+      }
+    }
+
+    if (issues.length > 0) {
+      errors.push({ row: rowNum, domain: domain || '(empty)', issues });
+    } else {
+      validRows.push({ row: rowNum, domain, categories, emails: emailsField });
+    }
+  });
+
+  return {
+    valid: errors.length === 0,
+    totalRows: dataRows.length,
+    validRows,
+    errors,
+  };
+}
+
 // ─── Upload Modal ────────────────────────────────────────────────────────────
 
 interface UploadModalProps {
@@ -119,6 +256,8 @@ function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationResult, setValidationResult] = useState<CsvValidationResult | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -130,6 +269,8 @@ function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
       setSelectedFile(null);
       setFileError(null);
       setIsUploading(false);
+      setIsValidating(false);
+      setValidationResult(null);
       setIsDragging(false);
       dragCounter.current = 0;
     }
@@ -168,16 +309,32 @@ function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
     return null;
   };
 
-  // Handle file selection
-  const handleFileSelect = (file: File) => {
+  // Handle file selection — validate then parse CSV
+  const handleFileSelect = async (file: File) => {
     setFileError(null);
+    setValidationResult(null);
+
     const error = validateFile(file);
     if (error) {
       setFileError(error);
       setSelectedFile(null);
       return;
     }
+
     setSelectedFile(file);
+    setIsValidating(true);
+
+    try {
+      const text = await file.text();
+      const rows = parseCsvText(text);
+      const result = validateCsv(rows);
+      setValidationResult(result);
+    } catch {
+      setFileError('Could not read file. Make sure it\'s a valid CSV.');
+      setSelectedFile(null);
+    } finally {
+      setIsValidating(false);
+    }
   };
 
   // Handle input change
@@ -368,6 +525,7 @@ function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
                       e.stopPropagation();
                       setSelectedFile(null);
                       setFileError(null);
+                      setValidationResult(null);
                     }}
                     className="text-[#0038FF] hover:text-[#0036D7] font-medium"
                   >
@@ -393,6 +551,14 @@ function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
             )}
           </div>
 
+          {/* Validating spinner */}
+          {isValidating && (
+            <div className="flex items-center gap-3 rounded-xl border border-[#DDE9FF] bg-[#EEF4FF] px-4 py-3">
+              <Loader2 className="h-4 w-4 animate-spin text-[#568FFF] flex-shrink-0" />
+              <p className="text-[13px] text-[#0D1531]">Checking CSV format...</p>
+            </div>
+          )}
+
           {/* File validation error */}
           {fileError && (
             <div className="flex items-center gap-2 rounded-lg bg-[#FCEBEB] px-3 py-2.5">
@@ -401,7 +567,85 @@ function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
             </div>
           )}
 
-          {/* CSV format help */}
+          {/* CSV validation result — errors */}
+          {validationResult && !validationResult.valid && (
+            <div className="rounded-xl border border-[#F9D7D7] bg-[#FCEBEB]/80 overflow-hidden">
+              {/* Error header */}
+              <div className="px-4 pt-4 pb-3">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-[#E13535] flex-shrink-0" />
+                  <h3 className="text-[14px] font-bold text-[#9E0000]">Incorrect format</h3>
+                </div>
+
+                {validationResult.headerError ? (
+                  <p className="mt-2 text-[13px] text-[#9E0000]">
+                    {validationResult.headerError}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-[13px] text-[#9E0000] leading-relaxed">
+                    {validationResult.errors.length} of {validationResult.totalRows} rows have format issues.
+                    Make sure the CSV follows this format: domain in the first column, offer categories in the
+                    second, and email addresses in the third.
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleDownloadTemplate}
+                  className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#0038FF] hover:text-[#0036D7] transition-colors duration-150"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Download template CSV
+                </button>
+              </div>
+
+              {/* Error list */}
+              {validationResult.errors.length > 0 && (
+                <div className="border-t border-[#F9D7D7] bg-white/60">
+                  <div className="px-4 py-3">
+                    <p className="text-[12px] font-bold uppercase tracking-wider text-[#81879C] mb-2">
+                      Rows with issues
+                    </p>
+                    <div className="space-y-3 max-h-[240px] overflow-y-auto pr-1">
+                      {validationResult.errors.map((err) => (
+                        <div key={err.row} className="text-[13px]">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-[12px] font-mono font-semibold text-[#81879C] flex-shrink-0">
+                              Row {err.row}
+                            </span>
+                            <span className="font-medium text-[#0D1531]">
+                              {err.domain}
+                            </span>
+                          </div>
+                          <ul className="mt-0.5 ml-[52px] space-y-0.5">
+                            {err.issues.map((issue, i) => (
+                              <li key={i} className="text-[12px] text-[#9E0000] flex items-start gap-1.5">
+                                <span className="h-1 w-1 rounded-full bg-[#E13535] flex-shrink-0 mt-[6px]" />
+                                {issue}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* CSV validation result — success preview */}
+          {validationResult && validationResult.valid && (
+            <div className="flex items-center gap-2 rounded-xl border border-[#CFECD5] bg-[#E7F6EA]/80 px-4 py-3">
+              <CheckCircle className="h-4 w-4 text-[#0EA02E] flex-shrink-0" />
+              <p className="text-[13px] text-[#005F15]">
+                <span className="font-semibold">{validationResult.totalRows} rows</span> ready to upload
+              </p>
+            </div>
+          )}
+
+          {/* CSV format help — show when no file selected or validating */}
+          {!validationResult && (
           <div className="rounded-xl border border-[#ECEDF0] bg-[#F9F9FA] p-4">
             <div className="flex items-center gap-2 mb-3">
               <Info className="h-4 w-4 text-[#568FFF]" />
@@ -439,6 +683,7 @@ function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
               Max 1,000 rows per file. For larger imports, contact support.
             </p>
           </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -454,9 +699,9 @@ function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
           <button
             type="button"
             onClick={handleUpload}
-            disabled={!selectedFile || isUploading}
+            disabled={!selectedFile || isUploading || isValidating || !validationResult?.valid}
             className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold px-5 py-2 text-[14px] min-h-[38px] transition-all duration-150 tracking-[0.4px] ${
-              !selectedFile || isUploading
+              !selectedFile || isUploading || isValidating || !validationResult?.valid
                 ? 'bg-[#0038FF]/30 text-white cursor-not-allowed'
                 : 'bg-[#0038FF] text-white hover:bg-[#0036D7] shadow-sm'
             }`}
