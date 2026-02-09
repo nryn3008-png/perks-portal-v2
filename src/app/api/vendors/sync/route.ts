@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createSupabaseAdmin } from '@/lib/supabase-server';
 import { getDefaultProvider } from '@/lib/providers';
 import { requireAdmin } from '@/lib/bridge/auth';
 import { changelogService } from '@/lib/api/changelog-service';
@@ -29,6 +29,8 @@ export async function POST(request: NextRequest) {
   if (!admin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const supabase = createSupabaseAdmin();
 
   try {
     const body = await request.json();

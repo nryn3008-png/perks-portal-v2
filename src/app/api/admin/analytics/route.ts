@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createSupabaseAdmin } from '@/lib/supabase-server';
 import { requireAdmin } from '@/lib/bridge/auth';
 import { logger } from '@/lib/logger';
 
@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const supabase = createSupabaseAdmin();
   const searchParams = request.nextUrl.searchParams;
   const range = searchParams.get('range') || '30d';
   const page = parseInt(searchParams.get('page') || '1', 10);

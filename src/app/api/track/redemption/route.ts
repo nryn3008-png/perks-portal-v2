@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveAuth } from '@/lib/bridge/auth';
-import { supabase } from '@/lib/supabase';
+import { createSupabaseAdmin } from '@/lib/supabase-server';
 import { getDefaultProvider } from '@/lib/providers';
 import { logger } from '@/lib/logger';
 
@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const supabase = createSupabaseAdmin();
     const body = await request.json();
 
     const {
