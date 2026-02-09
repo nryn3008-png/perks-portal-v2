@@ -5,6 +5,12 @@
 
 ---
 
+## Important: Context Preservation
+
+**Before context compaction or when running low on context, always update this file (CLAUDE.md) with any new information about the project — new features, changed files, updated schemas, modified APIs, new conventions, etc. This ensures context is never lost between sessions.**
+
+---
+
 ## Project Overview
 
 **Name:** `perks-portal-user`
@@ -65,11 +71,11 @@ src/
 │   │   └── admin/
 │   │       ├── page.tsx                    # → redirects to /admin/whitelist
 │   │       ├── layout.tsx                  # Admin layout (sidebar)
-│   │       ├── whitelist/page.tsx          # Manage whitelisted VC domains
+│   │       ├── whitelist/page.tsx          # Manage whitelisted VC domains + CSV upload modal
 │   │       ├── access-requests/page.tsx    # Review access requests
 │   │       ├── vendors/page.tsx            # Browse vendors
 │   │       ├── vendors/[id]/page.tsx       # Vendor detail
-│   │       ├── providers/page.tsx          # Manage API providers
+│   │       ├── providers/page.tsx          # Manage API providers (incl. owner_email)
 │   │       ├── individual-access/page.tsx  # Manual user access grants
 │   │       ├── analytics/page.tsx          # Redemption analytics + charts
 │   │       └── changelog/page.tsx          # Admin audit logs + filtering
@@ -86,7 +92,7 @@ src/
 │   └── landing-page.tsx                    # Unauthenticated landing
 ├── lib/
 │   ├── api/                                # Service layer (see Services section, incl. changelog-service)
-│   ├── bridge/                             # Auth utilities (resolveAuth, requireAdmin)
+│   ├── bridge/                             # Auth utilities (resolveAuth, requireAdmin, isProviderOwner)
 │   ├── providers.ts                        # Provider management (Supabase)
 │   ├── supabase-server.ts                  # Server-side Supabase admin client
 │   ├── supabase.ts                         # Client-side Supabase
@@ -143,10 +149,20 @@ Request → Is public route? → Allow (still resolve auth if token present)
 ### Admin Access
 
 Controlled by environment variables:
-- `ADMIN_EMAIL_ALLOWLIST` — comma-separated admin emails
-- `ADMIN_DOMAIN_ALLOWLIST` — comma-separated admin domains
+- `ADMIN_EMAIL_ALLOWLIST` — comma-separated admin emails (currently: `connor@brdg.app`)
+- `ADMIN_DOMAIN_ALLOWLIST` — comma-separated admin domains (currently: empty)
 
 If neither is set, all authenticated users get admin access. Admin check also inspects connected account domains (e.g., user's primary email is Gmail but has a connected `@brdg.app` work email).
+
+**Current config:** Only `connor@brdg.app` has admin access. The domain allowlist is empty so the entire `@brdg.app` domain is NOT whitelisted for admin.
+
+### Provider-Level Access (Community Owner)
+
+In addition to admin access, the portal supports **provider-level access** via the `owner_email` field on the `providers` table. This allows a non-admin user to manage the whitelist for a specific provider community.
+
+- `isProviderOwner()` in `src/lib/bridge/auth.ts` checks if the user's primary email OR any connected account email matches the provider's `owner_email`
+- The whitelist domains route (`/api/admin/whitelist/domains`) grants access to both admins AND provider owners
+- The API response includes an `isOwner` flag for frontend conditional rendering
 
 ---
 
@@ -218,8 +234,11 @@ Denied users can submit a manual access request form (stored in Supabase `access
 ### Providers
 | Method | Route | Purpose |
 |--------|-------|---------|
-| GET | `/api/providers` | List all providers |
-| GET | `/api/providers/[id]` | Provider detail |
+| GET | `/api/providers` | List all providers (incl. owner_email) |
+| GET | `/api/providers/[id]` | Provider detail (incl. owner_email) |
+| POST | `/api/providers` | Create provider (accepts owner_email) |
+| PATCH | `/api/providers/[id]` | Update provider (accepts owner_email) |
+| DELETE | `/api/providers/[id]` | Delete provider (cannot delete default) |
 
 ### Access Control
 | Method | Route | Purpose |
@@ -234,7 +253,7 @@ Denied users can submit a manual access request form (stored in Supabase `access
 ### Admin
 | Method | Route | Purpose |
 |--------|-------|---------|
-| GET | `/api/admin/whitelist/domains` | List whitelisted VC domains |
+| GET | `/api/admin/whitelist/domains` | List whitelisted VC domains (admin OR provider owner) |
 | POST | `/api/admin/whitelist/domains` | Create/update whitelist |
 | GET | `/api/admin/whitelist/individual-access` | List manual access grants |
 | POST | `/api/admin/whitelist/individual-access` | Grant individual access |
@@ -257,7 +276,7 @@ Denied users can submit a manual access request form (stored in Supabase `access
 
 | File | Purpose |
 |------|---------|
-| `getproven-client.ts` | HTTP client for GetProven API (Bearer token, error handling) |
+| `getproven-client.ts` | HTTP client for GetProven API (Token auth, error handling, CSV upload) |
 | `perks-service.ts` | `getOffers()`, `getOfferById()`, `getCategories()` |
 | `vendors-service.ts` | `getVendors()`, `getVendorById()`, `getVendorClients()`, `getVendorContacts()` |
 | `whitelist-service.ts` | `getWhitelistDomains()`, `getIndividualAccess()` |
@@ -274,16 +293,18 @@ Denied users can submit a manual access request form (stored in Supabase `access
 ## External Integrations
 
 ### GetProven API
-- **Base URL:** `https://provendeals.getproven.com/api/ext/v1`
-- **Auth:** `Authorization: Token {GETPROVEN_API_TOKEN}`
-- **Endpoints:** `/offers/`, `/categories/`, `/vendors/`, `/whitelist/domains/`, `/whitelist/individual_access/`
+- **Base URL:** Per provider config (e.g. `https://bridge.getproven.com/api/ext/v1`)
+- **Auth:** `Authorization: Token {api_token}` (from provider record)
+- **Endpoints:** `/offers/`, `/categories/`, `/vendors/`, `/whitelist/domains/`, `/whitelist/domains/upload/`, `/whitelist/individual_access/`
+- **Whitelist API fields:** `id`, `domain`, `offer_categories`, `investment_level`, `is_visible` (only these 5 fields — no dates, emails, or vendor info via external API)
+- **CSV upload format:** `domain,offer_categories,email1,email2,...` (emails in separate columns, not comma-separated in one column)
 - **Purpose:** Primary data source for all perk/vendor data and whitelist management
 
 ### Bridge API
 - **Base URL:** `https://api.brdg.app`
 - **Auth:** `Authorization: Bearer {token}`
 - **Endpoints:**
-  - `/api/v4/users/me` — User identity resolution (middleware + login)
+  - `/api/v4/users/me` — User identity resolution (middleware + login), includes `tokens` (connected email accounts) and `network_domains`
   - `/api/v4/search/network_portfolios?domain={vcDomain}` — Portfolio company lookup
 - **Purpose:** Authentication, identity, portfolio domain matching, intropath enrichment
 
@@ -308,6 +329,8 @@ Bridges between the portal and GetProven API instances. Supports multi-provider 
 | `api_token` | text | GetProven API token |
 | `is_active` | boolean | Whether provider is enabled |
 | `is_default` | boolean | Default provider for new users |
+| `owner_email` | text (nullable) | Community owner email for provider-level access |
+| `created_at` | timestamp | Auto-generated timestamp |
 
 ### `access_requests`
 Manual access requests from denied users.
@@ -363,8 +386,9 @@ Audit log tracking all admin actions for compliance.
 
 ### API Types (`api.ts`)
 - `GetProvenDeal`, `GetProvenVendor`, `GetProvenCategory` — Raw GetProven API responses
-- `GetProvenListResponse<T>` — Paginated wrapper
-- `WhitelistDomain`, `IndividualAccess` — Whitelist models
+- `GetProvenListResponse<T>` — Paginated wrapper (`count`, `next`, `previous`, `results`)
+- `WhitelistDomain` — `{ id, domain, offer_categories, investment_level, is_visible }` (confirmed via API — only these 5 fields)
+- `IndividualAccess` — Individual access record
 - `BridgeIntropathCountResponse`, `VendorIntropathData` — Bridge intropath data
 
 ### User Types (`user.ts`)
@@ -372,6 +396,13 @@ Audit log tracking all admin actions for compliance.
 - `AuthUser` — Lightweight auth (id, email, name, isAdmin, avatarUrl)
 - `VCFirm` — VC firm info (id, name, logo, settings)
 - `PortfolioCompany` — Startup (id, name, fundingStage, employeeCount)
+
+### Auth Types (`src/lib/bridge/auth.ts`)
+- `BridgeUserProfile` — Full Bridge API user profile (id, email, name, tokens, network_domains)
+- `BridgeEmailToken` — Connected email account (id, email, is_primary, provider, full_domain, is_personal_email)
+- `UserWithConnectedAccounts` — Full user with connectedAccounts, networkDomains, connectedDomains arrays
+- `ConnectedAccount` — Normalized connected email (email, domain, isPrimary, isPersonalEmail, provider)
+- `AuthResult` / `AuthResultWithAccounts` — Auth resolver return types
 
 ### Access Types (`access.ts`)
 - `AccessStatus` — Cookie payload (granted, reason, matchedDomain, matchedVcDomain, checkedAt, providerId, animationShown)
@@ -385,6 +416,36 @@ Audit log tracking all admin actions for compliance.
 - `ChangelogLogParams` — Parameters for `changelogService.log()` (adminId, adminEmail, action, entityType, summary, details)
 - `ChangelogFilters` — Query filters for `changelogService.list()`
 - `ChangelogListResponse` — Paginated response with entries + pagination metadata
+
+---
+
+## CSV Upload (Whitelist)
+
+The whitelist page (`/admin/whitelist`) includes a full-featured CSV upload flow:
+
+### Upload Modal Flow
+1. **Select file** — drag-drop zone or file browser (CSV only, max 5MB)
+2. **Client-side validation** — parses CSV, validates domain format, email format, detects booleans in email columns
+3. **Preview** — shows validation result (green success with domain/email counts, or red error list with per-row issues)
+4. **Confirmation** — "Bulk Whitelisting Confirmation" screen showing domain count, email count, file name
+5. **Upload** — sends to `/api/admin/whitelist/upload` which proxies to GetProven `/whitelist/domains/upload/`
+
+### CSV Format (GetProven)
+```
+domain,offer_categories,email1,email2,...
+a16z.com,SaaS Tools,partner@a16z.com,analyst@a16z.com
+sequoiacap.com,,team@sequoiacap.com,
+```
+- Column 1: domain (required)
+- Column 2: offer_categories (optional, comma-separated inside quotes)
+- Column 3+: email addresses (optional, one per column — NOT comma-separated in one column)
+
+### Validation Rules
+- Domain must match `DOMAIN_REGEX` (valid domain format)
+- Emails must match `EMAIL_REGEX` (basic email format)
+- Boolean values (`TRUE`, `FALSE`, `yes`, `no`, `1`, `0`) in email columns are rejected with specific error
+- Max 1,000 rows per file
+- Header row auto-detected (if first row contains "domain")
 
 ---
 
@@ -404,6 +465,20 @@ Audit log tracking all admin actions for compliance.
 | `warning-500` | `#f59e0b` | Warning states |
 | `error-500` | `#ef4444` | Error states |
 | `accent-500` | `#06b6d4` | Highlights, accents |
+
+### Bridge Design System Tokens (used in admin UI)
+| Token | Hex | Usage |
+|-------|-----|-------|
+| Royal Blue | `#0038FF` | Primary buttons, links, focus rings |
+| Royal Hover | `#0036D7` | Button hover state |
+| Charcoal | `#0D1531` | Primary text, headings |
+| Slate | `#676C7E` | Secondary text |
+| Mist | `#81879C` | Tertiary text, placeholders |
+| Cloud | `#F2F3F5` | Hover backgrounds |
+| Fog | `#F9F9FA` | Section backgrounds |
+| Border | `#ECEDF0` | Subtle borders |
+| Kelly Green | `#0EA02E` | Success states |
+| Ruby Red | `#E13535` | Error states, destructive |
 
 ### Typography
 - **Font:** Mulish (Google Fonts) via `--font-mulish` CSS variable
@@ -500,8 +575,8 @@ GETPROVEN_API_URL=               # GetProven base URL (default: https://provende
 
 # Bridge Auth (required for production)
 BRIDGE_API_BASE_URL=             # Bridge API (default: https://api.brdg.app)
-ADMIN_EMAIL_ALLOWLIST=           # Comma-separated admin emails
-ADMIN_DOMAIN_ALLOWLIST=          # Comma-separated admin domains
+ADMIN_EMAIL_ALLOWLIST=           # Comma-separated admin emails (e.g., connor@brdg.app)
+ADMIN_DOMAIN_ALLOWLIST=          # Comma-separated admin domains (leave empty to restrict)
 
 # Supabase (required for access requests + analytics + audit logs)
 NEXT_PUBLIC_SUPABASE_URL=        # Supabase project URL
@@ -584,25 +659,20 @@ Set `USE_MOCK_DATA=true` to use `data/perks.json` instead of GetProven API. When
 
 | Feature | Description |
 |---------|-------------|
-| Admin Audit Logs | `admin_changelog` table + `/admin/changelog` page with filterable audit log (entity type tabs, date range, pagination). All admin actions (approvals, rejections, syncs, uploads, provider CRUD) are logged via `changelogService.log()` |
-| CSV Upload Improvements | Server-side file validation (5MB, MIME type), format help card with column descriptions, template download, two-step upload flow with preview, human-friendly result summary |
+| Provider Owner Access | `owner_email` field on `providers` table + `isProviderOwner()` in auth.ts. Non-admin users whose email matches the provider's owner can access the whitelist page. Whitelist API returns `isOwner` flag. |
+| CSV Upload Modal | Full drag-drop upload modal with client-side CSV validation, format help, template download, confirmation step matching GetProven's "Bulk Whitelisting Confirmation" UX |
+| CSV Format Fix | Corrected CSV template: emails go in separate columns (3+), not comma-separated in one column. Validation rejects booleans (`TRUE`/`FALSE`) in email columns. |
+| Admin Access Restriction | `ADMIN_EMAIL_ALLOWLIST=connor@brdg.app`, `ADMIN_DOMAIN_ALLOWLIST=` (empty). Only connor@brdg.app has admin access. |
+| Admin Audit Logs | `admin_changelog` table + `/admin/changelog` page with filterable audit log (entity type tabs, date range, pagination). All admin actions logged via `changelogService.log()` |
 | Supabase RLS Preparation | All API routes use `createSupabaseAdmin()` with `SUPABASE_SERVICE_ROLE_KEY` (service role) to bypass RLS policies |
 | Royal Blue Design Fix | Replaced all indigo colors with Royal Blue (#0038FF) per Bridge Design System |
-| Access Badge in Top Nav | `<AccessBadge />` component shows color-coded access status pill (admin=amber, vc_team=blue, portfolio=emerald, manual_grant=purple) with admin link |
-| Admin Controls Link | Access badge and user menu link to `/admin` for admin users |
-| Access Cookie Route Handler | `POST /api/access/resolve` persists access cookie via Route Handler (required since `cookies().set()` doesn't work in Server Components) |
-| Reason-Specific Access Granted | Granted screen shows color-coded badge per access reason with contextual description and domain chip |
-| User Menu Access Status | User dropdown fetches access status client-side via `GET /api/access/status` and shows badge + reason description |
-| Animation-Controlled Access Gate | 8s scanning animation with VC favicon conveyor + 2.5s granted screen; plays only on fresh login via `animationShown` cookie flag; skipped on reload/reduced-motion/personal-email |
-| Matched Domain Display | Access Granted screen shows only the actually matched domain; stale cookies self-heal via forced re-check |
-| Claude Skills | 9 skills in `.claude/skills/` for AI-assisted development |
+| Access Badge in Top Nav | `<AccessBadge />` component shows color-coded access status pill with admin link |
+| Access Cookie Route Handler | `POST /api/access/resolve` persists access cookie via Route Handler |
+| Animation-Controlled Access Gate | 8s scanning animation with VC favicon conveyor + 2.5s granted screen; cookie-controlled |
 | Multi-Provider Support | Support multiple GetProven instances via `providers` table |
 | Redemption Analytics | Charts, tables, date range filters, CSV export |
 | Bridge API Integration | Intropath counts, portfolio domain matching |
 | MercuryOS Design System | Consistent visual language across all components |
-| Vendor Tracker | Admin vendor browsing, detail pages, client/contact info |
-| Individual Access | Manual user access grants by admin |
-| Security Headers | HSTS, CSP, X-Frame-Options, etc. |
 
 ---
 
@@ -628,7 +698,8 @@ Set `USE_MOCK_DATA=true` to use `data/perks.json` instead of GetProven API. When
 - **Server components by default** — client components marked with `'use client'`
 - **API routes:** All use `NextResponse.json()` with proper status codes
 - **Error handling:** Try/catch with structured error responses
-- **Logging:** Via `logger.ts` (server-only, dev console)
+- **Logging:** Via `logger.ts` (server-only, dev console in development, errors-only in production)
 - **Class merging:** Use `cn()` utility (clsx-based)
 - **Data normalization:** Raw API responses normalized via `normalizers/getproven.ts`
 - **Cookie names:** `authToken` (Bridge), `bridge_api_key` (API key), `perks_access` (access cache)
+- **Auth functions:** `resolveAuth()` for basic auth, `resolveAuthWithAccounts()` for full connected accounts, `requireAdmin()` for admin-only routes, `isProviderOwner()` for provider-level access
