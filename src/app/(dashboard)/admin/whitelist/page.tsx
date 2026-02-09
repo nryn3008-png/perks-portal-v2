@@ -259,6 +259,7 @@ function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [validationResult, setValidationResult] = useState<CsvValidationResult | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -272,6 +273,7 @@ function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
       setIsUploading(false);
       setIsValidating(false);
       setValidationResult(null);
+      setShowConfirmation(false);
       setIsDragging(false);
       dragCounter.current = 0;
     }
@@ -485,243 +487,311 @@ function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
           </button>
         </div>
 
-        {/* Content */}
-        <div className="px-6 pt-5 pb-6 space-y-5">
-          {/* Drop zone */}
-          <div
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            onClick={() => !isUploading && fileInputRef.current?.click()}
-            className={`relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 cursor-pointer transition-all duration-150 ${
-              isDragging
-                ? 'border-[#0038FF] bg-[#0038FF]/5'
-                : selectedFile
-                  ? 'border-[#0EA02E]/40 bg-[#E7F6EA]/50'
-                  : 'border-[#D9DBE1] bg-[#F9F9FA] hover:border-[#0038FF]/40 hover:bg-[#F2F5FF]'
-            } ${isUploading ? 'pointer-events-none opacity-60' : ''}`}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv"
-              onChange={handleInputChange}
-              disabled={isUploading}
-              className="sr-only"
-            />
+        {/* ── Confirmation Step ─────────────────────────────────── */}
+        {showConfirmation && validationResult?.valid && selectedFile ? (
+          <>
+            <div className="px-6 pt-5 pb-6 space-y-5">
+              <div className="text-center">
+                <h3 className="text-[16px] font-bold text-[#0D1531]">
+                  Bulk Whitelisting Confirmation
+                </h3>
+              </div>
 
-            {selectedFile ? (
-              <>
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#CFECD5]">
-                  <FileText className="h-5 w-5 text-[#0EA02E]" />
-                </div>
-                <p className="mt-3 text-[14px] font-semibold text-[#0D1531]">
-                  {selectedFile.name}
-                </p>
-                <p className="mt-1 text-[13px] text-[#676C7E]">
-                  {(selectedFile.size / 1024).toFixed(0)} KB
-                  <span className="mx-1.5 text-[#D9DBE1]">&middot;</span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedFile(null);
-                      setFileError(null);
-                      setValidationResult(null);
-                    }}
-                    className="text-[#0038FF] hover:text-[#0036D7] font-medium"
-                  >
-                    Change file
-                  </button>
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0038FF]/10">
-                  <UploadCloud className="h-5 w-5 text-[#0038FF]" />
-                </div>
-                <p className="mt-3 text-[14px] font-medium text-[#0D1531]">
-                  {isDragging ? 'Drop your CSV here' : 'Drag and drop a CSV file here'}
-                </p>
-                <p className="mt-1 text-[13px] text-[#81879C]">
-                  or{' '}
-                  <span className="text-[#0038FF] font-medium">
-                    browse files
-                  </span>
-                </p>
-              </>
-            )}
-          </div>
-
-          {/* Validating spinner */}
-          {isValidating && (
-            <div className="flex items-center gap-3 rounded-xl border border-[#DDE9FF] bg-[#EEF4FF] px-4 py-3">
-              <Loader2 className="h-4 w-4 animate-spin text-[#568FFF] flex-shrink-0" />
-              <p className="text-[13px] text-[#0D1531]">Checking CSV format...</p>
-            </div>
-          )}
-
-          {/* File validation error */}
-          {fileError && (
-            <div className="flex items-center gap-2 rounded-lg bg-[#FCEBEB] px-3 py-2.5">
-              <XCircle className="h-4 w-4 text-[#E13535] flex-shrink-0" />
-              <p className="text-[13px] text-[#9E0000]">{fileError}</p>
-            </div>
-          )}
-
-          {/* CSV validation result — errors */}
-          {validationResult && !validationResult.valid && (
-            <div className="rounded-xl border border-[#F9D7D7] bg-[#FCEBEB]/80 overflow-hidden">
-              {/* Error header */}
-              <div className="px-4 pt-4 pb-3">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-[#E13535] flex-shrink-0" />
-                  <h3 className="text-[14px] font-bold text-[#9E0000]">Incorrect format</h3>
-                </div>
-
-                {validationResult.headerError ? (
-                  <p className="mt-2 text-[13px] text-[#9E0000]">
-                    {validationResult.headerError}
+              <div className="flex gap-5 items-start">
+                {/* Summary text */}
+                <div className="flex-1">
+                  <p className="text-[14px] text-[#3D4352] leading-relaxed">
+                    You are about to whitelist the{' '}
+                    <span className="font-bold text-[#0D1531]">
+                      {validationResult.totalRows} domain{validationResult.totalRows !== 1 ? 's' : ''}
+                    </span>
+                    {' '}and send introductory email invites to{' '}
+                    <span className="font-bold text-[#0D1531]">
+                      {validationResult.validRows.reduce((sum, r) => sum + r.emails.length, 0)} associated email address{validationResult.validRows.reduce((sum, r) => sum + r.emails.length, 0) !== 1 ? 'es' : ''}
+                    </span>
+                    {' '}that you have provided.
                   </p>
+                </div>
+
+                {/* File icon */}
+                <div className="flex flex-col items-center gap-2 flex-shrink-0">
+                  <p className="text-[11px] text-[#81879C]">Uploaded file:</p>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-[#E7F6EA] border border-[#CFECD5]">
+                    <FileText className="h-7 w-7 text-[#0EA02E]" />
+                  </div>
+                  <p className="text-[12px] text-[#676C7E] text-center max-w-[120px] break-all leading-tight">
+                    {selectedFile.name}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Confirmation footer */}
+            <div className="flex items-center justify-between px-6 py-4 border-t border-[#ECEDF0] bg-[#F9F9FA]/50 rounded-b-xl">
+              <button
+                type="button"
+                onClick={() => setShowConfirmation(false)}
+                disabled={isUploading}
+                className="inline-flex items-center justify-center rounded-full font-semibold px-4 py-2 text-[14px] min-h-[38px] border border-[#B3B7C4] text-[#0D1531] hover:bg-[#F2F3F5] transition-all duration-150 disabled:opacity-30 tracking-[0.4px]"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={handleUpload}
+                disabled={isUploading}
+                className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold px-5 py-2 text-[14px] min-h-[38px] transition-all duration-150 tracking-[0.4px] ${
+                  isUploading
+                    ? 'bg-[#0038FF]/30 text-white cursor-not-allowed'
+                    : 'bg-[#0038FF] text-white hover:bg-[#0036D7] shadow-sm'
+                }`}
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
                 ) : (
-                  <p className="mt-2 text-[13px] text-[#9E0000] leading-relaxed">
-                    {validationResult.errors.length} of {validationResult.totalRows} rows have format issues.
-                    Enter the domain in the first column, offer categories in the second (leave empty if none),
-                    and email addresses in the remaining columns — one email per column.
-                  </p>
+                  'Confirm'
                 )}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* ── Upload Step ───────────────────────────────────────── */}
+            <div className="px-6 pt-5 pb-6 space-y-5">
+              {/* Drop zone */}
+              <div
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onClick={() => !isUploading && fileInputRef.current?.click()}
+                className={`relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 cursor-pointer transition-all duration-150 ${
+                  isDragging
+                    ? 'border-[#0038FF] bg-[#0038FF]/5'
+                    : selectedFile
+                      ? 'border-[#0EA02E]/40 bg-[#E7F6EA]/50'
+                      : 'border-[#D9DBE1] bg-[#F9F9FA] hover:border-[#0038FF]/40 hover:bg-[#F2F5FF]'
+                } ${isUploading ? 'pointer-events-none opacity-60' : ''}`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  onChange={handleInputChange}
+                  disabled={isUploading}
+                  className="sr-only"
+                />
+
+                {selectedFile ? (
+                  <>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#CFECD5]">
+                      <FileText className="h-5 w-5 text-[#0EA02E]" />
+                    </div>
+                    <p className="mt-3 text-[14px] font-semibold text-[#0D1531]">
+                      {selectedFile.name}
+                    </p>
+                    <p className="mt-1 text-[13px] text-[#676C7E]">
+                      {(selectedFile.size / 1024).toFixed(0)} KB
+                      <span className="mx-1.5 text-[#D9DBE1]">&middot;</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedFile(null);
+                          setFileError(null);
+                          setValidationResult(null);
+                        }}
+                        className="text-[#0038FF] hover:text-[#0036D7] font-medium"
+                      >
+                        Change file
+                      </button>
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0038FF]/10">
+                      <UploadCloud className="h-5 w-5 text-[#0038FF]" />
+                    </div>
+                    <p className="mt-3 text-[14px] font-medium text-[#0D1531]">
+                      {isDragging ? 'Drop your CSV here' : 'Drag and drop a CSV file here'}
+                    </p>
+                    <p className="mt-1 text-[13px] text-[#81879C]">
+                      or{' '}
+                      <span className="text-[#0038FF] font-medium">
+                        browse files
+                      </span>
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* Validating spinner */}
+              {isValidating && (
+                <div className="flex items-center gap-3 rounded-xl border border-[#DDE9FF] bg-[#EEF4FF] px-4 py-3">
+                  <Loader2 className="h-4 w-4 animate-spin text-[#568FFF] flex-shrink-0" />
+                  <p className="text-[13px] text-[#0D1531]">Checking CSV format...</p>
+                </div>
+              )}
+
+              {/* File validation error */}
+              {fileError && (
+                <div className="flex items-center gap-2 rounded-lg bg-[#FCEBEB] px-3 py-2.5">
+                  <XCircle className="h-4 w-4 text-[#E13535] flex-shrink-0" />
+                  <p className="text-[13px] text-[#9E0000]">{fileError}</p>
+                </div>
+              )}
+
+              {/* CSV validation result — errors */}
+              {validationResult && !validationResult.valid && (
+                <div className="rounded-xl border border-[#F9D7D7] bg-[#FCEBEB]/80 overflow-hidden">
+                  {/* Error header */}
+                  <div className="px-4 pt-4 pb-3">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-[#E13535] flex-shrink-0" />
+                      <h3 className="text-[14px] font-bold text-[#9E0000]">Incorrect format</h3>
+                    </div>
+
+                    {validationResult.headerError ? (
+                      <p className="mt-2 text-[13px] text-[#9E0000]">
+                        {validationResult.headerError}
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-[13px] text-[#9E0000] leading-relaxed">
+                        {validationResult.errors.length} of {validationResult.totalRows} rows have format issues.
+                        Enter the domain in the first column, offer categories in the second (leave empty if none),
+                        and email addresses in the remaining columns — one email per column.
+                      </p>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handleDownloadTemplate}
+                      className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#0038FF] hover:text-[#0036D7] transition-colors duration-150"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      Download template CSV
+                    </button>
+                  </div>
+
+                  {/* Error list */}
+                  {validationResult.errors.length > 0 && (
+                    <div className="border-t border-[#F9D7D7] bg-white/60">
+                      <div className="px-4 py-3">
+                        <p className="text-[12px] font-bold uppercase tracking-wider text-[#81879C] mb-2">
+                          Rows with issues
+                        </p>
+                        <div className="space-y-3 max-h-[240px] overflow-y-auto pr-1">
+                          {validationResult.errors.map((err) => (
+                            <div key={err.row} className="text-[13px]">
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-[12px] font-mono font-semibold text-[#81879C] flex-shrink-0">
+                                  Row {err.row}
+                                </span>
+                                <span className="font-medium text-[#0D1531]">
+                                  {err.domain}
+                                </span>
+                              </div>
+                              <ul className="mt-0.5 ml-[52px] space-y-0.5">
+                                {err.issues.map((issue, i) => (
+                                  <li key={i} className="text-[12px] text-[#9E0000] flex items-start gap-1.5">
+                                    <span className="h-1 w-1 rounded-full bg-[#E13535] flex-shrink-0 mt-[6px]" />
+                                    {issue}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* CSV validation result — success preview */}
+              {validationResult && validationResult.valid && (
+                <div className="flex items-center gap-2 rounded-xl border border-[#CFECD5] bg-[#E7F6EA]/80 px-4 py-3">
+                  <CheckCircle className="h-4 w-4 text-[#0EA02E] flex-shrink-0" />
+                  <p className="text-[13px] text-[#005F15]">
+                    <span className="font-semibold">{validationResult.totalRows} domain{validationResult.totalRows !== 1 ? 's' : ''}</span>
+                    {' '}and{' '}
+                    <span className="font-semibold">{validationResult.validRows.reduce((sum, r) => sum + r.emails.length, 0)} email{validationResult.validRows.reduce((sum, r) => sum + r.emails.length, 0) !== 1 ? 's' : ''}</span>
+                    {' '}ready to upload
+                  </p>
+                </div>
+              )}
+
+              {/* CSV format help — show when no file selected or validating */}
+              {!validationResult && (
+              <div className="rounded-xl border border-[#ECEDF0] bg-[#F9F9FA] p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Info className="h-4 w-4 text-[#568FFF]" />
+                  <h3 className="text-[13px] font-bold text-[#0D1531]">CSV format</h3>
+                </div>
+
+                <div className="space-y-2">
+                  {CSV_COLUMNS.map((col) => (
+                    <div key={col.name} className="flex items-baseline gap-2">
+                      <code className="text-[12px] font-mono font-semibold text-[#0D1531] bg-white px-1.5 py-0.5 rounded border border-[#E6E8ED] flex-shrink-0">
+                        {col.name}
+                      </code>
+                      {col.required && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#E13535] flex-shrink-0">
+                          Required
+                        </span>
+                      )}
+                      <span className="text-[12px] text-[#676C7E]">
+                        {col.description}
+                      </span>
+                    </div>
+                  ))}
+                </div>
 
                 <button
                   type="button"
                   onClick={handleDownloadTemplate}
-                  className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#0038FF] hover:text-[#0036D7] transition-colors duration-150"
+                  className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#0038FF] hover:text-[#0036D7] transition-colors duration-150"
                 >
                   <Download className="h-3.5 w-3.5" />
                   Download template CSV
                 </button>
-              </div>
 
-              {/* Error list */}
-              {validationResult.errors.length > 0 && (
-                <div className="border-t border-[#F9D7D7] bg-white/60">
-                  <div className="px-4 py-3">
-                    <p className="text-[12px] font-bold uppercase tracking-wider text-[#81879C] mb-2">
-                      Rows with issues
-                    </p>
-                    <div className="space-y-3 max-h-[240px] overflow-y-auto pr-1">
-                      {validationResult.errors.map((err) => (
-                        <div key={err.row} className="text-[13px]">
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-[12px] font-mono font-semibold text-[#81879C] flex-shrink-0">
-                              Row {err.row}
-                            </span>
-                            <span className="font-medium text-[#0D1531]">
-                              {err.domain}
-                            </span>
-                          </div>
-                          <ul className="mt-0.5 ml-[52px] space-y-0.5">
-                            {err.issues.map((issue, i) => (
-                              <li key={i} className="text-[12px] text-[#9E0000] flex items-start gap-1.5">
-                                <span className="h-1 w-1 rounded-full bg-[#E13535] flex-shrink-0 mt-[6px]" />
-                                {issue}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                <p className="mt-2 text-[12px] text-[#81879C]">
+                  Max 1,000 rows per file. For larger imports, contact support.
+                </p>
+              </div>
               )}
             </div>
-          )}
 
-          {/* CSV validation result — success preview */}
-          {validationResult && validationResult.valid && (
-            <div className="flex items-center gap-2 rounded-xl border border-[#CFECD5] bg-[#E7F6EA]/80 px-4 py-3">
-              <CheckCircle className="h-4 w-4 text-[#0EA02E] flex-shrink-0" />
-              <p className="text-[13px] text-[#005F15]">
-                <span className="font-semibold">{validationResult.totalRows} rows</span> ready to upload
-              </p>
-            </div>
-          )}
-
-          {/* CSV format help — show when no file selected or validating */}
-          {!validationResult && (
-          <div className="rounded-xl border border-[#ECEDF0] bg-[#F9F9FA] p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Info className="h-4 w-4 text-[#568FFF]" />
-              <h3 className="text-[13px] font-bold text-[#0D1531]">CSV format</h3>
-            </div>
-
-            <div className="space-y-2">
-              {CSV_COLUMNS.map((col) => (
-                <div key={col.name} className="flex items-baseline gap-2">
-                  <code className="text-[12px] font-mono font-semibold text-[#0D1531] bg-white px-1.5 py-0.5 rounded border border-[#E6E8ED] flex-shrink-0">
-                    {col.name}
-                  </code>
-                  {col.required && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#E13535] flex-shrink-0">
-                      Required
-                    </span>
-                  )}
-                  <span className="text-[12px] text-[#676C7E]">
-                    {col.description}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={handleDownloadTemplate}
-              className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#0038FF] hover:text-[#0036D7] transition-colors duration-150"
-            >
-              <Download className="h-3.5 w-3.5" />
-              Download template CSV
-            </button>
-
-            <p className="mt-2 text-[12px] text-[#81879C]">
-              Max 1,000 rows per file. For larger imports, contact support.
-            </p>
-          </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#ECEDF0] bg-[#F9F9FA]/50 rounded-b-xl">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isUploading}
-            className="inline-flex items-center justify-center rounded-full font-semibold px-4 py-2 text-[14px] min-h-[38px] border border-[#B3B7C4] text-[#0D1531] hover:bg-[#F2F3F5] transition-all duration-150 disabled:opacity-30 tracking-[0.4px]"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleUpload}
-            disabled={!selectedFile || isUploading || isValidating || !validationResult?.valid}
-            className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold px-5 py-2 text-[14px] min-h-[38px] transition-all duration-150 tracking-[0.4px] ${
-              !selectedFile || isUploading || isValidating || !validationResult?.valid
-                ? 'bg-[#0038FF]/30 text-white cursor-not-allowed'
-                : 'bg-[#0038FF] text-white hover:bg-[#0036D7] shadow-sm'
-            }`}
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              <>
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#ECEDF0] bg-[#F9F9FA]/50 rounded-b-xl">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isUploading}
+                className="inline-flex items-center justify-center rounded-full font-semibold px-4 py-2 text-[14px] min-h-[38px] border border-[#B3B7C4] text-[#0D1531] hover:bg-[#F2F3F5] transition-all duration-150 disabled:opacity-30 tracking-[0.4px]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowConfirmation(true)}
+                disabled={!selectedFile || isUploading || isValidating || !validationResult?.valid}
+                className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold px-5 py-2 text-[14px] min-h-[38px] transition-all duration-150 tracking-[0.4px] ${
+                  !selectedFile || isUploading || isValidating || !validationResult?.valid
+                    ? 'bg-[#0038FF]/30 text-white cursor-not-allowed'
+                    : 'bg-[#0038FF] text-white hover:bg-[#0036D7] shadow-sm'
+                }`}
+              >
                 <Upload className="h-4 w-4" />
                 Upload CSV
-              </>
-            )}
-          </button>
-        </div>
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
