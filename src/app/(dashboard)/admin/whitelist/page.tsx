@@ -85,25 +85,30 @@ function parseUploadSummary(data: unknown): string[] {
 }
 
 /**
- * CSV column definitions for the format help section
+ * CSV column definitions for the format help section.
+ *
+ * GetProven format:
+ *   Column 1: domain (required) — e.g. domainname.com
+ *   Column 2: offer_categories (optional) — comma-separated categories
+ *   Column 3+: emails (optional) — one email per column for users with that domain
  */
 const CSV_COLUMNS = [
   {
     name: 'domain',
     required: true,
-    description: 'Company domain to whitelist',
+    description: 'Domain to whitelist (e.g. domainname.com)',
     example: 'a16z.com',
   },
   {
     name: 'offer_categories',
     required: false,
-    description: 'Perk categories to assign',
+    description: 'Offer categories, comma-separated (leave empty if none)',
     example: 'SaaS Tools',
   },
   {
-    name: 'emails',
+    name: 'email1, email2, ...',
     required: false,
-    description: 'Email addresses for this domain',
+    description: 'Email addresses for this domain — one per column',
     example: 'partner@a16z.com',
   },
 ];
@@ -120,7 +125,7 @@ interface CsvRow {
   row: number;
   domain: string;
   categories: string;
-  emails: string;
+  emails: string[];
 }
 
 interface CsvRowError {
@@ -171,6 +176,12 @@ function parseCsvText(text: string): string[][] {
 
 /**
  * Validate parsed CSV rows against expected format.
+ *
+ * GetProven CSV format:
+ *   Column 1: domain (required)
+ *   Column 2: offer_categories (optional, comma-separated inside quotes)
+ *   Column 3+: email addresses (optional, one per column)
+ *
  * Checks: header present, domain is valid, emails are valid (not "TRUE"/"FALSE").
  */
 function validateCsv(rows: string[][]): CsvValidationResult {
@@ -199,7 +210,8 @@ function validateCsv(rows: string[][]): CsvValidationResult {
     const rowNum = hasHeader ? index + 2 : index + 1; // 1-indexed, accounting for header
     const domain = (fields[0] || '').trim();
     const categories = (fields[1] || '').trim();
-    const emailsField = (fields[2] || '').trim();
+    // Columns 3+ are email addresses (one per column)
+    const emailColumns = fields.slice(2).map((e) => e.trim()).filter(Boolean);
     const issues: string[] = [];
 
     // Check domain
@@ -209,30 +221,19 @@ function validateCsv(rows: string[][]): CsvValidationResult {
       issues.push(`"${domain}" is not a valid domain`);
     }
 
-    // Check emails column — catch common mistake of putting TRUE/FALSE here
-    if (emailsField) {
-      const emailValues = emailsField.split(/[,;]/).map((e) => e.trim()).filter(Boolean);
-      for (const emailVal of emailValues) {
-        if (/^(true|false|yes|no|1|0)$/i.test(emailVal)) {
-          issues.push(`"${emailVal}" in emails column — expected an email address, not a boolean`);
-        } else if (!EMAIL_REGEX.test(emailVal)) {
-          issues.push(`"${emailVal}" is not a valid email`);
-        }
-      }
-    }
-
-    // Check for extra columns that might indicate wrong format
-    if (fields.length > 3) {
-      const extraValues = fields.slice(3).filter((f) => f.trim().length > 0);
-      if (extraValues.length > 0) {
-        issues.push(`Extra columns detected — expected 3 columns (domain, offer_categories, emails)`);
+    // Check email columns — each should be a valid email, not a boolean
+    for (const emailVal of emailColumns) {
+      if (/^(true|false|yes|no|1|0)$/i.test(emailVal)) {
+        issues.push(`"${emailVal}" in email column — expected an email address, not a boolean`);
+      } else if (!EMAIL_REGEX.test(emailVal)) {
+        issues.push(`"${emailVal}" is not a valid email address`);
       }
     }
 
     if (issues.length > 0) {
       errors.push({ row: rowNum, domain: domain || '(empty)', issues });
     } else {
-      validRows.push({ row: rowNum, domain, categories, emails: emailsField });
+      validRows.push({ row: rowNum, domain, categories, emails: emailColumns });
     }
   });
 
@@ -419,9 +420,11 @@ function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
 
   // Download template
   const handleDownloadTemplate = () => {
-    const headers = CSV_COLUMNS.map((c) => c.name);
-    const exampleRow = CSV_COLUMNS.map((c) => c.example);
-    const csv = [headers.join(','), exampleRow.join(',')].join('\n');
+    const csv = [
+      'domain,offer_categories,email1,email2',
+      'a16z.com,SaaS Tools,partner@a16z.com,analyst@a16z.com',
+      'sequoiacap.com,,team@sequoiacap.com,',
+    ].join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -584,8 +587,8 @@ function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
                 ) : (
                   <p className="mt-2 text-[13px] text-[#9E0000] leading-relaxed">
                     {validationResult.errors.length} of {validationResult.totalRows} rows have format issues.
-                    Make sure the CSV follows this format: domain in the first column, offer categories in the
-                    second, and email addresses in the third.
+                    Enter the domain in the first column, offer categories in the second (leave empty if none),
+                    and email addresses in the remaining columns — one email per column.
                   </p>
                 )}
 
