@@ -468,6 +468,14 @@ export function AccessGate({
     return false;
   }, [connectedDomains.length, animationShown]);
 
+  // ── Persist access cookie via Route Handler ─────────────────────────────
+  // cookies().set() only works in Route Handlers / Server Actions, not in
+  // Server Components (page.tsx). This call ensures the perks_access cookie
+  // is actually persisted to the browser.
+  useEffect(() => {
+    fetch('/api/access/resolve', { method: 'POST' }).catch(() => {});
+  }, []);
+
   // ── Scanning → granted/result timer ─────────────────────────────────────
   useEffect(() => {
     if (shouldSkip()) {
