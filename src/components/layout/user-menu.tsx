@@ -7,7 +7,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ExternalLink, Mail, Loader2, Building2, Crown, Briefcase, Network, UserCheck, Settings } from 'lucide-react';
+import { ExternalLink, Mail, Loader2, Building2, Crown, Briefcase, Network, UserCheck, Settings, ChevronRight } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
 const BRIDGE_ACCOUNT_URL = 'https://brdg.app/account/';
@@ -242,11 +242,11 @@ export function UserMenu({ user }: UserMenuProps) {
                         <Link
                           href="/admin"
                           onClick={() => setOpen(false)}
-                          className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-amber-700 hover:text-amber-800 transition-colors"
+                          className="mt-2 flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
                         >
                           <Settings className="h-3 w-3" />
                           Admin Controls
-                          <span aria-hidden="true">&rarr;</span>
+                          <ChevronRight className="h-3 w-3" />
                         </Link>
                       )}
                     </>
