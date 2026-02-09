@@ -333,6 +333,12 @@ export const accessService = {
     // Perform fresh check
     const status = await this.checkAccess(user, providerId);
 
+    // Preserve animationShown from the previous cookie so reloads
+    // don't replay the scanning animation after an hourly re-check
+    if (cached?.animationShown) {
+      status.animationShown = true;
+    }
+
     // Cache the result
     await this.setAccessCookie(status);
 
