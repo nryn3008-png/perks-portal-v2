@@ -4,6 +4,7 @@
  */
 
 import { ApiHealthBadge } from './api-health-badge';
+import { AccessBadge } from './access-badge';
 import { UserMenu } from './user-menu';
 
 // External brand URLs
@@ -71,6 +72,9 @@ export function TopNav({ user, showApiHealth = false }: TopNavProps) {
               className="h-2.5 w-auto"
             />
           </a>
+
+          {/* Access Status Badge */}
+          {user && <AccessBadge />}
 
           {/* User Menu (only shown when logged in) */}
           {user && <UserMenu user={user} />}
