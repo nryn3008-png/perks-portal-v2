@@ -17,6 +17,7 @@
 import { cookies } from 'next/headers';
 import type { AccessStatus } from '@/types';
 import type { UserWithConnectedAccounts } from '@/lib/bridge';
+import { ADMIN_EMAIL_ALLOWLIST, ADMIN_DOMAIN_ALLOWLIST } from '@/lib/bridge/auth';
 import { getCachedWhitelistDomains, getCachedPortfolioDomains } from './access-cache';
 import { createSupabaseAdmin } from '@/lib/supabase-server';
 import { logger } from '@/lib/logger';
@@ -97,10 +98,30 @@ export const accessService = {
 
     // 1. Admin bypass
     if (user.isAdmin) {
-      logAccess('granted:admin', { userId: user.id, email: user.email });
+      // Find the domain that grants admin access
+      const emailDomain = user.email.split('@')[1]?.toLowerCase();
+      let adminDomain: string | undefined;
+
+      // Check primary email domain
+      if (emailDomain && ADMIN_DOMAIN_ALLOWLIST.includes(emailDomain)) {
+        adminDomain = emailDomain;
+      }
+      // Check connected account domains
+      if (!adminDomain && user.connectedDomains.length > 0) {
+        adminDomain = user.connectedDomains.find(
+          (d) => ADMIN_DOMAIN_ALLOWLIST.includes(d.toLowerCase())
+        );
+      }
+      // Fall back to email match
+      if (!adminDomain && ADMIN_EMAIL_ALLOWLIST.includes(user.email.toLowerCase())) {
+        adminDomain = emailDomain;
+      }
+
+      logAccess('granted:admin', { userId: user.id, email: user.email, matchedDomain: adminDomain });
       return {
         granted: true,
         reason: 'admin',
+        matchedDomain: adminDomain,
         checkedAt: now,
         providerId,
       };
