@@ -61,13 +61,6 @@ export async function GET(request: NextRequest) {
   try {
     const data = await client.getWhitelistDomains(page, pageSize);
 
-    // Debug: log full response shape to discover available fields
-    // TODO: Remove after confirming response fields
-    if (data.results?.length > 0) {
-      logger.info('[Whitelist] Response fields:', Object.keys(data.results[0]));
-      logger.info('[Whitelist] Sample row:', JSON.stringify(data.results[0], null, 2));
-    }
-
     const response = NextResponse.json({
       data: data.results,
       pagination: {

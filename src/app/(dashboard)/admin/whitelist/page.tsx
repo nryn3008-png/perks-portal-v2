@@ -40,6 +40,7 @@ interface ApiResponse {
     next: string | null;
     previous: string | null;
   };
+  isOwner?: boolean;
 }
 
 /**
@@ -809,6 +810,9 @@ function WhitelistPageContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
 
+  // Provider owner flag — set from API response
+  const [isOwner, setIsOwner] = useState(false);
+
   // Modal state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadResult, setUploadResult] = useState<{
@@ -843,6 +847,7 @@ function WhitelistPageContent() {
       } else {
         setDomains(data.data);
         setTotalCount(data.pagination.count);
+        if (data.isOwner !== undefined) setIsOwner(data.isOwner);
       }
 
       setCurrentPage(page);
