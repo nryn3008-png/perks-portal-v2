@@ -77,24 +77,27 @@ interface ConnectedAccount {
   isPersonalEmail: boolean;
 }
 
+interface AccessInfo {
+  granted: boolean;
+  reason: string;
+  matchedDomain?: string;
+}
+
 interface UserMenuProps {
   user: {
     name: string;
     email: string;
     avatarUrl?: string;
   };
-  accessInfo?: {
-    granted: boolean;
-    reason: string;
-    matchedDomain?: string;
-  };
 }
 
-export function UserMenu({ user, accessInfo }: UserMenuProps) {
+export function UserMenu({ user }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
+  const [accessInfo, setAccessInfo] = useState<AccessInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetched, setFetched] = useState(false);
+  const [accessFetched, setAccessFetched] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Fetch connected accounts when menu opens
@@ -116,6 +119,23 @@ export function UserMenu({ user, accessInfo }: UserMenuProps) {
         .finally(() => setLoading(false));
     }
   }, [open, fetched]);
+
+  // Fetch access status when menu opens
+  useEffect(() => {
+    if (open && !accessFetched) {
+      fetch('/api/access/status')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.granted) {
+            setAccessInfo(data);
+          }
+          setAccessFetched(true);
+        })
+        .catch(() => {
+          setAccessFetched(true);
+        });
+    }
+  }, [open, accessFetched]);
 
   // Close on click outside
   useEffect(() => {

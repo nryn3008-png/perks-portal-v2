@@ -174,7 +174,7 @@ When a user logs in and visits `/perks` for the first time:
 - Personal email only (no work domains) → animation skipped entirely
 - `prefers-reduced-motion` → animation skipped (accessibility)
 
-**Reason-specific messaging:** Both the Access Granted screen (`access-gate.tsx`) and user menu dropdown (`user-menu.tsx`) display color-coded access reason badges with contextual descriptions. Access info is threaded server-side: `layout.tsx` reads `perks_access` cookie → `AppShell` → `TopNav` → `UserMenu`.
+**Reason-specific messaging:** Both the Access Granted screen (`access-gate.tsx`) and user menu dropdown (`user-menu.tsx`) display color-coded access reason badges with contextual descriptions. Access info for the user menu is fetched client-side via `GET /api/access/status` when the dropdown opens, ensuring the cookie has been set by the page before reading.
 
 **Stale cookie self-healing:** If a cached cookie has a domain-match grant (`vc_team`/`portfolio_match`) but is missing `matchedDomain`, `resolveAccess()` forces a fresh check instead of returning the incomplete cache.
 
@@ -408,8 +408,8 @@ Tracks perk redemption clicks for analytics.
 ### Layout (`src/components/layout/`)
 | Component | Purpose |
 |-----------|---------|
-| `app-shell.tsx` | Main layout wrapper (top nav + content + footer); threads `accessInfo` to TopNav |
-| `top-nav.tsx` | Navigation bar with logo, links, user menu; passes `accessInfo` to UserMenu |
+| `app-shell.tsx` | Main layout wrapper (top nav + content + footer) |
+| `top-nav.tsx` | Navigation bar with logo, links, user menu |
 | `user-menu.tsx` | User dropdown (avatar, access status badge, connected accounts, Bridge link) |
 | `user-context.tsx` | React Context provider for user data |
 | `layout-context.tsx` | Context for full-width mode (admin pages) |
