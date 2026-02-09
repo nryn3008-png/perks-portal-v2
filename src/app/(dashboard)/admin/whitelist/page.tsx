@@ -232,8 +232,8 @@ function WhitelistPageContent() {
 
   // Download sample CSV template
   const handleDownloadTemplate = () => {
-    const headers = ['domain', 'offer_categories', 'investment_level', 'is_visible'];
-    const exampleRow = ['example.com', 'SaaS Tools', 'Series A', 'true'];
+    const headers = ['domain', 'offer_categories', 'emails'];
+    const exampleRow = ['example.com', 'SaaS Tools', 'partner@example.com'];
     const csv = [headers.join(','), exampleRow.join(',')].join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -323,8 +323,7 @@ function WhitelistPageContent() {
               Upload a CSV file with the following columns:{' '}
               <span className="font-medium text-gray-700">domain</span> (required),{' '}
               <span className="font-medium text-gray-700">offer_categories</span>,{' '}
-              <span className="font-medium text-gray-700">investment_level</span>,{' '}
-              <span className="font-medium text-gray-700">is_visible</span>
+              <span className="font-medium text-gray-700">emails</span>
             </p>
             <button
               type="button"
