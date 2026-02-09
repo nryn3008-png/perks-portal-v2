@@ -242,7 +242,7 @@ export function UserMenu({ user }: UserMenuProps) {
                         <Link
                           href="/admin"
                           onClick={() => setOpen(false)}
-                          className="mt-2 flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
+                          className="mt-2 flex items-center gap-1 text-[11px] font-medium text-[#0038FF] hover:text-[#0036D7] transition-colors"
                         >
                           <Settings className="h-3 w-3" />
                           Admin Controls
@@ -265,7 +265,7 @@ export function UserMenu({ user }: UserMenuProps) {
                   href={BRIDGE_CONNECTED_ACCOUNTS_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[11px] text-indigo-600 hover:text-indigo-700 font-medium"
+                  className="text-[11px] text-[#0038FF] hover:text-[#0036D7] font-medium"
                 >
                   Manage
                 </a>
@@ -311,7 +311,7 @@ export function UserMenu({ user }: UserMenuProps) {
                               <p className="text-[10px] text-gray-400 truncate">{account.email}</p>
                             </div>
                             {account.isPrimary && (
-                              <span className="text-[9px] font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                              <span className="text-[9px] font-medium text-[#0038FF] bg-[#0038FF]/10 px-1.5 py-0.5 rounded">
                                 Primary
                               </span>
                             )}
@@ -354,7 +354,7 @@ export function UserMenu({ user }: UserMenuProps) {
                               </p>
                             </div>
                             {account.isPrimary && (
-                              <span className="text-[9px] font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                              <span className="text-[9px] font-medium text-[#0038FF] bg-[#0038FF]/10 px-1.5 py-0.5 rounded">
                                 Primary
                               </span>
                             )}
