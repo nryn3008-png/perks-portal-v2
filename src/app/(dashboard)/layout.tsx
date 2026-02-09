@@ -1,5 +1,6 @@
 import { AppShell } from '@/components/layout';
 import { resolveAuth } from '@/lib/bridge/auth';
+import { accessService } from '@/lib/api/access-service';
 
 /**
  * Dashboard Layout
@@ -21,6 +22,9 @@ export default async function DashboardLayout({
   // Resolve authenticated user from Bridge cookies
   const { user } = await resolveAuth();
 
+  // Read access status from cookie (set after first access check)
+  const accessStatus = await accessService.getAccessFromCookie();
+
   // Map to the shape expected by AppShell/TopNav
   const navUser = user
     ? {
@@ -31,10 +35,19 @@ export default async function DashboardLayout({
       }
     : undefined;
 
+  const accessInfo = accessStatus?.granted
+    ? {
+        granted: accessStatus.granted,
+        reason: accessStatus.reason,
+        matchedDomain: accessStatus.matchedDomain,
+      }
+    : undefined;
+
   return (
     <AppShell
       isAdmin={user?.isAdmin ?? false}
       user={navUser}
+      accessInfo={accessInfo}
       showApiHealth={isDev}
     >
       {children}

@@ -5,6 +5,7 @@ import { PerksPageClient } from './perks-content';
 import { accessService } from '@/lib/api/access-service';
 import { getCachedWhitelistDomains } from '@/lib/api/access-cache';
 import { getDefaultProvider } from '@/lib/providers';
+import type { AccessReason } from '@/types/access';
 
 export default async function PerksPage() {
   const { authenticated, user } = await resolveAuthWithAccounts();
@@ -16,6 +17,7 @@ export default async function PerksPage() {
   const provider = await getDefaultProvider();
   let accessGranted = true;
   let matchedDomain: string | undefined;
+  let accessReason: AccessReason = 'denied';
   let animationShown = false;
   let totalPartnerCount = 0;
 
@@ -23,6 +25,7 @@ export default async function PerksPage() {
     const access = await accessService.resolveAccess(user, provider.id);
     accessGranted = access.granted;
     matchedDomain = access.matchedDomain;
+    accessReason = access.reason;
     animationShown = access.animationShown ?? false;
 
     if (!accessGranted) {
@@ -35,6 +38,7 @@ export default async function PerksPage() {
     <AccessGate
       accessGranted={accessGranted}
       matchedDomain={matchedDomain}
+      accessReason={accessReason}
       animationShown={animationShown}
       connectedDomains={user.connectedDomains}
       userName={user.name}

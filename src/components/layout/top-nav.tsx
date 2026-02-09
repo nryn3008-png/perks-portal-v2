@@ -16,11 +16,16 @@ interface TopNavProps {
     email: string;
     avatarUrl?: string;
   };
+  accessInfo?: {
+    granted: boolean;
+    reason: string;
+    matchedDomain?: string;
+  };
   /** Show API health badge — dev/internal only */
   showApiHealth?: boolean;
 }
 
-export function TopNav({ user, showApiHealth = false }: TopNavProps) {
+export function TopNav({ user, accessInfo, showApiHealth = false }: TopNavProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200/60 bg-white/80 backdrop-blur-md">
       <div className="flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -73,7 +78,7 @@ export function TopNav({ user, showApiHealth = false }: TopNavProps) {
           </a>
 
           {/* User Menu (only shown when logged in) */}
-          {user && <UserMenu user={user} />}
+          {user && <UserMenu user={user} accessInfo={accessInfo} />}
         </div>
       </div>
     </header>

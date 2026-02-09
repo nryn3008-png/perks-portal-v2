@@ -13,9 +13,10 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Shield, ShieldCheck, Building2, CheckCircle2 } from 'lucide-react';
+import { Shield, ShieldCheck, Building2, CheckCircle2, Crown, Briefcase, Network, UserCheck } from 'lucide-react';
 import { AccessRestrictedPage } from '@/components/access-restricted';
 import { FEATURED_VCS } from '@/lib/constants/featured-vcs';
+import type { AccessReason } from '@/types/access';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -25,6 +26,8 @@ interface AccessGateProps {
   accessGranted: boolean;
   /** The user's email domain that actually matched the whitelist */
   matchedDomain?: string;
+  /** Why access was granted (admin, vc_team, portfolio_match, manual_grant) */
+  accessReason?: AccessReason;
   /** Whether the scanning animation has already been shown for this access check */
   animationShown?: boolean;
   connectedDomains: string[];
@@ -195,18 +198,75 @@ function ScannerConveyor({ currentIndex }: { currentIndex: number }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ACCESS REASON CONFIG
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface ReasonConfig {
+  badge: string;
+  icon: React.ComponentType<{ className?: string }>;
+  description: (domain?: string) => string;
+  badgeColor: string;     // Tailwind classes for badge bg + text
+  chipColor: string;      // Tailwind classes for domain chip
+}
+
+const REASON_CONFIG: Record<string, ReasonConfig> = {
+  admin: {
+    badge: 'Admin Access',
+    icon: Crown,
+    description: (domain) =>
+      domain
+        ? `You have admin access through ${domain}`
+        : 'You have admin access to the portal',
+    badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
+    chipColor: 'bg-amber-50 border-amber-200 text-amber-800',
+  },
+  vc_team: {
+    badge: 'VC Team',
+    icon: Briefcase,
+    description: (domain) =>
+      domain
+        ? `You have access as part of the ${domain} team`
+        : 'You have access as a VC team member',
+    badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
+    chipColor: 'bg-blue-50 border-blue-200 text-blue-800',
+  },
+  portfolio_match: {
+    badge: 'Portfolio Company',
+    icon: Network,
+    description: (domain) =>
+      domain
+        ? `Your company (${domain}) is in a partner VC's portfolio`
+        : 'Your company is in a partner VC\'s portfolio',
+    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    chipColor: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+  },
+  manual_grant: {
+    badge: 'Approved Access',
+    icon: UserCheck,
+    description: () => 'Your access request was approved',
+    badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
+    chipColor: 'bg-purple-50 border-purple-200 text-purple-800',
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ACCESS GRANTED SCREEN
 // ─────────────────────────────────────────────────────────────────────────────
 
 function AccessGrantedScreen({
   matchedDomain,
+  accessReason,
   userName,
   fadeOut,
 }: {
   matchedDomain?: string;
+  accessReason?: AccessReason;
   userName: string;
   fadeOut: boolean;
 }) {
+  const config = REASON_CONFIG[accessReason ?? ''] ?? REASON_CONFIG.portfolio_match;
+  const ReasonIcon = config.icon;
+
   return (
     <div
       className={`
@@ -226,40 +286,54 @@ function AccessGrantedScreen({
             Access Granted
           </h1>
           <p className="text-[13px] text-gray-500">
-            {userName ? `Welcome, ${userName}!` : 'Welcome!'} Your identity has been verified
+            {userName ? `Welcome, ${userName}!` : 'Welcome!'}
           </p>
         </div>
 
-        {/* ── Matched Domain ────────────────────────────────────── */}
+        {/* ── Reason Badge + Description ────────────────────────── */}
+        <div
+          className="space-y-3 animate-fade-in-up"
+          style={{ animationDelay: '100ms' }}
+        >
+          {/* Badge */}
+          <div className="flex justify-center">
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold border ${config.badgeColor}`}>
+              <ReasonIcon className="h-3.5 w-3.5" />
+              {config.badge}
+            </span>
+          </div>
+
+          {/* Description */}
+          <p className="text-[13px] text-gray-600">
+            {config.description(matchedDomain)}
+          </p>
+        </div>
+
+        {/* ── Matched Domain Chip ───────────────────────────────── */}
         {matchedDomain && (
-          <div className="space-y-2">
-            <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wider">
-              Verified through
-            </p>
-            <div className="flex justify-center">
-              <div
-                className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 bg-emerald-50 border border-emerald-200 animate-fade-in-up"
-                style={{ animationDelay: '100ms' }}
-              >
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://www.google.com/s2/favicons?domain=${matchedDomain}&sz=64`}
-                  alt=""
-                  className="h-4 w-4 rounded-sm"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    if (target.nextElementSibling) {
-                      (target.nextElementSibling as HTMLElement).classList.remove('hidden');
-                    }
-                  }}
-                />
-                <Building2 className="hidden h-4 w-4 text-emerald-400" />
-                <span className="text-[14px] font-semibold text-emerald-800">
-                  {matchedDomain}
-                </span>
-              </div>
+          <div
+            className="flex justify-center animate-fade-in-up"
+            style={{ animationDelay: '200ms' }}
+          >
+            <div className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 border ${config.chipColor}`}>
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://www.google.com/s2/favicons?domain=${matchedDomain}&sz=64`}
+                alt=""
+                className="h-4 w-4 rounded-sm"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  if (target.nextElementSibling) {
+                    (target.nextElementSibling as HTMLElement).classList.remove('hidden');
+                  }
+                }}
+              />
+              <Building2 className="hidden h-4 w-4 opacity-40" />
+              <span className="text-[14px] font-semibold">
+                {matchedDomain}
+              </span>
             </div>
           </div>
         )}
@@ -368,6 +442,7 @@ function ScanningScreen({
 export function AccessGate({
   accessGranted,
   matchedDomain,
+  accessReason,
   animationShown,
   connectedDomains,
   userName,
@@ -482,6 +557,7 @@ export function AccessGate({
     return (
       <AccessGrantedScreen
         matchedDomain={matchedDomain}
+        accessReason={accessReason}
         userName={userName}
         fadeOut={fadeOut}
       />

@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { ExternalLink, Mail, Loader2, Building2 } from 'lucide-react';
+import { ExternalLink, Mail, Loader2, Building2, Crown, Briefcase, Network, UserCheck, ShieldCheck } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
 const BRIDGE_ACCOUNT_URL = 'https://brdg.app/account/';
@@ -27,6 +27,49 @@ function getPersonalEmailFaviconUrl(email: string): string {
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ACCESS STATUS DISPLAY
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ACCESS_REASON_DISPLAY: Record<string, {
+  label: string;
+  description: (domain?: string) => string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string; // Tailwind classes
+}> = {
+  admin: {
+    label: 'Admin',
+    description: (domain) =>
+      domain ? `Admin access via ${domain}` : 'Admin access to portal',
+    icon: Crown,
+    color: 'text-amber-600 bg-amber-50 border-amber-200',
+  },
+  vc_team: {
+    label: 'VC Team',
+    description: (domain) =>
+      domain ? `Access via ${domain} team` : 'Access as VC team member',
+    icon: Briefcase,
+    color: 'text-blue-600 bg-blue-50 border-blue-200',
+  },
+  portfolio_match: {
+    label: 'Portfolio',
+    description: (domain) =>
+      domain ? `Access via ${domain} portfolio` : 'Access via VC portfolio',
+    icon: Network,
+    color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+  },
+  manual_grant: {
+    label: 'Approved',
+    description: () => 'Manually approved access',
+    icon: UserCheck,
+    color: 'text-purple-600 bg-purple-50 border-purple-200',
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TYPES
+// ─────────────────────────────────────────────────────────────────────────────
+
 interface ConnectedAccount {
   email: string;
   domain: string;
@@ -40,9 +83,14 @@ interface UserMenuProps {
     email: string;
     avatarUrl?: string;
   };
+  accessInfo?: {
+    granted: boolean;
+    reason: string;
+    matchedDomain?: string;
+  };
 }
 
-export function UserMenu({ user }: UserMenuProps) {
+export function UserMenu({ user, accessInfo }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
   const [loading, setLoading] = useState(false);
@@ -145,6 +193,37 @@ export function UserMenu({ user }: UserMenuProps) {
               </div>
             </div>
           </div>
+
+          {/* Access Status Section */}
+          {accessInfo?.granted && accessInfo.reason && ACCESS_REASON_DISPLAY[accessInfo.reason] && (
+            <div className="border-t border-gray-100">
+              <div className="px-4 py-3">
+                <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2">
+                  Access Status
+                </p>
+                {(() => {
+                  const config = ACCESS_REASON_DISPLAY[accessInfo.reason];
+                  const Icon = config.icon;
+                  return (
+                    <div className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 border ${config.color}`}>
+                      <div className="flex items-center justify-center h-6 w-6 rounded-full bg-white/80">
+                        <Icon className="h-3.5 w-3.5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                          <span className="text-[11px] font-semibold">{config.label}</span>
+                        </div>
+                        <p className="text-[11px] opacity-80 mt-0.5">
+                          {config.description(accessInfo.matchedDomain)}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
 
           {/* Connected Accounts Section */}
           <div className="border-t border-gray-100">

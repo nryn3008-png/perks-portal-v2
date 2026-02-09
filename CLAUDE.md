@@ -164,7 +164,7 @@ The portal gates access to perks based on the user's email domain. The access ch
 
 When a user logs in and visits `/perks` for the first time:
 1. **Scanning phase** (8 seconds) — animated VC favicon conveyor belt cycling through partner logos, domain chips with scan line, 8 status text phases, progress bar
-2. **Granted phase** (2.5 seconds) — success screen showing only the actually matched domain with green checkmark
+2. **Granted phase** (2.5 seconds) — reason-specific success screen with color-coded badge (admin=amber, vc_team=blue, portfolio_match=emerald, manual_grant=purple), contextual description, and matched domain chip
 3. **Result** — perks list or access-restricted page
 
 **Animation control via `animationShown` cookie flag:**
@@ -173,6 +173,8 @@ When a user logs in and visits `/perks` for the first time:
 - Logout → cookie cleared → next login plays animation again
 - Personal email only (no work domains) → animation skipped entirely
 - `prefers-reduced-motion` → animation skipped (accessibility)
+
+**Reason-specific messaging:** Both the Access Granted screen (`access-gate.tsx`) and user menu dropdown (`user-menu.tsx`) display color-coded access reason badges with contextual descriptions. Access info is threaded server-side: `layout.tsx` reads `perks_access` cookie → `AppShell` → `TopNav` → `UserMenu`.
 
 **Stale cookie self-healing:** If a cached cookie has a domain-match grant (`vc_team`/`portfolio_match`) but is missing `matchedDomain`, `resolveAccess()` forces a fresh check instead of returning the incomplete cache.
 
@@ -223,6 +225,7 @@ Denied users can submit a manual access request form (stored in Supabase `access
 | GET | `/api/access-request` | User's most recent access request |
 | POST | `/api/access-request` | Submit manual access request |
 | POST | `/api/access-request/refresh` | Re-check access, update cookie |
+| GET | `/api/access/status` | Current access status from cookie (for client components) |
 | POST | `/api/access/animation-shown` | Mark scanning animation as shown in cookie |
 
 ### Admin
@@ -405,9 +408,9 @@ Tracks perk redemption clicks for analytics.
 ### Layout (`src/components/layout/`)
 | Component | Purpose |
 |-----------|---------|
-| `app-shell.tsx` | Main layout wrapper (top nav + content + footer) |
-| `top-nav.tsx` | Navigation bar with logo, links, user menu |
-| `user-menu.tsx` | User dropdown (avatar, settings, logout) |
+| `app-shell.tsx` | Main layout wrapper (top nav + content + footer); threads `accessInfo` to TopNav |
+| `top-nav.tsx` | Navigation bar with logo, links, user menu; passes `accessInfo` to UserMenu |
+| `user-menu.tsx` | User dropdown (avatar, access status badge, connected accounts, Bridge link) |
 | `user-context.tsx` | React Context provider for user data |
 | `layout-context.tsx` | Context for full-width mode (admin pages) |
 | `header.tsx` | Page header section |
@@ -450,7 +453,7 @@ Tracks perk redemption clicks for analytics.
 ### Feature Components
 | Component | Purpose |
 |-----------|---------|
-| `access-gate.tsx` | Domain scanning animation (8s conveyor + 2.5s granted screen), cookie-controlled skip |
+| `access-gate.tsx` | Domain scanning animation (8s conveyor + 2.5s reason-specific granted screen), cookie-controlled skip |
 | `access-restricted.tsx` | Access denied page with domain check explanation + request form |
 | `landing-page.tsx` | Unauthenticated user landing page |
 
@@ -548,6 +551,8 @@ Set `USE_MOCK_DATA=true` to use `data/perks.json` instead of GetProven API. When
 
 | Feature | Description |
 |---------|-------------|
+| Reason-Specific Access Granted | Granted screen shows color-coded badge per access reason (admin/vc_team/portfolio_match/manual_grant) with contextual description and domain chip |
+| User Menu Access Status | User dropdown shows access status section (badge + reason description) between user info and connected accounts; server-side prop threading from layout |
 | Animation-Controlled Access Gate | 8s scanning animation with VC favicon conveyor + 2.5s granted screen; plays only on fresh login via `animationShown` cookie flag; skipped on reload/reduced-motion/personal-email |
 | Matched Domain Display | Access Granted screen shows only the actually matched domain (not all connected domains); stale cookies self-heal via forced re-check |
 | Work Email Clarification | Both scanning and restricted screens explain that connected work emails are being checked |
