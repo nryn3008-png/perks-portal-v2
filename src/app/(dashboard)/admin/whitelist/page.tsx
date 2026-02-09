@@ -5,13 +5,12 @@
  *
  * ADMIN ONLY: Manages whitelisted domains via GetProven API
  * - List domains with pagination
- * - Upload CSV with format guidance + template download
- * - Two-step upload with client-side validation
+ * - Upload CSV via modal with drag-drop, format guidance, template download
  * - Human-friendly upload result display
  * - Mercury OS styling with Bridge Blue (#0038FF)
  */
 
-import { Suspense, useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import {
   AlertCircle,
   Loader2,
@@ -22,6 +21,9 @@ import {
   Download,
   Info,
   Code,
+  X,
+  FileText,
+  UploadCloud,
 } from 'lucide-react';
 import { Button, Card, Disclosure } from '@/components/ui';
 import type { WhitelistDomain } from '@/types';
@@ -81,6 +83,404 @@ function parseUploadSummary(data: unknown): string[] {
   return lines;
 }
 
+/**
+ * CSV column definitions for the format help section
+ */
+const CSV_COLUMNS = [
+  {
+    name: 'domain',
+    required: true,
+    description: 'Company domain to whitelist',
+    example: 'a16z.com',
+  },
+  {
+    name: 'offer_categories',
+    required: false,
+    description: 'Perk categories to assign',
+    example: 'SaaS Tools',
+  },
+  {
+    name: 'emails',
+    required: false,
+    description: 'Email addresses for this domain',
+    example: 'partner@a16z.com',
+  },
+];
+
+// ─── Upload Modal ────────────────────────────────────────────────────────────
+
+interface UploadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onUploadComplete: (result: { success: boolean; message: string; data?: unknown }) => void;
+}
+
+function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const dragCounter = useRef(0);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedFile(null);
+      setFileError(null);
+      setIsUploading(false);
+      setIsDragging(false);
+      dragCounter.current = 0;
+    }
+  }, [isOpen]);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isUploading) onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isUploading, onClose]);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  // Validate file
+  const validateFile = (file: File): string | null => {
+    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+    if (ext !== '.csv') return 'Only CSV files are accepted';
+    if (file.size > MAX_FILE_SIZE) {
+      return `File is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 5MB.`;
+    }
+    if (file.size === 0) return 'File is empty';
+    return null;
+  };
+
+  // Handle file selection
+  const handleFileSelect = (file: File) => {
+    setFileError(null);
+    const error = validateFile(file);
+    if (error) {
+      setFileError(error);
+      setSelectedFile(null);
+      return;
+    }
+    setSelectedFile(file);
+  };
+
+  // Handle input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFileSelect(file);
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+  };
+
+  // Drag and drop handlers
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current++;
+    if (dragCounter.current === 1) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current--;
+    if (dragCounter.current === 0) setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounter.current = 0;
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFileSelect(file);
+  };
+
+  // Handle upload
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const res = await fetch('/api/admin/whitelist/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        onUploadComplete({
+          success: false,
+          message: data.error?.message || 'Upload failed',
+          data: data.error,
+        });
+      } else {
+        onUploadComplete({
+          success: true,
+          message: 'Domains uploaded',
+          data: data,
+        });
+      }
+      onClose();
+    } catch (err) {
+      logger.error('Upload error:', err);
+      onUploadComplete({
+        success: false,
+        message: err instanceof Error ? err.message : 'Upload failed',
+      });
+      onClose();
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Download template
+  const handleDownloadTemplate = () => {
+    const headers = CSV_COLUMNS.map((c) => c.name);
+    const exampleRow = CSV_COLUMNS.map((c) => c.example);
+    const csv = [headers.join(','), exampleRow.join(',')].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'whitelist-template.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="upload-modal-title"
+    >
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/40 backdrop-blur-[2px] animate-fade-in"
+        onClick={() => !isUploading && onClose()}
+        aria-hidden="true"
+      />
+
+      {/* Modal */}
+      <div
+        ref={modalRef}
+        className="relative z-10 w-full max-w-lg mx-4 bg-white rounded-xl shadow-[0px_6px_20px_rgba(0,0,0,0.1)] border border-gray-200/60 animate-scale-in"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-0">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#0038FF] to-[#0030E0]">
+              <Upload className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <h2
+                id="upload-modal-title"
+                className="text-lg font-bold text-[#0D1531]"
+              >
+                Upload domains
+              </h2>
+              <p className="text-[13px] text-[#676C7E]">
+                Add whitelisted domains via CSV
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isUploading}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#81879C] hover:text-[#0D1531] hover:bg-[#F2F3F5] transition-colors duration-150 disabled:opacity-30"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="px-6 pt-5 pb-6 space-y-5">
+          {/* Drop zone */}
+          <div
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            onClick={() => !isUploading && fileInputRef.current?.click()}
+            className={`relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 cursor-pointer transition-all duration-150 ${
+              isDragging
+                ? 'border-[#0038FF] bg-[#0038FF]/5'
+                : selectedFile
+                  ? 'border-[#0EA02E]/40 bg-[#E7F6EA]/50'
+                  : 'border-[#D9DBE1] bg-[#F9F9FA] hover:border-[#0038FF]/40 hover:bg-[#F2F5FF]'
+            } ${isUploading ? 'pointer-events-none opacity-60' : ''}`}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={handleInputChange}
+              disabled={isUploading}
+              className="sr-only"
+            />
+
+            {selectedFile ? (
+              <>
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#CFECD5]">
+                  <FileText className="h-5 w-5 text-[#0EA02E]" />
+                </div>
+                <p className="mt-3 text-[14px] font-semibold text-[#0D1531]">
+                  {selectedFile.name}
+                </p>
+                <p className="mt-1 text-[13px] text-[#676C7E]">
+                  {(selectedFile.size / 1024).toFixed(0)} KB
+                  <span className="mx-1.5 text-[#D9DBE1]">&middot;</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedFile(null);
+                      setFileError(null);
+                    }}
+                    className="text-[#0038FF] hover:text-[#0036D7] font-medium"
+                  >
+                    Change file
+                  </button>
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0038FF]/10">
+                  <UploadCloud className="h-5 w-5 text-[#0038FF]" />
+                </div>
+                <p className="mt-3 text-[14px] font-medium text-[#0D1531]">
+                  {isDragging ? 'Drop your CSV here' : 'Drag and drop a CSV file here'}
+                </p>
+                <p className="mt-1 text-[13px] text-[#81879C]">
+                  or{' '}
+                  <span className="text-[#0038FF] font-medium">
+                    browse files
+                  </span>
+                </p>
+              </>
+            )}
+          </div>
+
+          {/* File validation error */}
+          {fileError && (
+            <div className="flex items-center gap-2 rounded-lg bg-[#FCEBEB] px-3 py-2.5">
+              <XCircle className="h-4 w-4 text-[#E13535] flex-shrink-0" />
+              <p className="text-[13px] text-[#9E0000]">{fileError}</p>
+            </div>
+          )}
+
+          {/* CSV format help */}
+          <div className="rounded-xl border border-[#ECEDF0] bg-[#F9F9FA] p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Info className="h-4 w-4 text-[#568FFF]" />
+              <h3 className="text-[13px] font-bold text-[#0D1531]">CSV format</h3>
+            </div>
+
+            <div className="space-y-2">
+              {CSV_COLUMNS.map((col) => (
+                <div key={col.name} className="flex items-baseline gap-2">
+                  <code className="text-[12px] font-mono font-semibold text-[#0D1531] bg-white px-1.5 py-0.5 rounded border border-[#E6E8ED] flex-shrink-0">
+                    {col.name}
+                  </code>
+                  {col.required && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#E13535] flex-shrink-0">
+                      Required
+                    </span>
+                  )}
+                  <span className="text-[12px] text-[#676C7E]">
+                    {col.description}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleDownloadTemplate}
+              className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#0038FF] hover:text-[#0036D7] transition-colors duration-150"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Download template CSV
+            </button>
+
+            <p className="mt-2 text-[12px] text-[#81879C]">
+              Max 1,000 rows per file. For larger imports, contact support.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#ECEDF0] bg-[#F9F9FA]/50 rounded-b-xl">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isUploading}
+            className="inline-flex items-center justify-center rounded-full font-semibold px-4 py-2 text-[14px] min-h-[38px] border border-[#B3B7C4] text-[#0D1531] hover:bg-[#F2F3F5] transition-all duration-150 disabled:opacity-30 tracking-[0.4px]"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleUpload}
+            disabled={!selectedFile || isUploading}
+            className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold px-5 py-2 text-[14px] min-h-[38px] transition-all duration-150 tracking-[0.4px] ${
+              !selectedFile || isUploading
+                ? 'bg-[#0038FF]/30 text-white cursor-not-allowed'
+                : 'bg-[#0038FF] text-white hover:bg-[#0036D7] shadow-sm'
+            }`}
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4" />
+                Upload CSV
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ───────────────────────────────────────────────────────────────
+
 function WhitelistPageContent() {
   // Data state
   const [domains, setDomains] = useState<WhitelistDomain[]>([]);
@@ -91,10 +491,8 @@ function WhitelistPageContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
 
-  // Upload state
-  const [isUploading, setIsUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileError, setFileError] = useState<string | null>(null);
+  // Modal state
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadResult, setUploadResult] = useState<{
     success: boolean;
     message: string;
@@ -146,103 +544,12 @@ function WhitelistPageContent() {
     fetchDomains(1);
   }, [fetchDomains]);
 
-  // Handle file selection (validation only)
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    setFileError(null);
-    setUploadResult(null);
-
-    if (!file) {
-      setSelectedFile(null);
-      return;
+  // Handle upload complete
+  const handleUploadComplete = (result: { success: boolean; message: string; data?: unknown }) => {
+    setUploadResult(result);
+    if (result.success) {
+      fetchDomains(1);
     }
-
-    // Client-side validation
-    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
-    if (ext !== '.csv') {
-      setFileError('Please select a CSV file');
-      setSelectedFile(null);
-      event.target.value = '';
-      return;
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      setFileError(
-        `File is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 5MB.`
-      );
-      setSelectedFile(null);
-      event.target.value = '';
-      return;
-    }
-
-    if (file.size === 0) {
-      setFileError('File is empty');
-      setSelectedFile(null);
-      event.target.value = '';
-      return;
-    }
-
-    setSelectedFile(file);
-  };
-
-  // Handle upload (after file is validated)
-  const handleUpload = async () => {
-    if (!selectedFile) return;
-
-    setIsUploading(true);
-    setUploadResult(null);
-
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-
-    try {
-      const res = await fetch('/api/admin/whitelist/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setUploadResult({
-          success: false,
-          message: data.error?.message || 'Upload failed',
-          data: data.error,
-        });
-      } else {
-        setUploadResult({
-          success: true,
-          message: 'Upload successful',
-          data: data,
-        });
-        // Refresh the domains list
-        fetchDomains(1);
-      }
-    } catch (err) {
-      logger.error('Upload error:', err);
-      setUploadResult({
-        success: false,
-        message: err instanceof Error ? err.message : 'Upload failed',
-      });
-    } finally {
-      setIsUploading(false);
-      setSelectedFile(null);
-    }
-  };
-
-  // Download sample CSV template
-  const handleDownloadTemplate = () => {
-    const headers = ['domain', 'offer_categories', 'emails'];
-    const exampleRow = ['example.com', 'SaaS Tools', 'partner@example.com'];
-    const csv = [headers.join(','), exampleRow.join(',')].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'whitelist-template.csv';
-    link.click();
-    URL.revokeObjectURL(url);
   };
 
   return (
@@ -263,113 +570,47 @@ function WhitelistPageContent() {
           </p>
         </div>
 
-        {/* Upload CSV Section — Two-step: select file, then upload */}
-        <div className="flex items-center gap-3">
-          {/* File selector button */}
-          <label className="inline-flex items-center justify-center gap-2 rounded-full font-medium px-4 py-2 text-[14px] min-h-[38px] transition-all duration-150 cursor-pointer border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300">
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleFileSelect}
-              disabled={isUploading}
-              className="sr-only"
-            />
-            <Upload className="h-4 w-4" />
-            {selectedFile ? 'Change file' : 'Choose CSV'}
-          </label>
-
-          {/* Selected file info + upload button */}
-          {selectedFile && (
-            <div className="flex items-center gap-3">
-              <span className="text-[13px] text-gray-600">
-                {selectedFile.name}{' '}
-                <span className="text-gray-400">
-                  ({(selectedFile.size / 1024).toFixed(0)} KB)
-                </span>
-              </span>
-              <button
-                type="button"
-                onClick={handleUpload}
-                disabled={isUploading}
-                className={`inline-flex items-center justify-center gap-2 rounded-full font-medium px-4 py-2 text-[14px] min-h-[38px] transition-all duration-150 ${
-                  isUploading
-                    ? 'bg-[#0038FF]/30 text-white cursor-not-allowed'
-                    : 'bg-gradient-to-br from-[#0038FF] to-[#0030E0] text-white hover:shadow-lg hover:shadow-[#0038FF]/25'
-                }`}
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Uploading...
-                  </>
-                ) : (
-                  'Upload'
-                )}
-              </button>
-            </div>
-          )}
-        </div>
+        {/* Upload CSV button — opens modal */}
+        <button
+          type="button"
+          onClick={() => setIsUploadModalOpen(true)}
+          className="inline-flex items-center justify-center gap-2 rounded-full font-semibold px-4 py-2 text-[14px] min-h-[38px] transition-all duration-150 border border-[#B3B7C4] bg-white text-[#0D1531] hover:bg-[#F2F3F5] hover:border-[#81879C] tracking-[0.4px]"
+        >
+          <Upload className="h-4 w-4" />
+          Upload CSV
+        </button>
       </div>
 
-      {/* CSV Format Help */}
-      <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
-        <div className="flex items-start gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0038FF]/10 flex-shrink-0">
-            <Info className="h-4 w-4 text-[#0038FF]" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-[14px] font-semibold text-gray-900">CSV Format</h3>
-            <p className="mt-1 text-[13px] text-gray-500">
-              Upload a CSV file with the following columns:{' '}
-              <span className="font-medium text-gray-700">domain</span> (required),{' '}
-              <span className="font-medium text-gray-700">offer_categories</span>,{' '}
-              <span className="font-medium text-gray-700">emails</span>
-            </p>
-            <button
-              type="button"
-              onClick={handleDownloadTemplate}
-              className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[#0038FF] hover:text-[#0030E0] transition-colors"
-            >
-              <Download className="h-3.5 w-3.5" />
-              Download template CSV
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* File Validation Error */}
-      {fileError && (
-        <div className="rounded-xl border border-red-200/60 bg-red-50/80 p-3">
-          <div className="flex items-center gap-2">
-            <XCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
-            <p className="text-[13px] text-red-700">{fileError}</p>
-          </div>
-        </div>
-      )}
+      {/* Upload Modal */}
+      <UploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onUploadComplete={handleUploadComplete}
+      />
 
       {/* Upload Result */}
       {uploadResult && (
         <div
           className={`rounded-xl border p-4 ${
             uploadResult.success
-              ? 'bg-emerald-50/80 border-emerald-200/60'
-              : 'bg-red-50/80 border-red-200/60'
+              ? 'bg-[#E7F6EA]/80 border-[#CFECD5]'
+              : 'bg-[#FCEBEB]/80 border-[#F9D7D7]'
           }`}
         >
           <div className="flex items-start gap-4">
             {uploadResult.success ? (
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100">
-                <CheckCircle className="h-4 w-4 text-emerald-600" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#CFECD5]">
+                <CheckCircle className="h-4 w-4 text-[#0EA02E]" />
               </div>
             ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-100">
-                <XCircle className="h-4 w-4 text-red-600" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#F9D7D7]">
+                <XCircle className="h-4 w-4 text-[#E13535]" />
               </div>
             )}
             <div className="flex-1 min-w-0">
               <h3
                 className={`font-semibold text-[14px] ${
-                  uploadResult.success ? 'text-emerald-900' : 'text-red-900'
+                  uploadResult.success ? 'text-[#005F15]' : 'text-[#9E0000]'
                 }`}
               >
                 {uploadResult.message}
@@ -379,14 +620,14 @@ function WhitelistPageContent() {
                   {/* Human-readable summary */}
                   <ul
                     className={`text-[13px] space-y-1 ${
-                      uploadResult.success ? 'text-emerald-700' : 'text-red-700'
+                      uploadResult.success ? 'text-[#005F15]' : 'text-[#9E0000]'
                     }`}
                   >
                     {parseUploadSummary(uploadResult.data).map((line, i) => (
                       <li key={i} className="flex items-center gap-1.5">
                         <span
                           className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${
-                            uploadResult.success ? 'bg-emerald-500' : 'bg-red-500'
+                            uploadResult.success ? 'bg-[#0EA02E]' : 'bg-[#E13535]'
                           }`}
                         />
                         {line}
@@ -398,7 +639,7 @@ function WhitelistPageContent() {
                   <Disclosure trigger="Raw API response" icon={<Code className="h-4 w-4" />}>
                     <pre
                       className={`text-[12px] overflow-auto font-mono whitespace-pre-wrap ${
-                        uploadResult.success ? 'text-emerald-800' : 'text-red-800'
+                        uploadResult.success ? 'text-[#005F15]' : 'text-[#9E0000]'
                       }`}
                     >
                       {JSON.stringify(uploadResult.data, null, 2)}
@@ -411,8 +652,8 @@ function WhitelistPageContent() {
               onClick={() => setUploadResult(null)}
               className={`text-[13px] font-medium transition-colors ${
                 uploadResult.success
-                  ? 'text-emerald-600 hover:text-emerald-800'
-                  : 'text-red-600 hover:text-red-800'
+                  ? 'text-[#0EA02E] hover:text-[#005F15]'
+                  : 'text-[#E13535] hover:text-[#9E0000]'
               }`}
             >
               Dismiss
@@ -492,7 +733,7 @@ function WhitelistPageContent() {
                           ))}
                         </div>
                       ) : (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-gray-400">&mdash;</span>
                       )}
                     </td>
                     <td className="px-4 py-4 text-[13px] text-gray-600">
@@ -501,16 +742,16 @@ function WhitelistPageContent() {
                           {domain.investment_level.name}
                         </span>
                       ) : (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-gray-400">&mdash;</span>
                       )}
                     </td>
                     <td className="px-4 py-4 text-[13px]">
                       {domain.is_visible ? (
-                        <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[12px] font-medium text-emerald-700">
+                        <span className="inline-flex rounded-full bg-[#E7F6EA] px-2 py-0.5 text-[12px] font-medium text-[#005F15]">
                           Yes
                         </span>
                       ) : (
-                        <span className="inline-flex rounded-full bg-red-100 px-2 py-0.5 text-[12px] font-medium text-red-700">
+                        <span className="inline-flex rounded-full bg-[#FCEBEB] px-2 py-0.5 text-[12px] font-medium text-[#9E0000]">
                           No
                         </span>
                       )}
