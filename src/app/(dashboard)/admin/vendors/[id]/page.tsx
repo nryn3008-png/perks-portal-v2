@@ -36,14 +36,12 @@ import { findSimilarVendors } from '@/lib/similarity';
 import type { GetProvenDeal, GetProvenVendor, VendorIntropathData } from '@/types';
 
 /**
- * Admin Vendor Detail Page - MercuryOS Design System
+ * Admin Vendor Detail Page - Clean Design
  *
  * Design Philosophy:
- * - Fluid, modeless experience with horizontal flows
- * - Glassmorphic cards with backdrop blur and soft shadows
+ * - Clean solid cards with subtle borders and shadows
  * - Intent-driven layout - content responds to context
  * - Generous whitespace and breathing room
- * - Subtle animations and micro-interactions
  *
  * ADMIN ONLY: View vendor details from GetProven API
  *
@@ -100,7 +98,7 @@ function getYouTubeEmbedUrl(url: string): string | null {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Mercury Glass Card - Frosted glass effect container
+ * Clean Card - Solid white container with subtle border
  */
 function GlassCard({
   children,
@@ -114,23 +112,21 @@ function GlassCard({
   return (
     <div
       className={`
-        relative overflow-hidden rounded-2xl
-        bg-white/70 backdrop-blur-xl
-        border border-white/20
-        shadow-[0_8px_32px_rgba(0,0,0,0.08)]
-        ${hover ? 'transition-all duration-300 ease-out hover:shadow-[0_16px_48px_rgba(0,0,0,0.12)] hover:-translate-y-1' : ''}
+        overflow-hidden rounded-2xl
+        bg-white
+        border border-gray-200
+        shadow-sm
+        ${hover ? 'transition-all duration-300 ease-out hover:shadow-md hover:-translate-y-1' : ''}
         ${className}
       `}
     >
-      {/* Subtle gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent pointer-events-none" />
-      <div className="relative">{children}</div>
+      {children}
     </div>
   );
 }
 
 /**
- * Mercury Floating Panel - For sidebar actions
+ * Floating Panel - Sticky sidebar with clean styling
  */
 function FloatingPanel({
   children,
@@ -142,16 +138,15 @@ function FloatingPanel({
   return (
     <div
       className={`
-        sticky top-6
-        rounded-3xl overflow-hidden
-        bg-gradient-to-b from-white/80 to-white/60
-        backdrop-blur-2xl
-        border border-white/30
-        shadow-[0_24px_64px_rgba(0,0,0,0.1),0_0_0_1px_rgba(255,255,255,0.5)_inset]
+        sticky top-20
+        rounded-2xl overflow-hidden
+        bg-white
+        border border-gray-200
+        shadow-md
         ${className}
       `}
     >
-      <div className="relative">{children}</div>
+      {children}
     </div>
   );
 }
