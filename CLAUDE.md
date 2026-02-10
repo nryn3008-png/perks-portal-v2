@@ -58,7 +58,7 @@ src/
 │   │   ├── layout.tsx                 # Dashboard shell (auth, nav, footer)
 │   │   ├── page.tsx                   # / → redirects to /perks
 │   │   ├── perks/                     # Perk list + detail pages
-│   │   └── admin/                     # Admin pages (whitelist, vendors, analytics, etc.)
+│   │   └── admin/                     # Admin pages (analytics, offers, vendors, whitelist, etc.)
 │   ├── api/                           # API routes (see below)
 │   └── login/page.tsx                 # API key login (non-Bridge domains)
 ├── components/
@@ -100,7 +100,7 @@ Request → Public route? → Allow
         → BYPASS_AUTH? → Mock user
         → authToken cookie? → Resolve via Bridge API → Set x-user-* headers
         → bridge_api_key cookie? → Resolve via Bridge API → Set x-user-* headers
-        → No auth → 401 / redirect to login
+        → No auth → 401 / redirect to /perks (landing page)
 ```
 
 ### Admin Access
@@ -338,6 +338,15 @@ Full-featured upload modal at `/admin/whitelist`:
 ## Current Development Focus
 
 ### Recently Completed
+- **Offer tracker page** (`/admin/offers`) — full table of all offers with search, category/deal type filters, redemption counts, vendor info
+- **Admin sidebar reorder** — Analytics → Offers → Vendors → Access Control → Providers → Audit Logs
+- **Admin default tab** — `/admin` redirects to `/admin/analytics` (was `/admin/whitelist`)
+- **Vendor table default** — `/admin/vendors` defaults to table view (was card view)
+- **Whitelist search** — client-side domain search on `/admin/whitelist`
+- **Header "Perks Portal" link** — clicking "Perks Portal" in header navigates to `/perks`
+- **Logout redirect fix** — unauthenticated users on non-Bridge domains redirect to `/perks` (landing page) instead of `/login`
+- **Offer detail layout cleanup** — replaced glassmorphic cards with clean solid `bg-white` + `border-gray-200` design, removed ambient background gradients
+- Preview pages for access-restricted, pending, rejected states (`/preview/*`)
 - Provider owner access (`owner_email` + `isProviderOwner()`)
 - CSV upload modal with client-side validation, format help, confirmation step
 - Admin audit logs (`admin_changelog` + `/admin/changelog` page)
