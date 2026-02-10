@@ -119,7 +119,8 @@ export function createPerksService(client: GetProvenClient, apiToken: string) {
 
     /**
      * Get single offer by ID
-     * Uses the direct /offers/{id}/ endpoint
+     * GetProven's /offers/{id}/ endpoint is not supported on this instance,
+     * so we fetch all offers from the list and find by ID.
      */
     async getOfferById(id: string): Promise<ApiResponse<GetProvenDeal>> {
       try {
@@ -135,10 +136,19 @@ export function createPerksService(client: GetProvenClient, apiToken: string) {
           };
         }
 
-        const offer = await client.getDeal(id);
-        return { success: true, data: offer };
-      } catch (error) {
-        if (error instanceof GetProvenApiError && error.status === 404) {
+        // Fetch all offers (API returns all 467 in one batch at page_size=1000)
+        const response = await client.getDeals({ pageSize: 1000 });
+        let offer = response.results.find((deal) => deal.id === numericId);
+
+        // If not found in first batch and there are more, fetch next batches
+        let nextUrl = response.next;
+        while (!offer && nextUrl) {
+          const nextResponse = await fetchWithNextUrl(nextUrl, apiToken);
+          offer = nextResponse.results.find((deal) => deal.id === numericId);
+          nextUrl = nextResponse.next;
+        }
+
+        if (!offer) {
           return {
             success: false,
             error: {
@@ -148,6 +158,9 @@ export function createPerksService(client: GetProvenClient, apiToken: string) {
             },
           };
         }
+
+        return { success: true, data: offer };
+      } catch (error) {
         logApiError('getOfferById', error);
         return {
           success: false,
