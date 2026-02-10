@@ -3,6 +3,7 @@
  * Minimal, clean header with logo
  */
 
+import Link from 'next/link';
 import { ApiHealthBadge } from './api-health-badge';
 import { AccessBadge } from './access-badge';
 import { UserMenu } from './user-menu';
@@ -45,10 +46,13 @@ export function TopNav({ user, showApiHealth = false }: TopNavProps) {
           {/* Divider */}
           <div className="hidden sm:block h-5 w-px bg-gray-200" />
 
-          {/* App title */}
-          <span className="hidden sm:block text-[13px] font-medium text-gray-500">
+          {/* App title — links to perks page */}
+          <Link
+            href="/perks"
+            className="hidden sm:block text-[13px] font-medium text-gray-500 hover:text-gray-700 transition-colors"
+          >
             Perks Portal
-          </span>
+          </Link>
         </div>
 
         {/* Right: Status & User */}

@@ -403,8 +403,9 @@ export async function middleware(request: NextRequest) {
     return buildLoginRedirect(request);
   }
 
-  // On non-Bridge domains → redirect to local /login page
-  return NextResponse.redirect(new URL('/login', request.url));
+  // On non-Bridge domains → redirect to landing page (shows unauthenticated landing)
+  // Users can still access /login directly if they need API key auth
+  return NextResponse.redirect(new URL('/perks', request.url));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -361,7 +361,7 @@ function AdminVendorsPageContent() {
     groupName: '',
   });
   const [searchInput, setSearchInput] = useState('');
-  const [viewMode, setViewMode] = useState<ViewMode>('card');
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
 
   // Fetch filter options from API
   const fetchFilterOptions = useCallback(async () => {

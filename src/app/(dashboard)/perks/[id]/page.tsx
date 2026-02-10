@@ -75,7 +75,7 @@ function stripHtml(html: string): string {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Mercury Glass Card - Frosted glass effect container
+ * Content Card - Clean, solid card for main content sections
  */
 function GlassCard({
   children,
@@ -89,23 +89,20 @@ function GlassCard({
   return (
     <div
       className={`
-        relative overflow-hidden rounded-2xl
-        bg-white/70 backdrop-blur-xl
-        border border-white/20
-        shadow-[0_8px_32px_rgba(0,0,0,0.08)]
-        ${hover ? 'transition-all duration-300 ease-out hover:shadow-[0_16px_48px_rgba(0,0,0,0.12)] hover:-translate-y-1' : ''}
+        rounded-2xl bg-white
+        border border-gray-200
+        shadow-sm
+        ${hover ? 'transition-all duration-300 ease-out hover:shadow-md hover:-translate-y-0.5' : ''}
         ${className}
       `}
     >
-      {/* Subtle gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent pointer-events-none" />
-      <div className="relative">{children}</div>
+      {children}
     </div>
   );
 }
 
 /**
- * Mercury Floating Panel - For sidebar actions
+ * Sidebar Panel - Sticky panel for redemption actions
  */
 function FloatingPanel({
   children,
@@ -117,16 +114,15 @@ function FloatingPanel({
   return (
     <div
       className={`
-        sticky top-6
-        rounded-3xl overflow-hidden
-        bg-gradient-to-b from-white/80 to-white/60
-        backdrop-blur-2xl
-        border border-white/30
-        shadow-[0_24px_64px_rgba(0,0,0,0.1),0_0_0_1px_rgba(255,255,255,0.5)_inset]
+        sticky top-20
+        rounded-2xl overflow-hidden
+        bg-white
+        border border-gray-200
+        shadow-md
         ${className}
       `}
     >
-      <div className="relative">{children}</div>
+      {children}
     </div>
   );
 }
@@ -342,13 +338,7 @@ export default async function OfferDetailPage({ params }: OfferDetailPageProps) 
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Ambient Background - Mercury OS gradient mesh */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-50" />
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-bl from-indigo-50/40 via-transparent to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-emerald-50/30 via-transparent to-transparent rounded-full blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-gray-50/50">
 
       <div className="mx-auto max-w-6xl px-6 py-8">
         {/* Back Navigation - Minimal */}

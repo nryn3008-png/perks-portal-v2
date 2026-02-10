@@ -26,7 +26,7 @@ import {
   UploadCloud,
   AlertTriangle,
 } from 'lucide-react';
-import { Button, Card, Disclosure } from '@/components/ui';
+import { Button, Card, Disclosure, SearchInput } from '@/components/ui';
 import type { WhitelistDomain } from '@/types';
 import { logger } from '@/lib/logger';
 
@@ -813,6 +813,9 @@ function WhitelistPageContent() {
   // Provider owner flag — set from API response
   const [isOwner, setIsOwner] = useState(false);
 
+  // Search state
+  const [searchInput, setSearchInput] = useState('');
+
   // Modal state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadResult, setUploadResult] = useState<{
@@ -875,6 +878,12 @@ function WhitelistPageContent() {
     }
   };
 
+  // Client-side search filtering
+  const isSearchActive = searchInput.trim().length > 0;
+  const filteredDomains = isSearchActive
+    ? domains.filter((d) => d.domain.toLowerCase().includes(searchInput.toLowerCase()))
+    : domains;
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Page Header */}
@@ -903,6 +912,15 @@ function WhitelistPageContent() {
           Upload CSV
         </button>
       </div>
+
+      {/* Search */}
+      <SearchInput
+        placeholder="Search domains..."
+        value={searchInput}
+        onChange={(e) => setSearchInput(e.target.value)}
+        onClear={() => setSearchInput('')}
+        aria-label="Search whitelisted domains"
+      />
 
       {/* Upload Modal */}
       <UploadModal
@@ -1002,6 +1020,15 @@ function WhitelistPageContent() {
         </div>
       )}
 
+      {/* Search results status */}
+      {isSearchActive && !isLoading && domains.length > 0 && (
+        <div aria-live="polite">
+          <span className="text-[13px] text-gray-400">
+            {filteredDomains.length} of {domains.length} domains matching &ldquo;{searchInput}&rdquo;
+          </span>
+        </div>
+      )}
+
       {/* Empty State */}
       {!isLoading && domains.length === 0 && !error && (
         <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-gray-50/50 py-16 px-8">
@@ -1010,8 +1037,17 @@ function WhitelistPageContent() {
         </div>
       )}
 
+      {/* No search results */}
+      {!isLoading && domains.length > 0 && filteredDomains.length === 0 && isSearchActive && (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-gray-50/50 py-16 px-8">
+          <Globe className="h-10 w-10 text-gray-300 mb-4" />
+          <p className="text-[14px] text-gray-600 font-medium mb-1">No matching domains</p>
+          <p className="text-[13px] text-gray-400">Try adjusting your search term</p>
+        </div>
+      )}
+
       {/* Domains Table */}
-      {!isLoading && domains.length > 0 && (
+      {!isLoading && filteredDomains.length > 0 && (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -1035,7 +1071,7 @@ function WhitelistPageContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {domains.map((domain) => (
+                {filteredDomains.map((domain) => (
                   <tr key={domain.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-4 py-4 text-[13px] font-mono text-gray-500">
                       {domain.id}
@@ -1088,7 +1124,7 @@ function WhitelistPageContent() {
       )}
 
       {/* Load More Button */}
-      {hasMore && !isLoading && (
+      {hasMore && !isLoading && !isSearchActive && (
         <div className="flex flex-col items-center gap-2 pt-4">
           <p className="text-[13px] text-gray-400">
             Showing {domains.length} of {totalCount} domains
@@ -1112,7 +1148,7 @@ function WhitelistPageContent() {
       )}
 
       {/* Footer */}
-      {!hasMore && !isLoading && domains.length > 0 && (
+      {!hasMore && !isLoading && domains.length > 0 && !isSearchActive && (
         <div className="flex justify-center border-t border-gray-100 pt-6">
           <p className="text-[13px] text-gray-400">
             Showing all {domains.length} domains

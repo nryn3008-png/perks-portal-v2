@@ -4,7 +4,7 @@
  * Admin Sidebar Navigation — MercuryOS Design System
  *
  * Vertical sidebar for admin pages.
- * Order: Analytics → Vendors → Access Control (collapsible) → Providers.
+ * Order: Analytics → Offers → Vendors → Access Control (collapsible) → Providers.
  * Access Control children: Domains, Individual Access, Access Requests.
  * Count badges shown for Vendors and each Access Control child.
  */
@@ -22,6 +22,7 @@ import {
   Database,
   ChevronDown,
   ClipboardList,
+  Gift,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -62,6 +63,7 @@ const topLinks: {
   countKey?: CountKey;
 }[] = [
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/admin/offers', label: 'Offers', icon: Gift },
   { href: '/admin/vendors', label: 'Vendors', icon: Building2, countKey: 'vendors' },
 ];
 
